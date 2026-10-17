@@ -89,7 +89,7 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
               </div>
             </div>
 
-            {/* Színkód-skála magyarázat (Legend - footballtipster.ai stílus) */}
+            {/* Színkód-skála magyarázat (SoccerAI valószínűségi hőtérkép) */}
             <div className="p-3.5 rounded-xl bg-[#0D1527]/90 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-400 font-medium border-b border-slate-800/80 pb-1.5">
                 <span>Modell valószínűségi hőtérkép:</span>

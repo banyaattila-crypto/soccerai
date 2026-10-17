@@ -27,21 +27,107 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focusMarket, setFocusMarket] = useState<FocusMarket>('ALL');
 
+  // Dinamikus dátumkezelés
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, []);
+
+  const yesterdayStr = useMemo(() => {
+    const prev = new Date();
+    prev.setDate(prev.getDate() - 1);
+    const y = prev.getFullYear();
+    const m = String(prev.getMonth() + 1).padStart(2, '0');
+    const d = String(prev.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, []);
+
+  const tomorrowStr = useMemo(() => {
+    const next = new Date();
+    next.setDate(next.getDate() + 1);
+    const y = next.getFullYear();
+    const m = String(next.getMonth() + 1).padStart(2, '0');
+    const d = String(next.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, []);
+
+  const countsByDay = useMemo(() => {
+    return {
+      yesterday: matches.filter((m) => m.kickoffDate === yesterdayStr).length,
+      today: matches.filter((m) => m.kickoffDate === todayStr).length,
+      tomorrow: matches.filter((m) => m.kickoffDate === tomorrowStr).length,
+    };
+  }, [matches, yesterdayStr, todayStr, tomorrowStr]);
+
   // Meccsek szűrése a nap szerint
   const dayMatches = useMemo(() => {
-    let targetDate = '2026-10-17'; // Ma
-    if (dayFilter === 'yesterday') targetDate = '2026-10-16';
-    if (dayFilter === 'tomorrow') targetDate = '2026-10-18';
+    let targetDate = todayStr;
+    if (dayFilter === 'yesterday') targetDate = yesterdayStr;
+    if (dayFilter === 'tomorrow') targetDate = tomorrowStr;
 
-    return matches.filter((m) => m.kickoffDate === targetDate);
-  }, [matches, dayFilter]);
+    const filtered = matches.filter((m) => m.kickoffDate === targetDate);
+    if (filtered.length > 0) return filtered;
+    // Ha ma van kiválasztva, de az API meccsek eltérő dátumúak, mutassuk az összeset
+    if (dayFilter === 'today' && matches.length > 0) return matches;
+    return [];
+  }, [matches, dayFilter, todayStr, yesterdayStr, tomorrowStr]);
+
+  // Dinamikusan kinyert ligák az éppen betöltött meccsekből
+  const availableLeagues = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; name: string; country: string; flag: string; count: number; priority: number }
+    >();
+
+    const pool = dayMatches.length > 0 ? dayMatches : matches;
+    pool.forEach((m) => {
+      const existing = map.get(m.leagueId);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        const priority =
+          m.leagueId === 'pl' ? 1 :
+          m.leagueId === 'laliga' || m.leagueId === 'pd' ? 2 :
+          m.leagueId === 'seriea' || m.leagueId === 'sa' ? 3 :
+          m.leagueId === 'bundesliga' || m.leagueId === 'bl1' ? 4 :
+          m.leagueId === 'ucl' || m.leagueId === 'cl' ? 5 :
+          m.leagueId === 'championship' || m.leagueId === 'elc' ? 6 :
+          m.leagueId === 'ligue1' || m.leagueId === 'fl1' ? 7 :
+          m.leagueId === 'eredivisie' || m.leagueId === 'ded' ? 8 :
+          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 9 : 20;
+
+        map.set(m.leagueId, {
+          id: m.leagueId,
+          name: m.leagueName,
+          country: m.leagueCountry,
+          flag: m.leagueFlag,
+          priority,
+          count: 1,
+        });
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.priority - b.priority || b.count - a.count);
+  }, [dayMatches, matches]);
 
   // Szűrés a többi kritérium alapján
   const filteredMatches = useMemo(() => {
     return dayMatches.filter((match) => {
       // Liga szűrés
-      if (selectedLeague !== 'all' && match.leagueId !== selectedLeague) {
-        return false;
+      if (selectedLeague !== 'all') {
+        const matchesExact = match.leagueId === selectedLeague;
+        const matchesAlias =
+          (selectedLeague === 'laliga' && match.leagueId === 'pd') ||
+          (selectedLeague === 'seriea' && match.leagueId === 'sa') ||
+          (selectedLeague === 'bundesliga' && match.leagueId === 'bl1') ||
+          (selectedLeague === 'championship' && match.leagueId === 'elc') ||
+          (selectedLeague === 'ligue1' && match.leagueId === 'fl1') ||
+          (selectedLeague === 'eredivisie' && match.leagueId === 'ded') ||
+          (selectedLeague === 'seriea_brazil' && match.leagueId === 'bsa');
+        if (!matchesExact && !matchesAlias) return false;
       }
 
       // Kereső szűrés (csapatnév vagy liga)
@@ -71,15 +157,43 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
 
   // Csoportosítás bajnokság szerint ha viewMode === 'league'
   const groupedByLeague = useMemo(() => {
-    const groups: { league: typeof LEAGUES[0]; matches: Match[] }[] = [];
-    LEAGUES.forEach((league) => {
-      const lm = filteredMatches.filter((m) => m.leagueId === league.id);
+    const groups: { league: { id: string; name: string; country: string; flag: string }; matches: Match[] }[] = [];
+    availableLeagues.forEach((league) => {
+      const lm = filteredMatches.filter(
+        (m) =>
+          m.leagueId === league.id ||
+          (league.id === 'laliga' && m.leagueId === 'pd') ||
+          (league.id === 'seriea' && m.leagueId === 'sa') ||
+          (league.id === 'bundesliga' && m.leagueId === 'bl1') ||
+          (league.id === 'championship' && m.leagueId === 'elc') ||
+          (league.id === 'ligue1' && m.leagueId === 'fl1') ||
+          (league.id === 'eredivisie' && m.leagueId === 'ded') ||
+          (league.id === 'seriea_brazil' && m.leagueId === 'bsa')
+      );
       if (lm.length > 0) {
         groups.push({ league, matches: lm });
       }
     });
+
+    // Ha maradt olyan meccs, ami nem volt az availableLeagues-ben
+    const coveredIds = new Set(groups.map((g) => g.league.id));
+    filteredMatches.forEach((m) => {
+      if (!coveredIds.has(m.leagueId)) {
+        groups.push({
+          league: {
+            id: m.leagueId,
+            name: m.leagueName,
+            country: m.leagueCountry,
+            flag: m.leagueFlag,
+          },
+          matches: [m],
+        });
+        coveredIds.add(m.leagueId);
+      }
+    });
+
     return groups;
-  }, [filteredMatches]);
+  }, [availableLeagues, filteredMatches]);
 
   // Cellára kattintva közvetlen szelvényhez adás
   const handleCellBet = (
@@ -100,7 +214,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   };
 
   return (
-    <section className="py-8 bg-[#070B14]" id="stats-grid">
+    <section className="py-8 bg-[#070B14] w-full max-w-full overflow-hidden" id="stats-grid">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Rács Fejléc és Vezérlők */}
@@ -127,7 +241,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Tegnap <span className="opacity-70 text-[10px]">(3)</span>
+              Tegnap <span className="opacity-70 text-[10px]">({countsByDay.yesterday})</span>
             </button>
             <button
               onClick={() => setDayFilter('today')}
@@ -137,7 +251,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Ma <span className="opacity-70 text-[10px]">(9)</span>
+              Ma <span className="opacity-70 text-[10px]">({countsByDay.today > 0 ? countsByDay.today : matches.length})</span>
             </button>
             <button
               onClick={() => setDayFilter('tomorrow')}
@@ -147,7 +261,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Holnap <span className="opacity-70 text-[10px]">(4)</span>
+              Holnap <span className="opacity-70 text-[10px]">({countsByDay.tomorrow})</span>
             </button>
           </div>
         </div>
@@ -155,30 +269,31 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         {/* Szűrők és Keresősáv */}
         <div className="p-4 rounded-2xl bg-[#0D1527]/80 border border-slate-800/80 mb-6 space-y-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Liga chipek */}
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+            {/* Liga chipek (Dinamikusan generálva az összes elérhető ligából!) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none touch-pan-x">
               <button
                 onClick={() => setSelectedLeague('all')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   selectedLeague === 'all'
-                    ? 'bg-slate-700 text-white'
+                    ? 'bg-slate-700 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                Minden Bajnokság
+                Minden Bajnokság ({dayMatches.length})
               </button>
-              {LEAGUES.map((l) => (
+              {availableLeagues.map((l) => (
                 <button
                   key={l.id}
                   onClick={() => setSelectedLeague(l.id)}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all ${
                     selectedLeague === l.id
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
                   <span>{l.flag}</span>
                   <span>{l.name}</span>
+                  <span className="text-[10px] opacity-75 font-mono">({l.count})</span>
                 </button>
               ))}
             </div>
@@ -328,8 +443,11 @@ const MatchTable: React.FC<MatchTableProps> = ({
   focusMarket,
 }) => {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-xs whitespace-nowrap">
+    <div
+      className="overflow-x-auto touch-pan-x max-w-full"
+      style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}
+    >
+      <table className="w-full text-left text-xs whitespace-nowrap min-w-[760px]">
         {/* Fejléc oszlopok */}
         <thead>
           <tr className="border-b border-slate-800 bg-[#0B1222] text-slate-400 uppercase text-[10px] font-bold tracking-wider">

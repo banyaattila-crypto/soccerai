@@ -10,6 +10,7 @@ import { MatchDetailModal } from './components/MatchDetailModal';
 import { BetSlipDrawer } from './components/BetSlipDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { ResultsView } from './components/ResultsView';
+import { Logo } from './components/Logo';
 import { Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const DEFAULT_API_KEY = '0a2ff5ef40ed4113a0ca28d6b9b122d8';
@@ -77,6 +78,19 @@ export function App() {
     }
   }, [apiSuccessNotice]);
 
+  // Automatikus háttérfrissítés 10 percenként, ha a fül látható/aktív
+  useEffect(() => {
+    if (dataSource !== 'api') return;
+
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadMatches('api', apiKey, true);
+      }
+    }, 10 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [dataSource, apiKey, loadMatches]);
+
   const handleRefresh = () => {
     loadMatches(dataSource, apiKey, true);
   };
@@ -124,6 +138,11 @@ export function App() {
     return t.length > 0 ? t : matches;
   }, [matches, todayDateStr]);
 
+  const distinctLeagueCount = useMemo(() => {
+    const set = new Set(matches.map((m) => m.leagueId));
+    return set.size > 0 ? set.size : LEAGUES.length;
+  }, [matches]);
+
   const strongSignalsCount = useMemo(() => {
     let count = 0;
     todayMatches.forEach((m) => {
@@ -162,7 +181,7 @@ export function App() {
       {/* 2. Hero Szekció KPI Mutatókkal & Jelmagyarázattal */}
       <HeroKpi
         matchCount={todayMatches.length}
-        leagueCount={LEAGUES.length}
+        leagueCount={distinctLeagueCount}
         strongSignalCount={strongSignalsCount}
         onExplorePicks={() => {
           setActiveTab('picks');
@@ -252,17 +271,18 @@ export function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                </div>
+              <div className="flex items-center gap-2.5">
+                <Logo size={32} />
                 <span className="font-extrabold text-white text-base tracking-tight">
-                  TippMester<span className="text-amber-400">.ai</span>
+                  Soccer<span className="text-amber-400">AI</span>
+                </span>
+                <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  PRO
                 </span>
               </div>
               <p className="text-slate-400 leading-relaxed max-w-md">
-                Magyar nyelvű kompakt labdarúgó analitikai platform, a footballtipster.ai bevált hőtérképes mintájára kifejlesztve. 
-                Matematikai Poisson modellezés és xG alapú valószínűségszámítás a fegyelmezett sportfogadáshoz.
+                Kvantitatív labdarúgó analitikai és predikciós platform. 
+                Dixon-Coles korrigált Poisson modellezés, Shin de-vigging bukméker árrés szűrés és negyed-Kelly tétméretezés a fegyelmezett, adatvezérelt sportelemzéshez.
               </p>
             </div>
 
@@ -271,11 +291,11 @@ export function App() {
                 Lefedett Bajnokságok
               </div>
               <ul className="space-y-1 text-slate-400">
-                <li>&bull; Premier League (Anglia)</li>
+                <li>&bull; Premier League &amp; Championship (Anglia)</li>
                 <li>&bull; La Liga (Spanyolország)</li>
                 <li>&bull; Serie A (Olaszország)</li>
                 <li>&bull; Bundesliga (Németország)</li>
-                <li>&bull; Bajnokok Ligája &amp; Championship</li>
+                <li>&bull; Ligue 1, Eredivisie &amp; Bajnokok Ligája</li>
               </ul>
             </div>
 
@@ -292,7 +312,7 @@ export function App() {
 
           <div className="pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
             <div>
-              &copy; 2026 TippMester.ai &bull; Minden jog fenntartva.
+              &copy; 2026 SoccerAI &bull; Minden jog fenntartva.
             </div>
             <div className="flex items-center gap-4">
               <span>Élő Football-Data.org API Integráció</span>

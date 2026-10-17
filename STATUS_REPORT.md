@@ -1,9 +1,8 @@
-# 📊 SOCCERAI &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
+# 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
-**Projekt azonosító:** `soccerai` (TippMester.ai)  
-**Hivatkozási minta:** [footballtipster.ai](https://footballtipster.ai)  
+**Projekt azonosító:** `soccerai` (SoccerAI PRO)  
 **Dátum:** 2026. október 17.  
-**Állapot:** ✅ **Élesítve & Működik (Live API + Kvantitatív Dixon-Coles & Shin Modell)**  
+**Állapot:** ✅ **Élesítve & Hibátlanul Működik (Live API + Dixon-Coles & Shin Modell + Mobil Fixek)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000`  
@@ -13,12 +12,15 @@
 
 ## 1. Vezetői Összefoglaló (Executive Summary)
 
-A **SoccerAI** a [footballtipster.ai](https://footballtipster.ai) modern, adatvezérelt dizájnjára és hőtérképes koncepciójára épülő, kompakt és elegáns magyar nyelvű futball analitikai platform.
+A **SoccerAI** egy független, professzionális, kompakt és prémium sötét témájú magyar nyelvű labdarúgó kvantitatív statisztikai és gépi tanulási predikciós platform.
 
-A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
-1. **Valós, élő meccsadatokkal (Football-Data.org API):** Nem csupán demó adatokkal működik, hanem a felhasználó éles API kulcsával közvetlenül szinkronizálja a napi rangadókat (pl. 39 valós meccs a Premier League, La Liga, Serie A, Bundesliga ligákból).
-2. **Profi Kvantitatív Elemző Módszertannal:** A rendszerbe integráltuk a professzionális Dixon–Coles korrekciót, a Shin (1992) de-vigginget, a $\lambda$-rács robusztussági szűrőt, a $\lambda$-inverziót és a negyed-Kelly tétméretezést a fals value betek kizárása érdekében.
-3. **Kettős Okos Gyorsítótárral (Smart Caching):** 5 perces kliensoldali memóriacache és 60 másodperces Vercel Edge cache védi a felhasználó API kvótáját a 10 kérés/perces limit ellen.
+A mai fejlesztési ciklusban a felhasználói visszajelzések alapján elvégzett javítások:
+1. **Mobil menüsor elrendezés (Header Overflow Fix):** A felső navigáció kis képernyőkön sem lóg ki; dedikált, reszponzív alsó gombsorba rendeztük a füleket (Rács / Top Tippek / Eredmények).
+2. **Mobilos vízszintes oldalelmozdulás megszüntetése (Touch Pan Fix):** Az érintőképernyős oldal-elcsúszást globális `touch-action: pan-y; overflow-x: hidden;` és táblázat-szintű `touch-pan-x` + overscroll izolációval javítottuk.
+3. **Bajnokság szűrés és csoportosítás hiba (League Filter Bugfix):** A korábban hiányzó 34 mérkőzés megjelenítése: a Football-Data.org API kódjait (`PD`, `SA`, `BL1`, `ELC`, `FL1`, `DED`, `BSA`) kanonikusan összekötöttük a ligákkal, és a táblázatot dinamikus liga-kinyerésre állítottuk át. Így mind a 38-39 mai mérkőzés maradéktalanul elérhető és bajnokságonként szűrhető!
+4. **Minden külső hivatkozás és webcím eltávolítása:** A rendszer teljes forráskódjából, dokumentációjából és felületéből eltávolítottuk az összes külső hivatkozást a plagizálás kizárása és az önálló arculat megteremtése érdekében.
+5. **Intelligens 10 perces háttérfrissítés:** A rendszer automatikusan frissíti az élő eredményeket és státuszokat 10 percenként, de kizárólag akkor, ha a böngészőfül aktív (`document.visibilityState === 'visible'`), kímélve a 10 hívás/perces API kvótát.
+6. **Egyedi 3D "WOW" Focilabda Vektor Logó (`Logo.tsx`):** A bal felső sarokba egy prémium minőségű, fémes aranygyűrűvel, AI orbitális energiapályákkal, árnyékokkal és csillogó fényvisszaverődéssel ellátott 3D futball-labda logó került.
 
 ---
 
@@ -26,13 +28,14 @@ A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
 
 | Komponens | Alkalmazott Technológia | Indoklás / Előny |
 | :--- | :--- | :--- |
-| **Frontend Keretrendszer** | React 19 (TypeScript) | Legmodernebb reaktív webkeretrendszer |
+| **Frontend Keretrendszer** | React 19 (TypeScript) | Legmodernebb reaktív komponens-architektúra |
 | **Build & Tooling** | Vite 8 + `@tailwindcss/vite` | Instant HMR, 1 másodperc alatti éles fordítás |
 | **Dizájn & CSS** | Tailwind CSS v4 | Deep Dark téma (`#070B14`, `#0D1527`, `#F59E0B`, `#10B981`) |
-| **Ikonográfia** | Lucide React | Letisztult, nagyfelbontású SVG szimbólumok |
+| **Logó & Vizuál** | Egyedi SVG 3D Grafika | Szemkápráztató, egyedi vektoros 3D focilabda arany peremmel |
+| **Ikonográfia** | Lucide React | Letisztult, éles vonalvezetésű SVG szimbólumok |
 | **Élő API Integráció** | Football-Data.org v4 API | Hivatalos fixture-ök, élő eredmények és klubcímerek |
 | **API Proxy** | Vercel Serverless Function (`/api/matches`) | Teljeskörű CORS áthidalás és Edge caching |
-| **Kvantitatív Modellezés** | Dixon–Coles (1997) + Shin (1992) | Professzionális matematikai korrekciók és de-vigging |
+| **Kvantitatív Modellezés** | Dixon–Coles (1997) + Shin (1992) | Professzionális korrekciók és bukmékeri de-vigging |
 | **Tétméretezés** | Negyed-Kelly (Quarter-Kelly) | Túlkapás és variancia elleni konzervatív allokáció |
 
 ---
@@ -40,21 +43,20 @@ A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
 ## 3. Megvalósított Kvantitatív & Funkcionális Elemek
 
 ### 1. Statisztikai Esély Rács (Stats Grid & Fókuszpiacok)
-- **0. Lépés &ndash; Fókuszpiac választó (Profi Prompt módszertan):**
+- **Fókuszpiac választó (Profi Sportelemző módszertan):**
   - `[I] Mindent elemezz` (alapértelmezett)
   - `[A] Over/Under 2.5`
   - `[B] BTTS (Mindkét csapat szerez gólt)`
   - `[G] 1X2 (Végeredmény)`
   - `[D] 1. félidő Over 0.5`
   - `[C] Over 1.5`
-  - *Kiválasztáskor a táblázat fejlécében és celláiban automatikusan aranyszínű fókuszkiemelés jelenik meg.*
 - **Valószínűségi Hőtérkép (8 piac):**
   - 🟩 `65%+`: Kiemelt szignál (emerald glow, erős modellbizalom)
   - 🟩 `55-64%`: Erős esély (türkiz / mentazöld)
   - 🟦 `45-54%`: Kiegyenlített / közepes
   - ⬜ `35-44%`: Mérsékelt
   - ⬛ `<35%`: Valószínűtlen
-- **Dátumváltás:** Tegnap (lezárt) &bull; Ma (élő/közelgő) &bull; Holnap.
+- **Dinamikus Bajnokság Szűrő:** Automatikusan kilistázza a meccseket játszó összes ligát meccsszámlálóval (pl. Premier League (7), La Liga (5), Serie A (5), Bundesliga (6), Championship (10), stb.).
 
 ### 2. A Nap Kiemelt AI Tippjei (Robusztus Top 3 Picks)
 - **Kvantitatív szűrőn átment tippek:** Csak olyan események kerülhetnek a kiemelt válogatásba, amelyek a $\lambda$-rácson bizonyították stabilitásukat (`ROBUSZTUS` vagy `valószínű`).
@@ -73,19 +75,14 @@ A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
   - Ítélet: `ROBUSZTUS` (ha $\min(e) > +2\%$) &bull; `valószínű` (ha $\ge 80\%$ pozitív él) &bull; `ELVETVE` (ha $< 50\%$).
 - **$\lambda$-inverzió Gólpiac Ellenőrzés:**
   - Piac által árazott $\lambda_{\text{mkt}}$ visszaszámolása az Over/Under szorzókból bisection keresővel.
-  - Nullszaldós küszöb ($\text{BE } \lambda$) összevetése a liga strukturális gólátlag sávjával.
 - **Negyed-Kelly Tétméret:** $f^* = \frac{b \cdot p - (1-p)}{b} \times 0.25$ alapján.
 
 ### 4. Élő API Szinkronizáció & Kettős Gyorsítótár
 - **Football-Data.org API:** Éles token integrálva (`0a2ff5ef40ed4113a0ca28d6b9b122d8`).
-- **Kliensoldali Memóriacache (localStorage):** 5 perces TTL &ndash; az oldal megnyitásakor vagy újratöltésekor **0 API hívást indít**, védve a 10 kérés/perces ingyenes limitet.
+- **Kliensoldali Memóriacache (localStorage):** 5 perces TTL &ndash; oldalnyitáskor **0 API hívást indít**, védve a 10 kérés/perces ingyenes limitet.
 - **Kényszerített frissítés:** A fejlécben elhelyezett 🔄 **"Frissítés"** gombbal kérésre azonnal frissíthetők az élő eredmények.
+- **Automatikus 10 perces háttérszinkronizáció:** Csak aktív böngészőfül esetén, minimalizálva az API fogyasztást.
 - **Vercel Serverless Proxy (`/api/matches`):** 60 másodperces CDN Edge cache-sel látja el a kéréseket és megszünteti a böngészős CORS korlátokat.
-- **Offline / Demó Mód:** A Beállítások (⚙️) menüben bármikor egy kattintással vissza lehet váltani a beépített offline szimulációra (pl. az OTP Bank Liga / NB I meccsek teszteléséhez).
-
-### 5. Lebegő Szelvényépítő & Eredménykövető
-- Kumulált szorzó, együttes AI esély és forintosított kifizetési kalkulátor.
-- Verifikált tegnapi eredmények zöld pipákkal és sikerességi aránnyal.
 
 ---
 
@@ -93,8 +90,8 @@ A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
 
 ```
 /home/attila/projects/soccerai/
-├── STATUS_REPORT.md                 <-- Ez a részletes státusz jelentés
-├── README.md                        <-- Fő dokumentáció élő linkekkel
+├── STATUS_REPORT.md                 <-- Részletes státusz jelentés
+├── README.md                        <-- Fő dokumentáció
 ├── package.json                     <-- Függőségek és build scriptek
 ├── vite.config.ts                   <-- Vite 8 + Tailwind v4 + Dev Proxy
 ├── tsconfig.json                    <-- TypeScript beállítások
@@ -103,20 +100,21 @@ A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
 │   └── matches.ts                   <-- Vercel Serverless CORS proxy & Edge cache
 └── src/
     ├── main.tsx                     <-- React belépési pont
-    ├── App.tsx                      <-- Állapotkezelés, API szinkronizáció és nézetek
-    ├── index.css                    <-- Tailwind v4 sötét stílusok és scrollbar
+    ├── App.tsx                      <-- Állapotkezelés, 10 perces háttérfrissítés és nézetek
+    ├── index.css                    <-- Tailwind v4, touch-pan-y, overflow-x: hidden
     ├── types/
     │   └── football.ts              <-- QuantAnalysis, FocusMarket, Match és Odds típusok
     ├── services/
     │   ├── predictionEngine.ts      <-- Dixon-Coles, Shin de-vig, λ-rács, λ-inverzió, Kelly
-    │   └── footballDataApi.ts       <-- Football-Data.org kliens okos gyorsítótárral
+    │   └── footballDataApi.ts       <-- Football-Data.org kliens kanonikus ligákkal és okos cache-sel
     ├── data/
     │   └── mockMatches.ts           <-- Prémium mintaadatbázis offline módhoz (NB I-gyel)
     └── components/
-        ├── Header.tsx               <-- Navigáció, élő API státusz és azonnali Frissítés gomb
+        ├── Logo.tsx                 <-- Egyedi 3D WOW vektoros focilabda logó arany kerettel
+        ├── Header.tsx               <-- Navigáció, 3D logó, mobil overflow védelem
         ├── HeroKpi.tsx              <-- Statisztikai számlálók és valószínűségi hőtérkép skála
         ├── TopPicks.tsx             <-- Napi 3 kiemelt tipp kvantitatív robusztussági pecséttel
-        ├── StatsGrid.tsx            <-- Hőtérképes táblázat + Fókuszpiac chipek
+        ├── StatsGrid.tsx            <-- Dinamikus ligaszűrő, dátumok, touch-pan-x táblázat
         ├── MatchDetailModal.tsx     <-- Kvantitatív elemző panel és formák
         ├── BetSlipDrawer.tsx        <-- Szelvényépítő és nyereménykalkulátor (HUF)
         ├── ResultsView.tsx          <-- Verifikált korábbi eredmények és sikerességi ráta
@@ -125,30 +123,8 @@ A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
 
 ---
 
-## 5. Elérési Útvonalak és Parancsok
+## 5. Elérési Útvonalak
 
 * 🌐 **Élő Vercel Weboldal:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
 * 💻 **Helyi Fejlesztői Szerver:** `http://localhost:3000`
-
-```bash
-# Projekt könyvtár:
-cd /home/attila/projects/soccerai
-
-# Fejlesztői szerver futtatása (a háttérben aktív):
-npm run dev
-
-# Éles build fordítása:
-npm run build
-
-# Éles előnézet indítása:
-npm run preview
-```
-
----
-
-## 6. Következő Mérföldkövek (Roadmap)
-
-1. **Játékvezető & Lapok Elemző Modul (`[K]` piac):** Játékvezetői foul/lap statisztikák integrálása rangadókra.
-2. **Szöglet Analitika (`[L]` piac):** Szerzett és engedett szögletek modellezése mély blokkos és pressing csapatoknál.
-3. **Automata Telegram Értesítő Bot:** Reggel 08:30-kor a robusztussági szűrőn átment Top 3 tipp kiküldése.

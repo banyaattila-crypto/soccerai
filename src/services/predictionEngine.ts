@@ -294,7 +294,7 @@ export function lambdaInversionReport(
 }
 
 /**
- * Színkódoló segédfüggvény valószínűségi értékekhez (FootballTipster hőtérkép)
+ * Színkódoló segédfüggvény valószínűségi értékekhez (SoccerAI valószínűségi hőtérkép)
  */
 export function getProbabilityColorClass(percentage: number): {
   bg: string;

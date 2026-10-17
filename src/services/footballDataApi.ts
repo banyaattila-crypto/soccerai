@@ -65,20 +65,20 @@ interface FootballDataResponse {
   matches: FootballDataMatch[];
 }
 
-// Bajnokság metaadatok magyarul
-const COMPETITION_MAP: Record<
+// Bajnokság metaadatok magyarul és belső azonosítókkal
+export const COMPETITION_MAP: Record<
   string,
-  { name: string; country: string; flag: string; priority: number }
+  { id: string; name: string; country: string; flag: string; priority: number }
 > = {
-  PL: { name: 'Premier League', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 1 },
-  PD: { name: 'La Liga', country: 'Spanyolország', flag: '🇪🇸', priority: 2 },
-  SA: { name: 'Serie A', country: 'Olaszország', flag: '🇮🇹', priority: 3 },
-  BL1: { name: 'Bundesliga', country: 'Németország', flag: '🇩🇪', priority: 4 },
-  CL: { name: 'Bajnokok Ligája', country: 'Európa', flag: '⭐', priority: 5 },
-  ELC: { name: 'Championship', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 6 },
-  FL1: { name: 'Ligue 1', country: 'Franciaország', flag: '🇫🇷', priority: 7 },
-  DED: { name: 'Eredivisie', country: 'Hollandia', flag: '🇳🇱', priority: 8 },
-  BSA: { name: 'Série A Brasil', country: 'Brazília', flag: '🇧🇷', priority: 9 },
+  PL: { id: 'pl', name: 'Premier League', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 1 },
+  PD: { id: 'laliga', name: 'La Liga', country: 'Spanyolország', flag: '🇪🇸', priority: 2 },
+  SA: { id: 'seriea', name: 'Serie A', country: 'Olaszország', flag: '🇮🇹', priority: 3 },
+  BL1: { id: 'bundesliga', name: 'Bundesliga', country: 'Németország', flag: '🇩🇪', priority: 4 },
+  CL: { id: 'ucl', name: 'Bajnokok Ligája', country: 'Európa', flag: '⭐', priority: 5 },
+  ELC: { id: 'championship', name: 'Championship', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 6 },
+  FL1: { id: 'ligue1', name: 'Ligue 1', country: 'Franciaország', flag: '🇫🇷', priority: 7 },
+  DED: { id: 'eredivisie', name: 'Eredivisie', country: 'Hollandia', flag: '🇳🇱', priority: 8 },
+  BSA: { id: 'seriea_brazil', name: 'Série A Brasil', country: 'Brazília', flag: '🇧🇷', priority: 9 },
 };
 
 // Becsült csapat erősségi xG bázisok a népszerűbb klubokra
@@ -303,7 +303,7 @@ export async function fetchLiveMatches(
 
     return {
       id: `fd-${m.id}`,
-      leagueId: compCode.toLowerCase(),
+      leagueId: compInfo.id || compCode.toLowerCase(),
       leagueName: compInfo.name,
       leagueCountry: compInfo.country,
       leagueFlag: compInfo.flag,
