@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { MOCK_MATCHES, LEAGUES } from './data/mockMatches';
 import { fetchLiveMatches } from './services/footballDataApi';
+import { fetchApiSportsMatches, API_SPORTS_DEFAULT_KEY } from './services/apiSportsClient';
 import { Header, AppTab } from './components/Header';
 import { HeroKpi } from './components/HeroKpi';
 import { TopPicks } from './components/TopPicks';
@@ -36,12 +37,24 @@ export function App() {
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('focitipp_apikey') || DEFAULT_API_KEY;
   });
+  const [apiSportsKey, setApiSportsKey] = useState<string>(() => {
+    return localStorage.getItem('focitipp_apisports_key') || API_SPORTS_DEFAULT_KEY;
+  });
+  const [enableSecondary, setEnableSecondary] = useState<boolean>(() => {
+    return localStorage.getItem('focitipp_enable_secondary') !== 'false';
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiSuccessNotice, setApiSuccessNotice] = useState<string | null>(null);
 
-  // Élő meccsek betöltése
+  // Élő meccsek betöltése (Football-Data.org Top ligák + API-Sports másodosztályok és NB I)
   const loadMatches = useCallback(
-    async (source: 'builtin' | 'api', key: string, forceRefresh: boolean = false) => {
+    async (
+      source: 'builtin' | 'api',
+      fbKey: string,
+      sportsKey: string = apiSportsKey,
+      secEnabled: boolean = enableSecondary,
+      forceRefresh: boolean = false
+    ) => {
       if (source === 'builtin') {
         setMatches(MOCK_MATCHES);
         setApiSuccessNotice(null);
@@ -50,30 +63,47 @@ export function App() {
 
       setIsLoading(true);
       try {
-        const live = await fetchLiveMatches(key, forceRefresh);
-        if (live && live.length > 0) {
-          setMatches(live);
+        const liveMainPromise = fetchLiveMatches(fbKey, forceRefresh).catch((e) => {
+          console.warn('Football-Data.org hiba:', e);
+          return [] as Match[];
+        });
+
+        const liveSecondaryPromise = secEnabled
+          ? fetchApiSportsMatches(sportsKey, undefined, forceRefresh).catch((e) => {
+              console.warn('API-Sports másodosztályok lekérési hiba:', e);
+              return [] as Match[];
+            })
+          : Promise.resolve([] as Match[]);
+
+        const [liveMain, liveSecondary] = await Promise.all([liveMainPromise, liveSecondaryPromise]);
+
+        const combined = [...liveMain, ...liveSecondary];
+
+        if (combined.length > 0) {
+          setMatches(combined);
+          const secText = liveSecondary.length > 0
+            ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} másodosztályú: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga, NB I)`
+            : '';
           setApiSuccessNotice(
-            `Sikeres szinkronizáció! ${live.length} valós mai és közelgő meccs betöltve a Football-Data.org API-ról.`
+            `Sikeres szinkronizáció! ${combined.length} valós mérkőzés elérhető${secText}.`
           );
         } else {
           setMatches(MOCK_MATCHES);
         }
       } catch (err) {
         console.warn('API lekérési hiba, offline adatokra visszatérés:', err);
-        // Hiba esetén megtartjuk vagy visszatöltjük a stabil mintaadatokat
         setMatches(MOCK_MATCHES);
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [apiSportsKey, enableSecondary]
   );
 
   // Első betöltéskor
   useEffect(() => {
-    loadMatches(dataSource, apiKey, false);
-  }, [dataSource, apiKey, loadMatches]);
+    loadMatches(dataSource, apiKey, apiSportsKey, enableSecondary, false);
+  }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches]);
 
   // Értesítés eltüntetése 5mp után
   useEffect(() => {
@@ -89,21 +119,30 @@ export function App() {
 
     const interval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        loadMatches('api', apiKey, true);
+        loadMatches('api', apiKey, apiSportsKey, enableSecondary, true);
       }
     }, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [dataSource, apiKey, loadMatches]);
+  }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches]);
 
   const handleRefresh = () => {
-    loadMatches(dataSource, apiKey, true);
+    loadMatches(dataSource, apiKey, apiSportsKey, enableSecondary, true);
   };
 
-  const handleSaveConfig = (newSource: 'builtin' | 'api', newKey: string) => {
+  const handleSaveConfig = (
+    newSource: 'builtin' | 'api',
+    newKey: string,
+    newSportsKey?: string,
+    newSecEnabled?: boolean
+  ) => {
+    const sKey = newSportsKey || apiSportsKey;
+    const sEnabled = newSecEnabled !== undefined ? newSecEnabled : enableSecondary;
     setDataSource(newSource);
     setApiKey(newKey);
-    loadMatches(newSource, newKey, true);
+    if (newSportsKey) setApiSportsKey(newSportsKey);
+    if (newSecEnabled !== undefined) setEnableSecondary(newSecEnabled);
+    loadMatches(newSource, newKey, sKey, sEnabled, true);
   };
 
   // Szelvényhez adás (duplikáció szűréssel)

@@ -109,7 +109,12 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           m.leagueId === 'championship' || m.leagueId === 'elc' ? 6 :
           m.leagueId === 'ligue1' || m.leagueId === 'fl1' ? 7 :
           m.leagueId === 'eredivisie' || m.leagueId === 'ded' ? 8 :
-          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 9 : 20;
+          m.leagueId === 'laliga2' ? 9 :
+          m.leagueId === 'serieb' ? 10 :
+          m.leagueId === 'bundesliga2' ? 11 :
+          m.leagueId === 'ligue2' ? 12 :
+          m.leagueId === 'nbi' ? 13 :
+          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 14 : 20;
 
         map.set(m.leagueId, {
           id: m.leagueId,

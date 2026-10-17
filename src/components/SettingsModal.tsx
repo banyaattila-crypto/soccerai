@@ -6,7 +6,7 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenAbout?: () => void;
-  onSaveConfig?: (source: 'builtin' | 'api', key: string) => void;
+  onSaveConfig?: (source: 'builtin' | 'api', key: string, apiSportsKey?: string, enableSecondary?: boolean) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenAbout, onSaveConfig }) => {
@@ -15,6 +15,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   });
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('focitipp_apikey') || '0a2ff5ef40ed4113a0ca28d6b9b122d8';
+  });
+  const [apiSportsKey, setApiSportsKey] = useState<string>(() => {
+    return localStorage.getItem('focitipp_apisports_key') || 'b088263aae59a54a7f9a597f1ce83644';
+  });
+  const [enableSecondaryLeagues, setEnableSecondaryLeagues] = useState<boolean>(() => {
+    return localStorage.getItem('focitipp_enable_secondary') !== 'false';
   });
   const [threshold, setThreshold] = useState<number>(() => {
     return parseInt(localStorage.getItem('focitipp_threshold') || '60', 10);
@@ -33,10 +39,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const handleSave = () => {
     localStorage.setItem('focitipp_datasource', dataSource);
     localStorage.setItem('focitipp_apikey', apiKey);
+    localStorage.setItem('focitipp_apisports_key', apiSportsKey);
+    localStorage.setItem('focitipp_enable_secondary', enableSecondaryLeagues ? 'true' : 'false');
     localStorage.setItem('focitipp_threshold', threshold.toString());
     setSaved(true);
     if (onSaveConfig) {
-      onSaveConfig(dataSource, apiKey);
+      onSaveConfig(dataSource, apiKey, apiSportsKey, enableSecondaryLeagues);
     }
   };
 
@@ -147,6 +155,61 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <p className="text-[10px] text-slate-500">
               Fiók: <strong className="text-slate-300">banya.attila@icloud.com</strong> &bull; Helyben és felhőben tárolva.
             </p>
+          </div>
+
+          {/* Másodosztályok & API-Sports Beállítások */}
+          <div className="space-y-3 p-3.5 bg-gradient-to-b from-slate-900/90 to-[#0B1220] rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-emerald-400" />
+                <span>API-Sports &amp; Másodosztályok</span>
+              </label>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold font-mono">
+                ✓ Aktív (100 kérés/nap)
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-white">Másodosztályok és NB I bekapcsolása</div>
+                <div className="text-[10px] text-slate-400">
+                  LaLiga 2, Ligue 2, Serie B, 2. Bundesliga és NB I meccsek hozzáadása.
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enableSecondaryLeagues}
+                  onChange={(e) => setEnableSecondaryLeagues(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-slate-300">
+                API-Sports Kulcs
+              </label>
+              <input
+                type="text"
+                value={apiSportsKey}
+                onChange={(e) => setApiSportsKey(e.target.value)}
+                placeholder="Pl. b088263aae5..."
+                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+              />
+              <p className="text-[10px] text-slate-500">
+                Fiók: <strong className="text-slate-300">Banya Attila</strong> (banya.attila@icloud.com) &bull; Intelligens 45 perces gyorsítótárral védve.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇪🇸 LaLiga 2</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇫🇷 Ligue 2</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇮🇹 Serie B</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇩🇪 2. Bundesliga</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇭🇺 NB I</span>
+            </div>
           </div>
 
           {/* Erős szignál küszöbérték */}

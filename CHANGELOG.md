@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.2.0] - 2026-10-17
+
+### Hozzáadva (Added)
+- **API-Sports (API-Football) szolgáltató integráció (`apiSportsClient.ts`):** 5 új bajnokság valós mérkőzésadatai: 🇪🇸 LaLiga 2 (Segunda División), 🇫🇷 Ligue 2, 🇮🇹 Serie B, 🇩🇪 2. Bundesliga és 🇭🇺 NB I (OTP Bank Liga).
+- **Vercel Serverless API-Sports Proxy (`api/apisports.ts`):** 30 perces felhő Edge CDN gyorsítótár a napi 100 kéréses ingyenes keret védelmére és a böngészős CORS áthidalására.
+- **Beállítások Másodosztály-kezelő (`SettingsModal.tsx`):** API-Sports fiókstátusz kijelzés, kulcskezelés és egygombos ki/bekapcsoló a másodosztályú ligákhoz.
+- **Dinamikus ligaszűrő bővítés (`StatsGrid.tsx`):** Az új ligák automatikusan megjelennek a ligaszűrő chipek között prioritás szerint.
+
 ## [1.1.1] - 2026-10-17
 
 ### Javítva (Fixed)

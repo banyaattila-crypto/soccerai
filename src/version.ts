@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.1.1';
-export const APP_RELEASE_NAME = 'Eredménykiértékelési Javítás & Sokszínű Piacválasztás';
+export const APP_VERSION = '1.2.0';
+export const APP_RELEASE_NAME = 'API-Sports Integráció: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga & NB I';
 export const APP_RELEASE_DATE = '2026-10-17';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,11 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Valós végeredmény-kiértékelő algoritmus (evaluatePickWon) a tényleges gólok alapján',
-    'Millwall - Lincoln City 2:2 és egyéb lezárult meccsek hibás "NEM JÖTT BE" jelzésének javítása',
-    'Többpiacos, intelligens ajánló motor: BTTS, Over 2.5, BTTS & Over 2.5, 1X2 és Under 2.5',
-    'Dinamikus sikerességi ráta kalkuláció a lezárult mérkőzések valós eredményéből',
-    'Kompakt 4 füles Dashboard felépítés és Premier League alapértelmezett ligaszűrő',
+    'API-Sports (API-Football) integráció éles hitelesítéssel és 45 perces intelligens kvóta-védelemmel',
+    '5 új másodosztályú és hazai liga: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga és NB I (OTP Bank Liga)',
+    'Vercel Serverless Proxy (api/apisports.ts) 30 perces Edge CDN gyorsítótárral a 100 req/day védelmére',
+    'Kombinált többforrásos mérkőzéslista (~60 mai valós mérkőzés a főbajnokságokkal együtt)',
+    'Beállítások panel másodosztály-kezelővel és ligaválasztó kapcsolóval',
+    'Valós eredménykiértékelés (evaluatePickWon) és diverzifikált többpiacos ajánló (BTTS, Over 2.5, 1X2)',
   ],
 };

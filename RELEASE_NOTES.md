@@ -1,13 +1,16 @@
-# SoccerAI PRO v1.1.1 - Eredménykiértékelési Javítás & Sokszínű Piacválasztás
+# SoccerAI PRO v1.2.0 - API-Sports Integráció: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga & NB I
 
-A **SoccerAI PRO `v1.1.1`** javító kiadás két kritikus pontosságot érintő problémát orvosol a felhasználói visszajelzések alapján:
+A **SoccerAI PRO `v1.2.0`** kiadás egy jelentős funkcionális mérföldkő: a platform a Football-Data.org meglévő bajnokságai mellé hivatalosan bevezeti az **API-Sports (API-Football)** szolgáltató integrációját, elérhetővé téve a legnépszerűbb európai másodosztályokat és a magyar bajnokságot!
 
-## 🐛 Javítások (Fixed)
-- **Valós eredmény-kiértékelés (`ResultsView.tsx`):** A korábbi tesztkód helyébe az `evaluatePickWon` determinisztikus kiértékelő lépett, amely a tényleges gólokból számolja a nyertességet. A **Millwall – Lincoln City (2:2)** mérkőzés 2.5 gól feletti és BTTS tippje mostantól helyesen zöld **NYERTES TIPP**-ként szerepel!
-- **Dinamikus Sikerességi Ráta:** A korábbi beégetett 83.3% helyett a felület a lezárult mérkőzések tényleges kimeneteléből számítja ki a modell pontosságát.
-- **Diverzifikált Piacválasztás (`footballDataApi.ts`):** Megszűnt az egyoldalú Over 2.5 dominancia. A rendszer minden meccsnél az elérhető legmagasabb várható értékű (+EV) piacot választja:
-  - ⚽ **Mindkét csapat szerez gólt (BTTS)**
-  - 📈 **2.5 gól felett (Over 2.5)**
-  - 🔥 **Kombinált: BTTS & 2.5 gól felett**
-  - 🛡️ **2.5 gól alatt (Under 2.5)**
-  - 🏠 **Hazai győzelem (1)** és ✈️ **Vendég győzelem (2)**
+## ✨ Újdonságok (Added)
+- **API-Sports (API-Football) integráció (`apiSportsClient.ts`):** Valós mérkőzésadatok lekérése hivatalos API kulccsal, Dixon–Coles és Poisson statisztikai modellezéssel.
+- **5 új támogatott bajnokság:**
+  - 🇪🇸 **LaLiga 2** (*Segunda División / Hypermotion*)
+  - 🇫🇷 **Ligue 2** (*Francia másodosztály*)
+  - 🇮🇹 **Serie B** (*Olasz másodosztály*)
+  - 🇩🇪 **2. Bundesliga** (*Német másodosztály*)
+  - 🇭🇺 **NB I** (*OTP Bank Liga*)
+- **Vercel Serverless Proxy (`api/apisports.ts`):** 30 perces felhő oldali Edge CDN gyorsítótár a napi 100 kéréses ingyenes keret hatékony védelmére és a böngészős CORS áthidalására.
+- **Kettős Gyorsítótár (Cache Guard):** A kliensoldali 45 perces memóriacache révén a napi 100 kérésből naponta legfeljebb 5-10 kérés használódik el.
+- **Beállítások Másodosztály-kezelő (`SettingsModal.tsx`):** API-Sports fiókállapot (Attila Banya &bull; 100 req/day), szerkeszthető kulcsmező és egygombos ki/bekapcsoló a másodosztályú mérkőzésekhez.
+- **Kombinált Mérkőzés Rács:** A felületen a főbajnokságok és másodosztályok zökkenőmentesen, egyetlen egységes táblázatban jelennek meg ligachipekkel.
