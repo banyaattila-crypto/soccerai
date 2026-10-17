@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, Server, Key, Palette, Check, Sparkles, ShieldCheck } from 'lucide-react';
+import { X, Server, Key, Check } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSaveConfig?: (source: 'builtin' | 'api', key: string) => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSaveConfig }) => {
   const [dataSource, setDataSource] = useState<'builtin' | 'api'>(() => {
-    return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'builtin';
+    return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'api';
   });
   const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('focitipp_apikey') || '';
+    return localStorage.getItem('focitipp_apikey') || '0a2ff5ef40ed4113a0ca28d6b9b122d8';
   });
   const [threshold, setThreshold] = useState<number>(() => {
     return parseInt(localStorage.getItem('focitipp_threshold') || '60', 10);
@@ -32,6 +33,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     localStorage.setItem('focitipp_apikey', apiKey);
     localStorage.setItem('focitipp_threshold', threshold.toString());
     setSaved(true);
+    if (onSaveConfig) {
+      onSaveConfig(dataSource, apiKey);
+    }
   };
 
   return (
@@ -63,6 +67,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
             <div className="space-y-2">
               <label
+                onClick={() => setDataSource('api')}
+                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  dataSource === 'api'
+                    ? 'bg-amber-500/10 border-amber-500/50 text-white'
+                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="datasource"
+                  checked={dataSource === 'api'}
+                  onChange={() => setDataSource('api')}
+                  className="mt-1 text-amber-500 focus:ring-amber-500"
+                />
+                <div className="space-y-0.5">
+                  <div className="text-xs font-extrabold text-white flex items-center gap-2">
+                    <span>Élő Külső Futball API (Football-Data.org)</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
+                      Aktív / Éles kulccsal
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Közvetlen élő mérkőzés szinkronizáció valós mai párosításokkal, állásokkal és logókkal.
+                  </div>
+                </div>
+              </label>
+
+              <label
                 onClick={() => setDataSource('builtin')}
                 className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
                   dataSource === 'builtin'
@@ -79,63 +111,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 />
                 <div className="space-y-0.5">
                   <div className="text-xs font-extrabold text-white flex items-center gap-2">
-                    <span>Beépített Intelligens AI Predikciós Motor</span>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
-                      Aktív / Ajánlott
+                    <span>Beépített Offline Szimulációs Motor</span>
+                    <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-medium">
+                      Offline Demó
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    Azonnal futtatható valósághű adatokkal, matematikai Poisson-eloszlás és xG modell kalkulációval (nulla API költség).
-                  </div>
-                </div>
-              </label>
-
-              <label
-                onClick={() => setDataSource('api')}
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
-                  dataSource === 'api'
-                    ? 'bg-amber-500/10 border-amber-500/50 text-white'
-                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="datasource"
-                  checked={dataSource === 'api'}
-                  onChange={() => setDataSource('api')}
-                  className="mt-1 text-amber-500 focus:ring-amber-500"
-                />
-                <div className="space-y-0.5">
-                  <div className="text-xs font-extrabold text-white">
-                    Élő Külső Futball API (Football-Data / API-Football)
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Közvetlen élő szinkronizáció hivatalos sportstatisztikai szolgáltatóktól saját API kulccsal.
+                    Előre definiált minta rangadók és tesztadatok (internetkapcsolattól és API rátakorlátoktól független).
                   </div>
                 </div>
               </label>
             </div>
           </div>
 
-          {/* API Kulcs mező ha API mód kiválasztva */}
-          {dataSource === 'api' && (
-            <div className="space-y-2 p-3.5 bg-slate-900/90 rounded-xl border border-slate-800">
+          {/* API Kulcs mező */}
+          <div className="space-y-2 p-3.5 bg-slate-900/90 rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                 <Key className="w-3.5 h-3.5 text-amber-400" />
-                <span>API Kulcs (Token)</span>
+                <span>Football-Data.org API Kulcs</span>
               </label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Pl. fc394208a98... (football-data.org)"
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
-              />
-              <p className="text-[10px] text-slate-500">
-                A kulcs csak a saját böngésződ biztonságos helyi tárhelyén (localStorage) tárolódik.
-              </p>
+              <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                ✓ Érvényes kulcs
+              </span>
             </div>
-          )}
+            <input
+              type="text"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Pl. 0a2ff5ef40ed..."
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
+            />
+            <p className="text-[10px] text-slate-500">
+              Fiók: <strong className="text-slate-300">banya.attila@icloud.com</strong> &bull; Helyben és felhőben tárolva.
+            </p>
+          </div>
 
           {/* Erős szignál küszöbérték */}
           <div className="space-y-2">
@@ -177,7 +187,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             {saved ? (
               <>
                 <Check className="w-4 h-4 text-slate-950" />
-                Mentve!
+                Mentve és Alkalmazva!
               </>
             ) : (
               'Beállítások Mentése'

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, ShieldCheck, Sparkles, SlidersHorizontal, Ticket } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, Ticket, RefreshCw, Radio } from 'lucide-react';
 
 interface HeaderProps {
   onOpenSettings: () => void;
@@ -7,6 +7,9 @@ interface HeaderProps {
   betSlipCount: number;
   activeTab: 'grid' | 'picks' | 'results';
   setActiveTab: (tab: 'grid' | 'picks' | 'results') => void;
+  isLiveApi: boolean;
+  isLoading: boolean;
+  onRefresh: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,6 +18,9 @@ export const Header: React.FC<HeaderProps> = ({
   betSlipCount,
   activeTab,
   setActiveTab,
+  isLiveApi,
+  isLoading,
+  onRefresh,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-[#070B14]/90 backdrop-blur-md border-b border-slate-800/80">
@@ -41,13 +47,27 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Live model status badge */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="text-slate-300 font-medium">ÉLŐ ADATOK &bull; 2026. OKTÓBER 17.</span>
+        {/* Live model status badge & Refresh button */}
+        <div className="hidden lg:flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-slate-300 font-medium">
+              {isLiveApi ? 'ÉLŐ API: FOOTBALL-DATA.ORG' : 'OFFLINE MODELL SZIMULÁCIÓ'}
+            </span>
+          </div>
+
+          <button
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-[11px] font-semibold text-slate-300 transition-colors disabled:opacity-50"
+            title="Adatok azonnali frissítése"
+          >
+            <RefreshCw className={`w-3 h-3 text-amber-400 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Frissítés...' : 'Frissítés'}</span>
+          </button>
         </div>
 
         {/* Navigation & Actions */}

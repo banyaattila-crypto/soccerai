@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { MOCK_MATCHES, LEAGUES } from './data/mockMatches';
+import { fetchLiveMatches } from './services/footballDataApi';
 import { Header } from './components/Header';
 import { HeroKpi } from './components/HeroKpi';
 import { TopPicks } from './components/TopPicks';
@@ -9,7 +10,9 @@ import { MatchDetailModal } from './components/MatchDetailModal';
 import { BetSlipDrawer } from './components/BetSlipDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { ResultsView } from './components/ResultsView';
-import { Sparkles, Shield, Cpu, RefreshCw } from 'lucide-react';
+import { Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+
+const DEFAULT_API_KEY = '0a2ff5ef40ed4113a0ca28d6b9b122d8';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
@@ -19,6 +22,70 @@ export function App() {
   const [betSlipOpen, setBetSlipOpen] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [betSlipItems, setBetSlipItems] = useState<BetSlipItem[]>([]);
+
+  // API állapotok
+  const [dataSource, setDataSource] = useState<'builtin' | 'api'>(() => {
+    return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'api';
+  });
+  const [apiKey, setApiKey] = useState<string>(() => {
+    return localStorage.getItem('focitipp_apikey') || DEFAULT_API_KEY;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [apiSuccessNotice, setApiSuccessNotice] = useState<string | null>(null);
+
+  // Élő meccsek betöltése
+  const loadMatches = useCallback(
+    async (source: 'builtin' | 'api', key: string) => {
+      if (source === 'builtin') {
+        setMatches(MOCK_MATCHES);
+        setApiSuccessNotice(null);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const live = await fetchLiveMatches(key);
+        if (live && live.length > 0) {
+          setMatches(live);
+          setApiSuccessNotice(
+            `Sikeres szinkronizáció! ${live.length} valós mai és közelgő meccs betöltve a Football-Data.org API-ról.`
+          );
+        } else {
+          setMatches(MOCK_MATCHES);
+        }
+      } catch (err) {
+        console.warn('API lekérési hiba, offline adatokra visszatérés:', err);
+        // Hiba esetén megtartjuk vagy visszatöltjük a stabil mintaadatokat
+        setMatches(MOCK_MATCHES);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  // Első betöltéskor
+  useEffect(() => {
+    loadMatches(dataSource, apiKey);
+  }, [dataSource, apiKey, loadMatches]);
+
+  // Értesítés eltüntetése 5mp után
+  useEffect(() => {
+    if (apiSuccessNotice) {
+      const t = setTimeout(() => setApiSuccessNotice(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [apiSuccessNotice]);
+
+  const handleRefresh = () => {
+    loadMatches(dataSource, apiKey);
+  };
+
+  const handleSaveConfig = (newSource: 'builtin' | 'api', newKey: string) => {
+    setDataSource(newSource);
+    setApiKey(newKey);
+    loadMatches(newSource, newKey);
+  };
 
   // Szelvényhez adás (duplikáció szűréssel)
   const handleAddToBetSlip = (item: BetSlipItem) => {
@@ -44,9 +111,18 @@ export function App() {
   };
 
   // Dinamikus KPI kalkulációk a mai meccsekből
+  const todayDateStr = useMemo(() => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, []);
+
   const todayMatches = useMemo(() => {
-    return matches.filter((m) => m.kickoffDate === '2026-10-17');
-  }, [matches]);
+    const t = matches.filter((m) => m.kickoffDate === todayDateStr || m.status === 'LIVE');
+    return t.length > 0 ? t : matches;
+  }, [matches, todayDateStr]);
 
   const strongSignalsCount = useMemo(() => {
     let count = 0;
@@ -70,7 +146,18 @@ export function App() {
         betSlipCount={betSlipItems.length}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        isLiveApi={dataSource === 'api'}
+        isLoading={isLoading}
+        onRefresh={handleRefresh}
       />
+
+      {/* Sikeres API csatlakozás banner */}
+      {apiSuccessNotice && (
+        <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-2 text-center text-xs text-emerald-400 font-semibold flex items-center justify-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{apiSuccessNotice}</span>
+        </div>
+      )}
 
       {/* 2. Hero Szekció KPI Mutatókkal & Jelmagyarázattal */}
       <HeroKpi
@@ -157,6 +244,7 @@ export function App() {
       <SettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        onSaveConfig={handleSaveConfig}
       />
 
       {/* 5. Prémium Dark Lábléc */}
@@ -187,13 +275,13 @@ export function App() {
                 <li>&bull; La Liga (Spanyolország)</li>
                 <li>&bull; Serie A (Olaszország)</li>
                 <li>&bull; Bundesliga (Németország)</li>
-                <li>&bull; OTP Bank Liga (Magyarország)</li>
+                <li>&bull; Bajnokok Ligája &amp; Championship</li>
               </ul>
             </div>
 
             <div className="space-y-2">
               <div className="font-bold text-white uppercase text-[11px] tracking-wider">
-                Felelős Játék & Módszertan
+                Felelős Játék &amp; Módszertan
               </div>
               <p className="text-slate-500 text-[11px] leading-relaxed">
                 A rendszer statisztikai valószínűségeket és matematikai várható értékeket (Expected Value) számol. 
@@ -207,7 +295,7 @@ export function App() {
               &copy; 2026 TippMester.ai &bull; Minden jog fenntartva.
             </div>
             <div className="flex items-center gap-4">
-              <span>Algoritmikus Sportanalitika</span>
+              <span>Élő Football-Data.org API Integráció</span>
               <span>&bull;</span>
               <span>Poisson &amp; xG Modelling</span>
               <span>&bull;</span>

@@ -7,7 +7,17 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
-    host: true
+    host: true,
+    proxy: {
+      '/api/matches': {
+        target: 'https://api.football-data.org/v4',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/matches/, '/matches'),
+        headers: {
+          'X-Auth-Token': '0a2ff5ef40ed4113a0ca28d6b9b122d8'
+        }
+      }
+    }
   }
 })
 
