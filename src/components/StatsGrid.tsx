@@ -12,6 +12,8 @@ import {
   ChevronsUpDown,
   Layers,
   Target,
+  Table,
+  LayoutGrid,
 } from 'lucide-react';
 
 interface StatsGridProps {
@@ -34,6 +36,13 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   // Alapértelmezett liga: Premier League ('pl') a kompakt kezdőnézethez
   const [selectedLeague, setSelectedLeague] = useState<string>('pl');
   const [viewMode, setViewMode] = useState<ViewMode>('league');
+  // Mobilon (<768px) alapértelmezetten a kényelmes Kártyanézet nyílik meg!
+  const [displayMode, setDisplayMode] = useState<'table' | 'cards'>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return 'cards';
+    }
+    return 'table';
+  });
   const [onlyStrongSignals, setOnlyStrongSignals] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focusMarket, setFocusMarket] = useState<FocusMarket>('ALL');
@@ -382,8 +391,34 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                 className="px-2.5 py-1 rounded-md font-medium bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50 flex items-center gap-1.5 cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>{viewMode === 'league' ? 'Nézet: Bajnokság szerint' : 'Nézet: Időrendben'}</span>
+                <span>{viewMode === 'league' ? 'Bajnokság szerint' : 'Időrendben'}</span>
               </button>
+
+              {/* Nézetváltó: Táblázat vs Kompakt Kártyák */}
+              <div className="flex items-center gap-0.5 bg-slate-900/90 p-0.5 rounded-lg border border-slate-700/60">
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode('table')}
+                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    displayMode === 'table' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Részletes táblázat nézet"
+                >
+                  <Table className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Táblázat</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayMode('cards')}
+                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    displayMode === 'cards' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Kompakt kártyás nézet mobilon"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Kártyák</span>
+                </button>
+              </div>
 
               {viewMode === 'league' && groupedByLeague.length > 1 && (
                 <button
@@ -391,7 +426,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   className="px-2.5 py-1 rounded-md font-medium bg-slate-800/80 text-amber-300 hover:text-amber-200 border border-slate-700/50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <ChevronsUpDown className="w-3.5 h-3.5" />
-                  <span>{allCollapsed ? 'Összes liga kinyitása' : 'Összes liga becsukása'}</span>
+                  <span>{allCollapsed ? 'Összes kinyitása' : 'Összes becsukása'}</span>
                 </button>
               )}
             </div>
@@ -495,15 +530,25 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                     </div>
                   </button>
 
-                  {/* Táblázat (csak ha nincs becsukva) */}
+                  {/* Táblázat vagy Kompakt Kártyák (csak ha nincs becsukva) */}
                   {!isCollapsed && (
-                    <MatchTable
-                      matches={lMatches}
-                      onSelectMatch={onSelectMatch}
-                      onCellBet={handleCellBet}
-                      betSlipItems={betSlipItems}
-                      focusMarket={focusMarket}
-                    />
+                    displayMode === 'cards' ? (
+                      <MatchCardsList
+                        matches={lMatches}
+                        onSelectMatch={onSelectMatch}
+                        onCellBet={handleCellBet}
+                        betSlipItems={betSlipItems}
+                        focusMarket={focusMarket}
+                      />
+                    ) : (
+                      <MatchTable
+                        matches={lMatches}
+                        onSelectMatch={onSelectMatch}
+                        onCellBet={handleCellBet}
+                        betSlipItems={betSlipItems}
+                        focusMarket={focusMarket}
+                      />
+                    )
                   )}
                 </div>
               );
@@ -512,13 +557,23 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         ) : (
           /* Időrendi lista */
           <div className="rounded-2xl bg-[#0D1527] border border-slate-800/90 overflow-hidden shadow-lg">
-            <MatchTable
-              matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
-              onSelectMatch={onSelectMatch}
-              onCellBet={handleCellBet}
-              betSlipItems={betSlipItems}
-              focusMarket={focusMarket}
-            />
+            {displayMode === 'cards' ? (
+              <MatchCardsList
+                matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                onSelectMatch={onSelectMatch}
+                onCellBet={handleCellBet}
+                betSlipItems={betSlipItems}
+                focusMarket={focusMarket}
+              />
+            ) : (
+              <MatchTable
+                matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                onSelectMatch={onSelectMatch}
+                onCellBet={handleCellBet}
+                betSlipItems={betSlipItems}
+                focusMarket={focusMarket}
+              />
+            )}
           </div>
         )}
 
@@ -749,3 +804,211 @@ const MatchTable: React.FC<MatchTableProps> = ({
     </div>
   );
 };
+
+/* ================= SEGÉDKOMPONENS: RESZPONZÍV / MOBILOS KÁRTYA NÉZET ================= */
+interface MatchCardsListProps {
+  matches: Match[];
+  onSelectMatch: (match: Match) => void;
+  onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
+  betSlipItems: BetSlipItem[];
+  focusMarket: FocusMarket;
+}
+
+const MatchCardsList: React.FC<MatchCardsListProps> = ({
+  matches,
+  onSelectMatch,
+  onCellBet,
+  betSlipItems,
+  focusMarket,
+}) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-3">
+      {matches.map((match) => {
+        const p = match.probabilities;
+        const isFinished = match.status === 'FINISHED';
+        const isLive = match.status === 'LIVE';
+        const pick = match.aiPick;
+        const isPickAdded = pick
+          ? betSlipItems.some((item) => item.matchId === match.id && item.marketLabel === pick.marketLabel)
+          : false;
+
+        return (
+          <div
+            key={match.id}
+            onClick={() => onSelectMatch(match)}
+            className="p-3.5 rounded-xl bg-[#0B1222] border border-slate-800 hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-md group"
+          >
+            {/* 1. Fejléc: Liga, Kezdés/Státusz, Adatminőség */}
+            <div className="flex items-center justify-between text-[11px] text-slate-400">
+              <span className="flex items-center gap-1 font-semibold truncate">
+                <span>{match.leagueFlag}</span>
+                <span className="truncate">{match.leagueName}</span>
+              </span>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isFinished ? (
+                  <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    FT
+                  </span>
+                ) : isLive ? (
+                  <span className="font-bold text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    ÉLŐ
+                  </span>
+                ) : (
+                  <span className="font-mono text-amber-400 font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                    {match.kickoffTime}
+                  </span>
+                )}
+                {match.quantAnalysis && (
+                  <span className="text-[10px] text-slate-500 font-mono font-bold bg-slate-900 px-1 py-0.5 rounded">
+                    {match.quantAnalysis.dataQuality}-szint
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Csapatok & Eredmény / xG */}
+            <div className="py-1 space-y-1.5 border-y border-slate-800/60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <img
+                    src={match.homeTeam.logo}
+                    alt=""
+                    className="w-4 h-4 object-contain shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                  <span className="text-xs font-bold text-white truncate group-hover:text-amber-300 transition-colors">
+                    {match.homeTeam.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] font-mono text-slate-500">xG {match.homeTeam.xgAvg}</span>
+                  {match.homeScore !== undefined && (
+                    <span className="font-mono font-bold text-xs text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded">
+                      {match.homeScore}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <img
+                    src={match.awayTeam.logo}
+                    alt=""
+                    className="w-4 h-4 object-contain shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                  <span className="text-xs font-medium text-slate-200 truncate group-hover:text-amber-300 transition-colors">
+                    {match.awayTeam.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] font-mono text-slate-500">xG {match.awayTeam.xgAvg}</span>
+                  {match.awayScore !== undefined && (
+                    <span className="font-mono font-bold text-xs text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded">
+                      {match.awayScore}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Gyors Hőtérkép Pills (1, X, 2, BTTS, O2.5) */}
+            <div className="grid grid-cols-5 gap-1 text-center">
+              <button
+                type="button"
+                onClick={(e) => onCellBet(e, match, `${match.homeTeam.name} Győzelem (1)`, p.homeWin, match.odds.home)}
+                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.homeWin).bg} ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
+                title={`Hazai: ${p.homeWin}% @${match.odds.home.toFixed(2)}`}
+              >
+                <span className="text-[8px] uppercase block opacity-70">1</span>
+                <span>{p.homeWin}%</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw)}
+                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.draw).bg} ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
+                title={`Döntetlen: ${p.draw}% @${match.odds.draw.toFixed(2)}`}
+              >
+                <span className="text-[8px] uppercase block opacity-70">X</span>
+                <span>{p.draw}%</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => onCellBet(e, match, `${match.awayTeam.name} Győzelem (2)`, p.awayWin, match.odds.away)}
+                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.awayWin).bg} ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
+                title={`Vendég: ${p.awayWin}% @${match.odds.away.toFixed(2)}`}
+              >
+                <span className="text-[8px] uppercase block opacity-70">2</span>
+                <span>{p.awayWin}%</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => onCellBet(e, match, 'Mindkét csapat szerez gólt (BTTS)', p.bttsYes, match.odds.bttsYes)}
+                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.bttsYes).bg} ${focusMarket === 'BTTS' ? 'ring-1 ring-amber-400' : ''}`}
+                title={`BTTS: ${p.bttsYes}% @${match.odds.bttsYes.toFixed(2)}`}
+              >
+                <span className="text-[8px] uppercase block opacity-70">BTTS</span>
+                <span>{p.bttsYes}%</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25)}
+                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.over25).bg} ${focusMarket === 'OVER_25' ? 'ring-1 ring-amber-400' : ''}`}
+                title={`2.5 felett: ${p.over25}% @${match.odds.over25.toFixed(2)}`}
+              >
+                <span className="text-[8px] uppercase block opacity-70">&gt;2.5</span>
+                <span>{p.over25}%</span>
+              </button>
+            </div>
+
+            {/* 4. AI Ajánlott Tipp Sáv & Szelvény gomb */}
+            {pick && (
+              <div className="pt-2 border-t border-slate-800/70 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">
+                    MI Tipp:
+                  </div>
+                  <div className="text-[11px] font-extrabold text-amber-300 truncate">
+                    {pick.marketLabel}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCellBet(e, match, pick.marketLabel, pick.probability, pick.odds);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all ${
+                      isPickAdded
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-white border-slate-700'
+                    }`}
+                  >
+                    @{pick.odds.toFixed(2)}
+                  </button>
+
+                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+

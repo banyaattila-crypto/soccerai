@@ -3,6 +3,12 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.2.1] - 2026-10-17
+
+### Hozzáadva (Added)
+- **Mobilos Kompakt Kártyanézet (`StatsGrid.tsx`):** Mobilon (<768px) automatikusan reszponzív kártyás elrendezésben (`MatchCardsList`) jelennek meg a mérkőzések a széles táblázat vízszintes görgetésének kiváltására.
+- **Nézetváltó gombpár (`Táblázat 📊` / `Kártyák 🃏`):** Bármikor egy kattintással váltható a részletes hőtérkép-táblázat és a reszponzív kártyarács között.
+
 ## [1.2.0] - 2026-10-17
 
 ### Hozzáadva (Added)
