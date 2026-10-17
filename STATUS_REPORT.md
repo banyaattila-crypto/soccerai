@@ -1,8 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
+**Aktuális verzió:** 🏷️ **`v1.0.0`** (SemVer 2.0.0)  
 **Dátum:** 2026. október 17.  
-**Állapot:** ✅ **Élesítve & Hibátlanul Működik (Live API + Dixon-Coles & Shin Modell + Mobil Fixek)**  
+**Állapot:** ✅ **Hivatalos Első Kiadás (v1.0.0) Élesítve (GitHub Release + Vercel)**  
+**GitHub Release:** [https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.0.0](https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.0.0)  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000`  
@@ -14,13 +16,15 @@
 
 A **SoccerAI** egy független, professzionális, kompakt és prémium sötét témájú magyar nyelvű labdarúgó kvantitatív statisztikai és gépi tanulási predikciós platform.
 
-A mai fejlesztési ciklusban a felhasználói visszajelzések alapján elvégzett javítások:
-1. **Mobil menüsor elrendezés (Header Overflow Fix):** A felső navigáció kis képernyőkön sem lóg ki; dedikált, reszponzív alsó gombsorba rendeztük a füleket (Rács / Top Tippek / Eredmények).
-2. **Mobilos vízszintes oldalelmozdulás megszüntetése (Touch Pan Fix):** Az érintőképernyős oldal-elcsúszást globális `touch-action: pan-y; overflow-x: hidden;` és táblázat-szintű `touch-pan-x` + overscroll izolációval javítottuk.
-3. **Bajnokság szűrés és csoportosítás hiba (League Filter Bugfix):** A korábban hiányzó 34 mérkőzés megjelenítése: a Football-Data.org API kódjait (`PD`, `SA`, `BL1`, `ELC`, `FL1`, `DED`, `BSA`) kanonikusan összekötöttük a ligákkal, és a táblázatot dinamikus liga-kinyerésre állítottuk át. Így mind a 38-39 mai mérkőzés maradéktalanul elérhető és bajnokságonként szűrhető!
-4. **Minden külső hivatkozás és webcím eltávolítása:** A rendszer teljes forráskódjából, dokumentációjából és felületéből eltávolítottuk az összes külső hivatkozást a plagizálás kizárása és az önálló arculat megteremtése érdekében.
-5. **Intelligens 10 perces háttérfrissítés:** A rendszer automatikusan frissíti az élő eredményeket és státuszokat 10 percenként, de kizárólag akkor, ha a böngészőfül aktív (`document.visibilityState === 'visible'`), kímélve a 10 hívás/perces API kvótát.
-6. **Egyedi 3D "WOW" Focilabda Vektor Logó (`Logo.tsx`):** A bal felső sarokba egy prémium minőségű, fémes aranygyűrűvel, AI orbitális energiapályákkal, árnyékokkal és csillogó fényvisszaverődéssel ellátott 3D futball-labda logó került.
+A mai fejlesztési ciklusban sikeresen kiadásra került a hivatalos **`v1.0.0`** éles verzió:
+1. **SemVer 2.0.0 Release Manager Skill elmentve & élesítve:** A rendszer mostantól automatizáltan kezeli a szemantikus verziózást, a [CHANGELOG.md](file:///home/attila/projects/soccerai/CHANGELOG.md) naplózást és a GitHub Release-eket.
+2. **Alkalmazáson belüli Verziókijelzés & Névjegy Modál (`AboutModal.tsx`):** A fejlécben a logó mellett lévő kattintható `v1.0.0` jelvény, az új Info gomb (ℹ️), a Beállítások menü és a lábléc is mutatja az éppen futó verziót, a kiadás dátumát és az újdonságokat.
+3. **Mobil menüsor elrendezés (Header Overflow Fix):** A felső navigáció kis képernyőkön sem lóg ki; dedikált, reszponzív alsó gombsorba rendeztük a füleket.
+4. **Mobilos vízszintes oldalelmozdulás megszüntetése (Touch Pan Fix):** Globális `touch-action: pan-y; overflow-x: hidden;` és táblázat-szintű `touch-pan-x` + overscroll izoláció.
+5. **Bajnokság szűrés és csoportosítás hiba (League Filter Bugfix):** A Football-Data.org API kódjait (`PD`, `SA`, `BL1`, `ELC`, `FL1`, `DED`, `BSA`) kanonikusan összekötöttük a ligákkal, így mind a 39 mai mérkőzés elérhető és szűrhető!
+6. **Minden külső hivatkozás és webcím eltávolítása:** Teljes önálló arculat megteremtése.
+7. **Intelligens 10 perces háttérfrissítés:** Automatikus frissítés csak aktív böngészőfül mellett.
+8. **Egyedi 3D "WOW" Focilabda Vektor Logó (`Logo.tsx`):** Szemkápráztató, fémes aranygyűrűvel, AI orbitális energiapályákkal ellátott 3D futball-labda logó.
 
 ---
 
