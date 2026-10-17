@@ -3,6 +3,15 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.4.0] - 2026-10-17
+
+### Hozzáadva (Added)
+- **Piac-specifikus Szűrés & Elemzés (`ResultsView.tsx`):** Külön szűrhető és elemezhető piaci kategóriák (BTTS, Over 2.5, Kombinált, 1X2, Under 2.5) az Eredmények nézetben.
+- **Interaktív Piaci Teljesítmény Sáv:** 5 db kattintható mini-KPI kártya piacok szerinti eseményszámmal, nyerési aránnyal és virtuális ROI%-kal.
+- **Virtuális ROI & Profit Szimulátor:** 10 000 Ft-os bázistéttel számított tiszta nyereség (+Ft), tőkearányos megtérülés (ROI %) és átlagos nyertes szorzó.
+- **Többszintű Szűrőrendszer:** Státusz szerinti gyorsválasztó (Mind, Nyert, Vesztes), bajnokság választó és kártyánkénti nettó hozam kijelzés.
+- **Bővített Archívum (`mockMatches.ts`):** Valósághű befejezett meccsek a Premier League, La Liga, Serie A, Ligue 1, Bundesliga és NB I ligákból.
+
 ## [1.3.0] - 2026-10-17
 
 ### Hozzáadva (Added)
