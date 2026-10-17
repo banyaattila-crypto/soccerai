@@ -9,8 +9,10 @@ import { StatsGrid } from './components/StatsGrid';
 import { MatchDetailModal } from './components/MatchDetailModal';
 import { BetSlipDrawer } from './components/BetSlipDrawer';
 import { SettingsModal } from './components/SettingsModal';
+import { AboutModal } from './components/AboutModal';
 import { ResultsView } from './components/ResultsView';
 import { Logo } from './components/Logo';
+import { APP_VERSION } from './version';
 import { Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const DEFAULT_API_KEY = '0a2ff5ef40ed4113a0ca28d6b9b122d8';
@@ -22,6 +24,7 @@ export function App() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [betSlipOpen, setBetSlipOpen] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [aboutOpen, setAboutOpen] = useState<boolean>(false);
   const [betSlipItems, setBetSlipItems] = useState<BetSlipItem[]>([]);
 
   // API állapotok
@@ -161,6 +164,7 @@ export function App() {
       {/* 1. Felső Navigációs Sáv */}
       <Header
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenAbout={() => setAboutOpen(true)}
         onOpenBetSlip={() => setBetSlipOpen(true)}
         betSlipCount={betSlipItems.length}
         activeTab={activeTab}
@@ -263,7 +267,13 @@ export function App() {
       <SettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        onOpenAbout={() => setAboutOpen(true)}
         onSaveConfig={handleSaveConfig}
+      />
+
+      <AboutModal
+        isOpen={aboutOpen}
+        onClose={() => setAboutOpen(false)}
       />
 
       {/* 5. Prémium Dark Lábléc */}
@@ -279,6 +289,13 @@ export function App() {
                 <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
                   PRO
                 </span>
+                <button
+                  onClick={() => setAboutOpen(true)}
+                  className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 border border-slate-700 transition-colors cursor-pointer"
+                  title="Alkalmazás névjegy és verzió"
+                >
+                  v{APP_VERSION}
+                </button>
               </div>
               <p className="text-slate-400 leading-relaxed max-w-md">
                 Kvantitatív labdarúgó analitikai és predikciós platform. 
@@ -311,8 +328,14 @@ export function App() {
           </div>
 
           <div className="pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
-            <div>
-              &copy; 2026 SoccerAI &bull; Minden jog fenntartva.
+            <div className="flex items-center gap-2">
+              <span>&copy; 2026 SoccerAI &bull; Minden jog fenntartva.</span>
+              <button
+                onClick={() => setAboutOpen(true)}
+                className="font-mono text-amber-400 hover:text-amber-300 font-bold hover:underline"
+              >
+                v{APP_VERSION}
+              </button>
             </div>
             <div className="flex items-center gap-4">
               <span>Élő Football-Data.org API Integráció</span>

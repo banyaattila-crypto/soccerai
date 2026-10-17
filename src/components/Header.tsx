@@ -1,9 +1,11 @@
 import React from 'react';
-import { SlidersHorizontal, Ticket, RefreshCw } from 'lucide-react';
+import { SlidersHorizontal, Ticket, RefreshCw, Info } from 'lucide-react';
 import { Logo } from './Logo';
+import { APP_VERSION } from '../version';
 
 interface HeaderProps {
   onOpenSettings: () => void;
+  onOpenAbout: () => void;
   onOpenBetSlip: () => void;
   betSlipCount: number;
   activeTab: 'grid' | 'picks' | 'results';
@@ -15,6 +17,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
+  onOpenAbout,
   onOpenBetSlip,
   betSlipCount,
   activeTab,
@@ -41,6 +44,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
                   PRO
                 </span>
+                <button
+                  onClick={onOpenAbout}
+                  className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 border border-slate-700 transition-all shrink-0 cursor-pointer"
+                  title={`Verzió: v${APP_VERSION} (Kattints a névjegyhez)`}
+                >
+                  v{APP_VERSION}
+                </button>
               </div>
               <p className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
                 Kvantitatív Futball Predikciók &amp; Valószínűségi Hőtérkép
@@ -109,6 +119,15 @@ export const Header: React.FC<HeaderProps> = ({
                   {betSlipCount}
                 </span>
               )}
+            </button>
+
+            {/* Névjegy & Rendszerinfó */}
+            <button
+              onClick={onOpenAbout}
+              className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 transition-colors"
+              title={`Névjegy & Rendszerinfó (v${APP_VERSION})`}
+            >
+              <Info className="w-4 h-4" />
             </button>
 
             {/* Beállítások */}

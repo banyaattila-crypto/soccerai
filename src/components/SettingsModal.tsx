@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, Server, Key, Check } from 'lucide-react';
+import { X, Server, Key, Check, Info } from 'lucide-react';
+import { APP_VERSION } from '../version';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAbout?: () => void;
   onSaveConfig?: (source: 'builtin' | 'api', key: string) => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSaveConfig }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenAbout, onSaveConfig }) => {
   const [dataSource, setDataSource] = useState<'builtin' | 'api'>(() => {
     return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'api';
   });
@@ -167,6 +169,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <span>60% (Kiegyensúlyozott)</span>
               <span>75% (Csak elit)</span>
             </div>
+          </div>
+
+          {/* Verzióinformáció & Névjegy gomb */}
+          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-slate-300">SoccerAI PRO</span>
+              <span className="font-mono text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-amber-300 border border-slate-700">
+                v{APP_VERSION}
+              </span>
+            </div>
+            {onOpenAbout && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenAbout();
+                }}
+                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold hover:underline flex items-center gap-1"
+              >
+                <span>Névjegy &amp; Release Notes</span>
+                <span>&rarr;</span>
+              </button>
+            )}
           </div>
 
         </div>
