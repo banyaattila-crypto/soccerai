@@ -12,6 +12,17 @@ export interface Team {
   goalsConcededAvg?: number;
 }
 
+export type PickMarket =
+  | '1'
+  | 'X'
+  | '2'
+  | 'BTTS_YES'
+  | 'OVER_25'
+  | 'UNDER_25'
+  | 'OVER_15'
+  | 'FH_OVER_05'
+  | 'BTTS_AND_OVER25';
+
 export interface MarketProbabilities {
   // 1X2
   homeWin: number; // pl. 62 (%)
@@ -24,6 +35,7 @@ export interface MarketProbabilities {
   over25: number;  // 2.5 gól felett
   over35: number;  // 3.5 gól felett
   fhOver05: number; // Első félidő 0.5 felett
+  bttsAndOver25?: number; // BTTS & 2.5 felett közvetlenül a gólmátrixból
 }
 
 export interface MatchOdds {
@@ -77,16 +89,17 @@ export interface Match {
   probabilities: MarketProbabilities;
   odds: MatchOdds;
   aiPick?: {
-    market: '1' | 'X' | '2' | 'BTTS_YES' | 'OVER_25' | 'UNDER_25' | 'OVER_15' | 'FH_OVER_05' | 'BTTS_AND_OVER25';
+    market: PickMarket;
     marketLabel: string;
     probability: number;
     odds: number;
     confidence: number; // 1-10
     reasoning: string;
     isTopPick?: boolean;
-    expectedValue: number; // pl. +14.2% EV
+    expectedValue: number; // pl. +14.2% EV (valós piaci oddsnál) vagy szimulált árrés
     robustnessVerdict?: 'ROBUSZTUS' | 'valószínű' | 'bizonytalan' | 'ELVETVE';
     quarterKellyPct?: number;
+    isSimulatedOdds?: boolean;
   };
   quantAnalysis?: QuantAnalysis;
   h2h?: HeadToHead[];

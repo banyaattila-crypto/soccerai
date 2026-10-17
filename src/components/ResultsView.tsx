@@ -104,6 +104,10 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const BASE_STAKE = 10000;
 
   // 1. Befejezett meccsek kinyerése (ha a live szettben nincs lezárt, a mock archívum biztosítja az adatokat)
+  const isMockFallback = useMemo(() => {
+    return matches.filter((m) => m.status === 'FINISHED').length === 0;
+  }, [matches]);
+
   const finishedMatches = useMemo(() => {
     const fromProps = matches.filter((m) => m.status === 'FINISHED');
     if (fromProps.length > 0) return fromProps;
@@ -230,26 +234,35 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
     <div className="py-8 bg-[#070B14]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
+        {/* Demó adat figyelmeztető sáv, ha nincs élő lezárt meccs */}
+        {isMockFallback && (
+          <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-between gap-2">
+            <span>
+              ⚠️ Demó adat (mintaarchívum): Az alábbi eredmények és ROI mutatók beépített minta-mérkőzéseken és szimulált szorzókon alapulnak.
+            </span>
+          </div>
+        )}
+
         {/* 1. Fejléc & Fő KPI Vezérlőpult */}
         <div className="p-6 rounded-2xl bg-gradient-to-r from-[#0F1D33] via-[#0D1527] to-[#0A101F] border border-slate-800 shadow-xl space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
                 <Award className="w-3.5 h-3.5" />
-                <span>Verifikált Modell Teljesítmény &amp; ROI Archívum</span>
+                <span>Szimulált Modell Teljesítmény &amp; Becsült ROI Archívum</span>
               </div>
               <h2 className="text-2xl font-black text-white tracking-tight">
                 Legutóbbi Találatok &amp; Piac-specifikus Eredmények
               </h2>
               <p className="text-xs sm:text-sm text-slate-300">
-                A Dixon–Coles és Shin de-vig modell által adott előrejelzések tényleges végeredményei és piaci megtérülése (ROI).
+                A Dixon–Coles modell által adott előrejelzések végeredményei és szimulált szorzókkal (5% árrés) becsült megtérülése.
               </p>
             </div>
 
             <div className="flex items-center gap-2 self-start md:self-auto">
               <span className="text-[11px] text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-1.5 font-mono">
                 <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
-                Egységtét bázis: 10 000 Ft / tipp
+                Szimulált egységtét: 10 000 Ft / tipp
               </span>
             </div>
           </div>
@@ -259,7 +272,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
             {/* Nyerési arány */}
             <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Nyerési Arány (Win Rate)
+                Találati Arány (Win Rate)
               </span>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-2xl sm:text-3xl font-black text-emerald-400">
@@ -270,14 +283,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
-                Verifikált sikeres előrejelzések
+                Kiértékelt modell-előrejelzések
               </span>
             </div>
 
             {/* Virtuális ROI */}
             <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Virtuális ROI (Megtérülés)
+                Szimulált ROI (Becsült)
               </span>
               <div className="flex items-baseline gap-2 mt-2">
                 <span
@@ -289,14 +302,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
-                Tőkearányos tiszta haszon
+                Becsült szorzókkal számított hozam
               </span>
             </div>
 
             {/* Nettó Profit */}
             <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Tiszta Virtuális Profit
+                Szimulált Egyenleg Hatás
               </span>
               <div className="flex items-baseline gap-2 mt-2">
                 <span
@@ -310,14 +323,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
-                {(globalStats.totalStaked / 1000).toFixed(0)}e Ft össztétre vetítve
+                {(globalStats.totalStaked / 1000).toFixed(0)}e Ft virtuális össztétre
               </span>
             </div>
 
             {/* Átlagos nyertes szorzó */}
             <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Átlagos Nyertes Odds
+                Átlagos Becsült Odds
               </span>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
@@ -325,7 +338,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
-                Erős matematikai érték (+EV)
+                Szimulált piaci szorzó (5% árrés)
               </span>
             </div>
           </div>

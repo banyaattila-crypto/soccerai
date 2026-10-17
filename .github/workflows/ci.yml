@@ -1,0 +1,42 @@
+name: SoccerAI PRO CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-and-build:
+    name: Typecheck, Lint, Build & Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies (reproducible lockfile)
+        run: npm ci
+
+      - name: TypeScript strict check
+        run: npx tsc -b
+
+      - name: Oxlint strict check (0 warnings, 0 errors)
+        run: npx oxlint --deny-warnings
+
+      - name: Production Vite build
+        run: npm run build
+
+      - name: Verify client bundle has no leaked API keys
+        run: |
+          if grep -rnE "0a2ff5ef40ed4113a0ca28d6b9b122d8|b088263aae59a54a7f9a597f1ce83644" dist/ src/ api/ vite.config.ts; then
+            echo "ERROR: Hardcoded API key detected in source or build output!"
+            exit 1
+          fi
+          echo "Secret scan passed: 0 leaked keys in source or dist/."

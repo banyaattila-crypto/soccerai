@@ -241,7 +241,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 <span className="text-slate-400">
                   Kiemelt tipp: <strong className="text-white">{match.aiPick.marketLabel}</strong>
                 </span>
-                <span className="text-amber-300 font-bold">Odds: {match.aiPick.odds.toFixed(2)}</span>
+                <span className="text-amber-300 font-bold">
+                  {!realOdds && match.aiPick.isSimulatedOdds !== false ? 'Becsült odds' : 'Odds'}: {match.aiPick.odds.toFixed(2)}
+                </span>
               </div>
             </div>
           )}
@@ -258,7 +260,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
                     match.quantAnalysis.robustnessVerdict === 'ROBUSZTUS'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-teal-500/20 text-teal-300 border-teal-500/30'
+                      : match.quantAnalysis.robustnessVerdict === 'valószínű'
+                      ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
                   }`}
                 >
                   {match.quantAnalysis.robustnessVerdict}
@@ -269,17 +273,23 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
                   <span className="text-[10px] text-slate-400 block uppercase font-bold">Adatminőség</span>
                   <span className="text-sm font-black text-white">{match.quantAnalysis.dataQuality}-szint</span>
-                  <span className="text-[9px] text-slate-500 block">Több forrásból</span>
+                  <span className="text-[9px] text-slate-500 block">
+                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Szimulált bemenet' : 'Több forrásból'}
+                  </span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Bukméker Vig</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Szimulált Árrés' : 'Bukméker Vig'}
+                  </span>
                   <span className="text-sm font-black text-amber-400">{match.quantAnalysis.shinMargin}%</span>
                   <span className="text-[9px] text-slate-500 block">Shin de-vig margin</span>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
-                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Rács Pozitív Él</span>
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Rács Stabilitás' : 'Rács Pozitív Él'}
+                  </span>
                   <span className="text-sm font-black text-emerald-400">{match.quantAnalysis.posPct}%</span>
                   <span className="text-[9px] text-slate-500 block">λ-rács szűrő</span>
                 </div>
@@ -287,7 +297,9 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
                   <span className="text-[10px] text-slate-400 block uppercase font-bold">Negyed-Kelly Tét</span>
                   <span className="text-sm font-black text-amber-300">{match.quantAnalysis.quarterKellyPct}%</span>
-                  <span className="text-[9px] text-slate-500 block">Max. tőkeallokáció</span>
+                  <span className="text-[9px] text-slate-500 block">
+                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Valós odds szükséges' : 'Max. tőkeallokáció'}
+                  </span>
                 </div>
               </div>
 

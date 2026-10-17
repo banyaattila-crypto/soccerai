@@ -3,6 +3,23 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.7.0] - 2026-10-18
+
+### Biztonság (Security - 1. szakasz)
+- **API Kulcsok Eltávolítása a Kódból és Bundle-ből (`vite.config.ts`, `SettingsModal.tsx`, `App.tsx`, `footballDataApi.ts`, `apiSportsClient.ts`):** Minden beégetett API-kulcs és részleges kulcsrészlet törölve a verziózott forrásfájlokból. A kulcsok kizárólag a `.gitignore`-olt `.env.local` fájlból és a Vercel környezeti változókból töltődnek be (`.env.example` sablonnal).
+- **Vercel Serverless Proxyk Lezárása (`api/matches.ts`, `api/apisports.ts`):**
+  - `Access-Control-Allow-Origin: *` helyett szigorú origin-ellenőrzés (`403 Forbidden` idegen domainről).
+  - Bemeneti paraméterek (`dateFrom`, `dateTo`, `date`: `YYYY-MM-DD`, `fixture`: pozitív egész szám) szigorú formátum-validációja (`400 Bad Request`).
+  - Tartalék (fallback) API kulcsok törlése (`503` hiányzó szerveroldali kulcs esetén) és IP-alapú rate limiting (`429 Too Many Requests`).
+
+### Javítva & Módosítva (Fixed & Changed - 1. és 2. szakasz)
+- **Őszinte Feliratok & Demó Adat Sáv (`App.tsx`, `ResultsView.tsx`, `TopPicks.tsx`, `MatchDetailModal.tsx`):** A „Verifikált Modell Teljesítmény” és szimulált „+EV” feliratok helyett „Szimulált Modell Teljesítmény & Becsült ROI Archívum”, illetve „Becsült Odds / Fair szorzó” szerepel. Tartalék (mock) adatok használatakor jól látható borostyánsárga **„Demó adat (szimulált mód)”** figyelmeztető sáv jelenik meg.
+- **Piacfüggő Robusztussági Teszt (`predictionEngine.ts`):** A `robustnessGridTest` mostantól megkapja a konkrét célpiacot (`1`, `X`, `2`, `OVER_25`, `UNDER_25`, `BTTS_YES`, `BTTS_AND_OVER_25`), és a $\lambda$-rácson annak valószínűségét értékeli ki. Minden kézzel beégetett `'ROBUSZTUS'` / `'valószínű'` címke és a másodosztályú `charCodeAt(0)` heurisztika törölve; egységes `buildMatchQuantAndPick` függvény szolgálja ki mindkét API klienst.
+- **Egzakt Közös Valószínűség a Dixon–Coles Mátrixból (`predictionEngine.ts`):** A `BTTS és Over 2.5` együttes esélye (`bttsAndOver25`) közvetlenül a $11 \times 11$-es bivariáns Poisson gólmátrixból számolódik ($i > 0 \land j > 0 \land i+j > 2.5$), kiváltva a korábbi `(a * b) / 80` heurisztikát és megszüntetve a duplán számolt $\times 1.15$-ös hazai előnyt.
+- **Egységes Dátum- és Időzóna-kezelés (`src/utils/dateUtils.ts`, `StatsGrid.tsx`, `footballDataApi.ts`):** Közös helyi időzóna-alapú dátumformázó; a „Ma” fül többé nem mutat más napi meccseket üres találat esetén; a Football-Data API hívás explicit 3 napos (`dateFrom=tegnap`, `dateTo=holnap`) ablakot kér le.
+- **Network-First Service Worker & Verziófrissítési Jelzés (`public/sw.js`, `main.tsx`, `App.tsx`):** A navigációs kérések (`index.html`) Network-First stratégiát használnak, új Service Worker verzió elérhetőségekor pedig interaktív **„Új alkalmazásverzió érhető el – Frissítés most”** sáv jelenik meg.
+- **Reprodukálható Lockfile & GitHub Actions CI (`package-lock.json`, `.github/workflows/ci.yml`):** Verziózott `package-lock.json` és automatizált CI pipeline (`npm ci`, `tsc -b`, `oxlint --deny-warnings`, `vite build`, valamint kulcsszivárgás-ellenőrzés).
+
 ## [1.6.0] - 2026-10-17
 
 ### Hozzáadva (Added)

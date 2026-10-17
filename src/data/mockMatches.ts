@@ -1,5 +1,10 @@
 import { League, Match } from '../types/football';
 import { calculateMarketProbabilities } from '../services/predictionEngine';
+import { getRelativeDateStr } from '../utils/dateUtils';
+
+const TODAY = getRelativeDateStr(0);
+const YESTERDAY = getRelativeDateStr(-1);
+const TOMORROW = getRelativeDateStr(1);
 
 export const LEAGUES: League[] = [
   { id: 'pl', name: 'Premier League', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 1 },
@@ -19,7 +24,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Anglia',
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '13:30',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'arsenal',
@@ -76,7 +81,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Anglia',
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '16:00',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'liverpool',
@@ -133,7 +138,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Anglia',
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '16:00',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'man-city',
@@ -174,7 +179,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Spanyolország',
     leagueFlag: '🇪🇸',
     kickoffTime: '18:30',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'real-madrid',
@@ -215,7 +220,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Spanyolország',
     leagueFlag: '🇪🇸',
     kickoffTime: '21:00',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'barcelona',
@@ -266,7 +271,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Olaszország',
     leagueFlag: '🇮🇹',
     kickoffTime: '18:00',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'juventus',
@@ -307,7 +312,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Németország',
     leagueFlag: '🇩🇪',
     kickoffTime: '15:30',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'bayer-leverkusen',
@@ -348,7 +353,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Magyarország',
     leagueFlag: '🇭🇺',
     kickoffTime: '17:00',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'ferencvaros',
@@ -389,7 +394,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Magyarország',
     leagueFlag: '🇭🇺',
     kickoffTime: '19:30',
-    kickoffDate: '2026-10-17',
+    kickoffDate: TODAY,
     status: 'UPCOMING',
     homeTeam: {
       id: 'paks',
@@ -432,7 +437,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Anglia',
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '21:00',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'tottenham',
@@ -485,7 +490,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Németország',
     leagueFlag: '🇩🇪',
     kickoffTime: '20:30',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'dortmund',
@@ -538,7 +543,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Olaszország',
     leagueFlag: '🇮🇹',
     kickoffTime: '20:45',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'genoa',
@@ -591,7 +596,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Spanyolország',
     leagueFlag: '🇪🇸',
     kickoffTime: '21:00',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'celta',
@@ -644,7 +649,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Magyarország',
     leagueFlag: '🇭🇺',
     kickoffTime: '18:00',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'diosgyor',
@@ -697,7 +702,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Franciaország',
     leagueFlag: '🇫🇷',
     kickoffTime: '20:45',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'monaco',
@@ -750,7 +755,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Anglia',
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '16:00',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'man-utd',
@@ -803,7 +808,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Spanyolország',
     leagueFlag: '🇪🇸',
     kickoffTime: '18:30',
-    kickoffDate: '2026-10-16',
+    kickoffDate: YESTERDAY,
     status: 'FINISHED',
     homeTeam: {
       id: 'gijon',
@@ -858,7 +863,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Anglia',
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '15:00',
-    kickoffDate: '2026-10-18',
+    kickoffDate: TOMORROW,
     status: 'UPCOMING',
     homeTeam: {
       id: 'wolves',
@@ -909,7 +914,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Olaszország',
     leagueFlag: '🇮🇹',
     kickoffTime: '20:45',
-    kickoffDate: '2026-10-18',
+    kickoffDate: TOMORROW,
     status: 'UPCOMING',
     homeTeam: {
       id: 'roma',
@@ -950,7 +955,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Spanyolország',
     leagueFlag: '🇪🇸',
     kickoffTime: '16:15',
-    kickoffDate: '2026-10-18',
+    kickoffDate: TOMORROW,
     status: 'UPCOMING',
     homeTeam: {
       id: 'atletico',
@@ -991,7 +996,7 @@ export const MOCK_MATCHES: Match[] = [
     leagueCountry: 'Magyarország',
     leagueFlag: '🇭🇺',
     kickoffTime: '15:15',
-    kickoffDate: '2026-10-18',
+    kickoffDate: TOMORROW,
     status: 'UPCOMING',
     homeTeam: {
       id: 'puskas',

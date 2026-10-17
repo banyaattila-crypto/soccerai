@@ -1,10 +1,9 @@
-// SoccerAI Service Worker (PWA & Offline Cache)
-const CACHE_NAME = 'soccerai-core-v1.5.0';
-const API_CACHE_NAME = 'soccerai-api-v1.5.0';
+// SoccerAI Service Worker (PWA & Offline Cache - Network-First Navigation)
+const CACHE_VERSION = 'v1.7.0-20261018';
+const CACHE_NAME = `soccerai-core-${CACHE_VERSION}`;
+const API_CACHE_NAME = `soccerai-api-${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/favicon.svg',
   '/icons/icon-192x192.png',
@@ -12,29 +11,35 @@ const PRECACHE_ASSETS = [
   '/icons/apple-touch-icon.png',
 ];
 
-// Telepítés (Install): előtölti a kritikus fájlokat
+// Telepítés (Install): előtölti a statikus alap-ikonokat
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
+});
+
+// Üzenetkezelés: azonnali frissítés kérése a kliensről (Új verzió banner)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Aktiválás (Activate): eltakarítja az elavult cache verziókat
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME && key !== API_CACHE_NAME) {
-            console.log('🧹 Régi Service Worker cache törlése:', key);
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME && key !== API_CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
@@ -43,12 +48,41 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Csak GET kérések gyorsítótárazhatók
   if (request.method !== 'GET') {
     return;
   }
 
-  // 1. API kérések (/api/matches, /api/apisports): Network-First gyorsítótár tartalékkal
+  // 1. Navigációs kérések (index.html / gyökér): Szigorúan NETWORK-FIRST!
+  // Így minden új deploy után azonnal a legfrissebb HTML shell és asset-hash töltődik be.
+  if (
+    request.mode === 'navigate' ||
+    url.pathname === '/' ||
+    url.pathname === '/index.html'
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', clone));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cached = await caches.match('/index.html');
+          return (
+            cached ||
+            new Response('Offline mód: Kérlek ellenőrizd az internetkapcsolatot.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+          );
+        })
+    );
+    return;
+  }
+
+  // 2. API kérések (/api/matches, /api/apisports): Network-First gyorsítótár tartalékkal
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
@@ -62,14 +96,14 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(async () => {
-          // Ha nincs hálózat (offline), a legutóbbi sikeres API választ adjuk vissza
           const cachedResponse = await caches.match(request);
           if (cachedResponse) {
-            console.log('📡 Offline mód: API válasz kiszolgálva a gyorsítótárból:', request.url);
             return cachedResponse;
           }
           return new Response(
-            JSON.stringify({ error: 'Offline mód: Nincs internetkapcsolat és mentett adat' }),
+            JSON.stringify({
+              error: 'Offline mód: Nincs internetkapcsolat és mentett adat',
+            }),
             {
               status: 503,
               headers: { 'Content-Type': 'application/json' },
@@ -80,7 +114,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Statikus eszközök (JS, CSS, HTML, Képek, Fontok): Stale-While-Revalidate
+  // 3. Hashelt build assetek (/assets/*) és ikonok: Stale-While-Revalidate
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request)
@@ -93,13 +127,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {
-          // Navigációs kérés offline hibája esetén az index.html-t adjuk vissza
-          if (request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          return null;
-        });
+        .catch(() => cachedResponse);
 
       return cachedResponse || fetchPromise;
     })

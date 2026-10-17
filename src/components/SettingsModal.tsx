@@ -14,10 +14,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'api';
   });
   const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('focitipp_apikey') || '0a2ff5ef40ed4113a0ca28d6b9b122d8';
+    return localStorage.getItem('focitipp_apikey') || '';
   });
   const [apiSportsKey, setApiSportsKey] = useState<string>(() => {
-    return localStorage.getItem('focitipp_apisports_key') || 'b088263aae59a54a7f9a597f1ce83644';
+    return localStorage.getItem('focitipp_apisports_key') || '';
   });
   const [enableSecondaryLeagues, setEnableSecondaryLeagues] = useState<boolean>(() => {
     return localStorage.getItem('focitipp_enable_secondary') !== 'false';
@@ -142,18 +142,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <span>Football-Data.org API Kulcs</span>
               </label>
               <span className="text-[10px] text-emerald-400 font-mono font-bold">
-                ✓ Érvényes kulcs
+                {apiKey ? '✓ Egyéni kulcs megadva' : '✓ Szerveroldali proxy aktív'}
               </span>
             </div>
             <input
-              type="text"
+              type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Pl. 0a2ff5ef40ed..."
+              placeholder="Üresen hagyva a szerveroldali környezeti változót használja..."
               className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
             />
             <p className="text-[10px] text-slate-500">
-              Fiók: <strong className="text-slate-300">banya.attila@icloud.com</strong> &bull; Helyben és felhőben tárolva.
+              A kulcsot a biztonságos szerveroldali proxy (<code className="text-slate-300">FOOTBALL_DATA_API_KEY</code>) kezeli.
             </p>
           </div>
 
@@ -165,7 +165,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <span>API-Sports &amp; Másodosztályok</span>
               </label>
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold font-mono">
-                ✓ Aktív (100 kérés/nap)
+                {apiSportsKey ? '✓ Egyéni kulcs' : '✓ Proxy védett (100 req/nap)'}
               </span>
             </div>
 
@@ -189,17 +189,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-slate-300">
-                API-Sports Kulcs
+                API-Sports Kulcs (opcionális felülbírálat)
               </label>
               <input
-                type="text"
+                type="password"
                 value={apiSportsKey}
                 onChange={(e) => setApiSportsKey(e.target.value)}
-                placeholder="Pl. b088263aae5..."
+                placeholder="Üresen hagyva a szerveroldali API_SPORTS_KEY változót használja..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
               />
               <p className="text-[10px] text-slate-500">
-                Fiók: <strong className="text-slate-300">Banya Attila</strong> (banya.attila@icloud.com) &bull; Intelligens 45 perces gyorsítótárral védve.
+                Szerveroldali proxy (<code className="text-slate-300">API_SPORTS_KEY</code>) és 45 perces gyorsítótár védi a kvótát.
               </p>
             </div>
 

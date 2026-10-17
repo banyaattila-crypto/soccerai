@@ -1,36 +1,39 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    port: 3000,
-    host: true,
-    proxy: {
-      '/api/matches': {
-        target: 'https://api.football-data.org/v4',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/matches/, '/matches'),
-        headers: {
-          'X-Auth-Token': '0a2ff5ef40ed4113a0ca28d6b9b122d8'
-        }
-      },
-      '/api/apisports': {
-        target: 'https://v3.football.api-sports.io',
-        changeOrigin: true,
-        rewrite: (path) => {
-          if (path.includes('fixture=')) {
-            return path.replace(/^\/api\/apisports/, '/odds');
-          }
-          return path.replace(/^\/api\/apisports/, '/fixtures');
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+
+  return {
+    plugins: [react(), tailwindcss()],
+    server: {
+      port: 3000,
+      host: true,
+      proxy: {
+        '/api/matches': {
+          target: 'https://api.football-data.org/v4',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/matches/, '/matches'),
+          headers: env.FOOTBALL_DATA_API_KEY
+            ? { 'X-Auth-Token': env.FOOTBALL_DATA_API_KEY }
+            : {}
         },
-        headers: {
-          'x-apisports-key': 'b088263aae59a54a7f9a597f1ce83644'
+        '/api/apisports': {
+          target: 'https://v3.football.api-sports.io',
+          changeOrigin: true,
+          rewrite: (path) => {
+            if (path.includes('fixture=')) {
+              return path.replace(/^\/api\/apisports/, '/odds');
+            }
+            return path.replace(/^\/api\/apisports/, '/fixtures');
+          },
+          headers: env.API_SPORTS_KEY
+            ? { 'x-apisports-key': env.API_SPORTS_KEY }
+            : {}
         }
       }
     }
   }
 })
-

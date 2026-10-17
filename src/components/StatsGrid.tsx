@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket } from '../types/football';
 import { getProbabilityColorClass } from '../services/predictionEngine';
+import { getRelativeDateStr } from '../utils/dateUtils';
 import {
   Search,
   Filter,
@@ -48,32 +49,10 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   const [focusMarket, setFocusMarket] = useState<FocusMarket>('ALL');
   const [collapsedLeagues, setCollapsedLeagues] = useState<Record<string, boolean>>({});
 
-  // Dinamikus dátumkezelés
-  const todayStr = useMemo(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }, []);
-
-  const yesterdayStr = useMemo(() => {
-    const prev = new Date();
-    prev.setDate(prev.getDate() - 1);
-    const y = prev.getFullYear();
-    const m = String(prev.getMonth() + 1).padStart(2, '0');
-    const d = String(prev.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }, []);
-
-  const tomorrowStr = useMemo(() => {
-    const next = new Date();
-    next.setDate(next.getDate() + 1);
-    const y = next.getFullYear();
-    const m = String(next.getMonth() + 1).padStart(2, '0');
-    const d = String(next.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }, []);
+  // Központi helyi időzónás dátumkezelés
+  const todayStr = useMemo(() => getRelativeDateStr(0), []);
+  const yesterdayStr = useMemo(() => getRelativeDateStr(-1), []);
+  const tomorrowStr = useMemo(() => getRelativeDateStr(1), []);
 
   const countsByDay = useMemo(() => {
     return {
@@ -83,17 +62,13 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
     };
   }, [matches, yesterdayStr, todayStr, tomorrowStr]);
 
-  // Meccsek szűrése a nap szerint
+  // Meccsek szigorú szűrése a kiválasztott nap szerint (nincs más napi átcsorgás)
   const dayMatches = useMemo(() => {
     let targetDate = todayStr;
     if (dayFilter === 'yesterday') targetDate = yesterdayStr;
     if (dayFilter === 'tomorrow') targetDate = tomorrowStr;
 
-    const filtered = matches.filter((m) => m.kickoffDate === targetDate);
-    if (filtered.length > 0) return filtered;
-    // Ha ma van kiválasztva, de az API meccsek eltérő dátumúak, mutassuk az összeset
-    if (dayFilter === 'today' && matches.length > 0) return matches;
-    return [];
+    return matches.filter((m) => m.kickoffDate === targetDate);
   }, [matches, dayFilter, todayStr, yesterdayStr, tomorrowStr]);
 
   // Dinamikusan kinyert ligák az éppen betöltött meccsekből

@@ -153,7 +153,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     </div>
                     <div className="text-right shrink-0">
                       <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">
-                        Szorzó
+                        Becsült Odds
                       </span>
                       <span className="text-base font-black text-white bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-700">
                         {pick.odds.toFixed(2)}
@@ -161,10 +161,10 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     </div>
                   </div>
 
-                  {/* Valószínűség & Érték indikátor */}
+                  {/* Valószínűség & Fair ár indikátor */}
                   <div className="mt-3 space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400 font-medium">Modell esélye:</span>
+                      <span className="text-slate-400 font-medium">Becsült modell esély:</span>
                       <span className="font-extrabold text-emerald-400">{pick.probability}%</span>
                     </div>
                     <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -174,9 +174,11 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                       />
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-                      <span>Piaci esély: {impliedProb}%</span>
+                      <span>Szimulált odds esély: {impliedProb}%</span>
                       <span className="text-amber-400 font-semibold">
-                        Érték többlet: +{edge > 0 ? edge : 4}%
+                        {edge > 0
+                          ? `Valós érték: +${edge}%`
+                          : `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`}
                       </span>
                     </div>
                   </div>
@@ -186,13 +188,15 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     <div className="mt-2.5 flex items-center justify-between gap-1 text-[10px] bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800">
                       <span className="flex items-center gap-1 font-bold text-emerald-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        {match.quantAnalysis.robustnessVerdict}
+                        {pick.robustnessVerdict || match.quantAnalysis.robustnessVerdict}
                       </span>
                       <span className="text-slate-400">
                         Minőség: <strong className="text-slate-200">{match.quantAnalysis.dataQuality}</strong>
                       </span>
                       <span className="text-amber-300 font-mono font-bold">
-                        Kelly: {match.quantAnalysis.quarterKellyPct}%
+                        {pick.quarterKellyPct && pick.quarterKellyPct > 0
+                          ? `Kelly: ${pick.quarterKellyPct}%`
+                          : 'Szimulált ár'}
                       </span>
                     </div>
                   )}

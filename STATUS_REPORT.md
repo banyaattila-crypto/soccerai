@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.6.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Saját Bankroll Követő & Tétnapló (Bet Tracker)*  
-**Dátum:** 2026. október 17.  
-**Állapot:** ✅ **v1.6.0 Funkciók Elkészültek & Verifikálva (Oxlint 0 hiba, Build OK)**  
+**Aktuális verzió:** 🏷️ **`v1.7.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Biztonsági Audit, Egzakt Matematikai Mag & CI Védőháló*  
+**Dátum:** 2026. október 18.  
+**Állapot:** ✅ **v1.7.0 Audit 1–2. Szakasz (Lépések 1–8 + 14) Elkészült & Verifikálva (Oxlint 0 hiba, Build OK, 0 kulcsszivárgás)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -14,30 +14,20 @@
 
 ## 1. Vezetői Összefoglaló (Executive Summary)
 
-A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és gépi tanulási futball-predikciós platform.
+A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A legújabb **`v1.6.0`** kiadással megérkezett a platform egyik legfontosabb funkcionális bővítménye: a **Saját Bankroll Követő & Tétnapló (Bet Tracker)**.
+A **`v1.7.0`** kiadás a technikai és biztonsági audit **1. szakaszát (azonnali, kötelező biztonsági és transzparencia lépések: 1–4.)** és **2. szakaszát (ismert matematikai, dátum- és Service Worker hibák: 5–8., valamint a 14. lépés szerinti duplikált pick-logika összevonását)** valósítja meg.
 
-### Fő Megvalósítások a v1.6.0-ban:
-1. **Saját Bankroll Követő & Tétnapló (`BankrollView.tsx`, `bankrollService.ts`):**
-   - Dinamikus tőkemenedzsment: aktuális egyenleg valós idejű számítása a kezdőtőkéből, a megnyert/vesztett szelvényekből és a függőben lévő lekötött összegekből.
-   - Egyéni kezdőtőke szerkesztés (alapértelmezett 50 000 Ft, bármikor átírható).
-   - Teljes KPI statisztika: Nettó Profit (+/- Ft), Személyes ROI (%), Találati Arány (Strike Rate %), Lekötött tőke és átlagos oddsok.
-   - Biztonságos helyi perzisztencia (`localStorage`), JSON export/import és egykattintásos mintaadat-visszaállítás.
-
-2. **Közvetlen Szelvény Rögzítés a Szelvényépítőből (`BetSlipDrawer.tsx`):**
-   - Egykattintásos mentés a Tétnaplóba automatikus odds és valószínűség számítással.
-   - Negyed-Kelly kockázati kitettség figyelmeztetés (>10% bankroll arány esetén).
-   - Opcionális egyedi jegyzetelés és közvetlen ugrás a Tétnaplóhoz.
-
-3. **Intelligens Automatikus Szelvény Kiértékelés (Auto-Evaluate):**
-   - A meccsadatbázis befejezett mérkőzéseinek tényleges végeredményei alapján egy kattintással kiértékeli a függőben lévő szelvényeket.
-   - Intelligens korai veszteség-felismerés kombinált szelvényeknél.
-   - Kézi felülbírálati lehetőség bármelyik szelvényre (Nyert / Vesztett / Függőben / Void).
-
-4. **5-fülű Bővített Navigáció & Élő Bankroll Kijelző (`Header.tsx`):**
-   - Élő egyenleg-chip a fejlécben (`💰 53 450 Ft`) azonnali navigációval.
-   - Reszponzív 5-elemes mobil tab-sáv (`Top`, `Rács`, `Eredmény`, `Bankroll`, `Módszer`).
+### Fő Megvalósítások a v1.7.0-ban:
+1. **Titokmentes Kód & Lezárt Vercel Proxyk (`api/matches.ts`, `api/apisports.ts`, `.env.local`):**
+   - Minden beégetett API-kulcs törölve a forrásfájlokból és a kliens bundle-ből (`dist/`).
+   - A serverless proxyk szigorú origin-ellenőrzést (`403`), bemeneti paraméter-validációt (`400`), tartalékkulcs-mentes működést (`503`) és IP-alapú rate limitet (`429`) kaptak.
+2. **Őszinte Feliratok & Demó Adat Sáv (`App.tsx`, `ResultsView.tsx`, `TopPicks.tsx`, `MatchDetailModal.tsx`):**
+   - A szimulált oddsok és archív ROI értékek egyértelmű *„Szimulált / Becsült”* jelölést kaptak, tartalék adatoknál pedig látható **„Demó adat”** figyelmeztető sáv jelenik meg.
+3. **Piacfüggő Robusztussági Teszt & Egzakt Mátrix (`predictionEngine.ts`):**
+   - A `robustnessGridTest` a kiválasztott piacot (`1`, `X`, `2`, `OVER_25`, `UNDER_25`, `BTTS_YES`, `BTTS_AND_OVER_25`) teszteli a $\lambda$-rácson; a közös `BTTS és Over 2.5` valószínűség egzaktul a Dixon–Coles mátrixból számolódik, a duplán számolt $\times 1.15$ hazai előny és a `charCodeAt(0)` heurisztika eltávolításával.
+4. **Helyi Időzóna, Network-First Service Worker & GitHub Actions CI (`dateUtils.ts`, `sw.js`, `.github/workflows/ci.yml`):**
+   - 3 napos (`dateFrom`–`dateTo`) API lekérés, pontos napi szűrés, Network-First `index.html` navigáció frissítési sávval, verziózott `package-lock.json` és automatizált GitHub Actions CI.
 
 ---
 

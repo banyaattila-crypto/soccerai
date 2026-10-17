@@ -9,17 +9,44 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// PWA Service Worker regisztráció
+// PWA Service Worker regisztráció és új verzió detektálás
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
-        console.log('✅ SoccerAI PWA Service Worker sikeresen regisztrálva:', registration.scope);
+        if (registration.waiting) {
+          window.dispatchEvent(
+            new CustomEvent('sw-update-available', { detail: registration })
+          );
+        }
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+
+          newWorker.addEventListener('statechange', () => {
+            if (
+              newWorker.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
+              window.dispatchEvent(
+                new CustomEvent('sw-update-available', { detail: registration })
+              );
+            }
+          });
+        });
       })
       .catch((error) => {
         console.warn('❌ Service Worker regisztrációs hiba:', error);
       });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 }
-

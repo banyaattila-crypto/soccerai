@@ -1,6 +1,6 @@
-export const APP_VERSION = '1.6.0';
-export const APP_RELEASE_NAME = 'Saját Bankroll Követő & Tétnapló (Bet Tracker)';
-export const APP_RELEASE_DATE = '2026-10-17';
+export const APP_VERSION = '1.7.0';
+export const APP_RELEASE_NAME = 'Biztonsági Audit, Egzakt Matematikai Mag & CI Védőháló';
+export const APP_RELEASE_DATE = '2026-10-18';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
 
@@ -16,11 +16,11 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Saját Bankroll & Tétnapló (Bet Tracker): Dinamikus egyenleg, testreszabható kezdőtőke, valós idejű nettó profit és személyes ROI (%) kalkulátor',
-    'Közvetlen Szelvény Rögzítés: Egy kattintásos elmentés a Szelvényépítőből, Negyed-Kelly kockázati kitettség figyelmeztetővel és egyedi jegyzetekkel',
-    'Automatikus Szelvény Kiértékelés: A mérkőzés adatbázis befejezett meccsei alapján a függőben lévő szelvények és szelvényesemények azonnali zárása és profit-elszámolása',
-    'Rugalmas Kézi Tét Rögzítés: Tetszőleges külső mérkőzések, oddsok és piacok gyors manuális felvitele a tétnaplóba',
-    'Adatmentés & Biztonság: Teljes tétnapló exportálása és importálása JSON formátumban, bemutató mintaadatok és tőke-átírás egyetlen kattintással',
-    '5-oszlopos Navigáció & Élő Bankroll Kijelző: Dinamikus egyenleg chip a fejlécben és reszponzív mobil tab-elrendezés',
+    'Titokmentes Kód & Lezárt Proxyk: Beégetett API kulcsok eltávolítása a forrásból és bundle-ből (.env.local), szigorú CORS origin-ellenőrzés (403), paraméter-validáció (400) és IP rate-limit (429) a Vercel proxykon',
+    'Őszinte Feliratok & Demó Adat Jelző: Szimulált / becsült odds és ROI megjelölés, valós idejű „Demó adat” figyelmeztető sáv tartalék adatok használatakor',
+    'Piacfüggő Robusztussági Teszt & Egzakt Mátrix: A robustnessGridTest az adott piacot (1/X/2, Over 2.5, BTTS, BTTS+Over 2.5) vizsgálja a λ-rácson; a közös BTTS & Over 2.5 esély egzaktul a Dixon–Coles mátrixból számolódik, dupla hazai előny nélkül',
+    'Egységes Dátumkezelés & 3 Napos API Ablak: Helyi időzóna-helyes dátumozás (dateUtils.ts), 3 napos (Tegnap–Ma–Holnap) Football-Data lekérés és a Ma fül átszivárgásának javítása',
+    'Network-First Service Worker & Frissítési Sáv: Az index.html navigáció mindig hálózatról frissül, új verzió esetén pedig azonnali egykattintásos frissítő sáv jelenik meg',
+    'Reprodukálható Lockfile & GitHub Actions CI: Verziózott package-lock.json és automatikus CI munkafolyamat (npm ci, tsc -b, oxlint, vite build, kulcsszivárgás-ellenőrzés)',
   ],
 };

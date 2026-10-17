@@ -16,7 +16,8 @@ import { BankrollView } from './components/BankrollView';
 import { MethodologyView } from './components/MethodologyView';
 import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { formatLocalDate } from './utils/dateUtils';
 import {
   createTrackedBet,
   getTrackedBets,
@@ -24,7 +25,7 @@ import {
   calculateBankrollSummary,
 } from './services/bankrollService';
 
-const DEFAULT_API_KEY = '0a2ff5ef40ed4113a0ca28d6b9b122d8';
+const DEFAULT_API_KEY = '';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
@@ -52,6 +53,7 @@ export function App() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiSuccessNotice, setApiSuccessNotice] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // Élő meccsek betöltése (Football-Data.org Top ligák + API-Sports másodosztályok és NB I)
   const loadMatches = useCallback(
@@ -64,6 +66,7 @@ export function App() {
     ) => {
       if (source === 'builtin') {
         setMatches(MOCK_MATCHES);
+        setIsDemoMode(true);
         setApiSuccessNotice(null);
         return;
       }
@@ -88,6 +91,7 @@ export function App() {
 
         if (combined.length > 0) {
           setMatches(combined);
+          setIsDemoMode(false);
           const secText = liveSecondary.length > 0
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} másodosztályú: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga, NB I)`
             : '';
@@ -96,10 +100,12 @@ export function App() {
           );
         } else {
           setMatches(MOCK_MATCHES);
+          setIsDemoMode(true);
         }
       } catch (err) {
         console.warn('API lekérési hiba, offline adatokra visszatérés:', err);
         setMatches(MOCK_MATCHES);
+        setIsDemoMode(true);
       } finally {
         setIsLoading(false);
       }
@@ -119,6 +125,27 @@ export function App() {
       return () => clearTimeout(t);
     }
   }, [apiSuccessNotice]);
+
+  // PWA Service Worker frissítés detektálás ("Új verzió elérhető")
+  const [swUpdateReg, setSwUpdateReg] = useState<ServiceWorkerRegistration | null>(null);
+  useEffect(() => {
+    const handleSwUpdate = (e: Event) => {
+      const customEvt = e as CustomEvent<ServiceWorkerRegistration>;
+      if (customEvt.detail) {
+        setSwUpdateReg(customEvt.detail);
+      }
+    };
+    window.addEventListener('sw-update-available', handleSwUpdate);
+    return () => window.removeEventListener('sw-update-available', handleSwUpdate);
+  }, []);
+
+  const handleApplySwUpdate = () => {
+    if (swUpdateReg?.waiting) {
+      swUpdateReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      window.location.reload();
+    }
+  };
 
   // Automatikus háttérfrissítés 10 percenként, ha a fül látható/aktív
   useEffect(() => {
@@ -199,13 +226,7 @@ export function App() {
   };
 
   // Dinamikus KPI kalkulációk a mai meccsekből
-  const todayDateStr = useMemo(() => {
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = String(today.getMonth() + 1).padStart(2, '0');
-    const d = String(today.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }, []);
+  const todayDateStr = useMemo(() => formatLocalDate(), []);
 
   const todayMatches = useMemo(() => {
     const t = matches.filter((m) => m.kickoffDate === todayDateStr || m.status === 'LIVE');
@@ -243,11 +264,34 @@ export function App() {
           setActiveTab(tab);
           if (tab === 'bankroll') updateBankrollState();
         }}
-        isLiveApi={dataSource === 'api'}
+        isLiveApi={dataSource === 'api' && !isDemoMode}
         isLoading={isLoading}
         onRefresh={handleRefresh}
         currentBankroll={currentBankroll}
       />
+
+      {/* Új PWA verzió elérhető sáv */}
+      {swUpdateReg && (
+        <div className="bg-cyan-500/20 border-b border-cyan-500/40 px-4 py-2 text-center text-xs text-cyan-200 font-bold flex items-center justify-center gap-3">
+          <span>🔄 Új alkalmazásverzió érhető el!</span>
+          <button
+            onClick={handleApplySwUpdate}
+            className="px-2.5 py-0.5 rounded bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black transition-colors cursor-pointer"
+          >
+            Frissítés most
+          </button>
+        </div>
+      )}
+
+      {/* Demó adat / Mock fallback figyelmeztető sáv */}
+      {isDemoMode && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-300 font-bold flex items-center justify-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>
+            Demó adat (szimulált mód): A megjelenített mérkőzések, csapaterősségek és szorzók beépített mintaadatok.
+          </span>
+        </div>
+      )}
 
       {/* Sikeres API csatlakozás banner */}
       {apiSuccessNotice && (
