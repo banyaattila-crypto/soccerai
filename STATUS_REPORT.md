@@ -3,7 +3,7 @@
 **Projekt azonosító:** `soccerai` (TippMester.ai)  
 **Hivatkozási minta:** [footballtipster.ai](https://footballtipster.ai)  
 **Dátum:** 2026. október 17.  
-**Állapot:** ✅ **Működőképes, tesztelt, élesítve GitHub-on és Vercel-en**  
+**Állapot:** ✅ **Élesítve & Működik (Live API + Kvantitatív Dixon-Coles & Shin Modell)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000`  
@@ -13,13 +13,12 @@
 
 ## 1. Vezetői Összefoglaló (Executive Summary)
 
-A projekt célja egy olyan kompakt, esztétikus, prémium sötét témájú, magyar nyelvű labdarúgó statisztikai és prediktív mesterséges intelligencia rendszer létrehozása, amely a **footballtipster.ai** bevált hőtérképes és valószínűségi modelljét követi.
+A **SoccerAI** a [footballtipster.ai](https://footballtipster.ai) modern, adatvezérelt dizájnjára és hőtérképes koncepciójára épülő, kompakt és elegáns magyar nyelvű futball analitikai platform.
 
-A rendszer kevesebb felesleges funkcióval, de sziklaszilárd, magas minőségű adatokkal és intuitív felhasználói élménnyel operál:
-- **Nem önti el a felhasználót 50 felesleges alpiaccal**, hanem a 8 legfontosabb fogadási piacra fókuszál.
-- **Azonnal felismerhető színkódolt valószínűségi hőtérkép** (minél zöldebb, annál valószínűbb a kimenetel).
-- **Önálló matematikai predikciós motor** (Poisson-eloszlás és xG gólbecslés), amely offline és élő API módban is képes működni.
-- **Interaktív szelvényépítő és meccselemző modál**, valamint verifikált találati eredménykövető.
+A legutóbbi mérföldkő során a rendszert sikeresen kiegészítettük:
+1. **Valós, élő meccsadatokkal (Football-Data.org API):** Nem csupán demó adatokkal működik, hanem a felhasználó éles API kulcsával közvetlenül szinkronizálja a napi rangadókat (pl. 39 valós meccs a Premier League, La Liga, Serie A, Bundesliga ligákból).
+2. **Profi Kvantitatív Elemző Módszertannal:** A rendszerbe integráltuk a professzionális Dixon–Coles korrekciót, a Shin (1992) de-vigginget, a $\lambda$-rács robusztussági szűrőt, a $\lambda$-inverziót és a negyed-Kelly tétméretezést a fals value betek kizárása érdekében.
+3. **Kettős Okos Gyorsítótárral (Smart Caching):** 5 perces kliensoldali memóriacache és 60 másodperces Vercel Edge cache védi a felhasználó API kvótáját a 10 kérés/perces limit ellen.
 
 ---
 
@@ -27,59 +26,66 @@ A rendszer kevesebb felesleges funkcióval, de sziklaszilárd, magas minőségű
 
 | Komponens | Alkalmazott Technológia | Indoklás / Előny |
 | :--- | :--- | :--- |
-| **Frontend Keretrendszer** | React 19 (TypeScript) | Legfrissebb szabvány, ultra gyors reaktivitás |
-| **Build & Tooling** | Vite 8 + `@tailwindcss/vite` | 600 ms alatti éles build, instant Hot Module Reload |
+| **Frontend Keretrendszer** | React 19 (TypeScript) | Legmodernebb reaktív webkeretrendszer |
+| **Build & Tooling** | Vite 8 + `@tailwindcss/vite` | Instant HMR, 1 másodperc alatti éles fordítás |
 | **Dizájn & CSS** | Tailwind CSS v4 | Deep Dark téma (`#070B14`, `#0D1527`, `#F59E0B`, `#10B981`) |
-| **Ikonográfia** | Lucide React | Egységes, modern sport- és analitikai szimbólumok |
-| **Matematikai Modell** | Saját Poisson + xG Engine | Valószínűségek normalizálása és Value Bet detektálás |
-| **Adatkezelés** | Kettős mód (Beépített / API) | Teljesen önálló indulás, bármikor beköthető külső API-ra |
+| **Ikonográfia** | Lucide React | Letisztult, nagyfelbontású SVG szimbólumok |
+| **Élő API Integráció** | Football-Data.org v4 API | Hivatalos fixture-ök, élő eredmények és klubcímerek |
+| **API Proxy** | Vercel Serverless Function (`/api/matches`) | Teljeskörű CORS áthidalás és Edge caching |
+| **Kvantitatív Modellezés** | Dixon–Coles (1997) + Shin (1992) | Professzionális matematikai korrekciók és de-vigging |
+| **Tétméretezés** | Negyed-Kelly (Quarter-Kelly) | Túlkapás és variancia elleni konzervatív allokáció |
 
 ---
 
-## 3. Megvalósított Fő Funkciók és Képernyők
+## 3. Megvalósított Kvantitatív & Funkcionális Elemek
 
-### 1. Statisztikai Rács (Stats Grid - Fő nézet)
-- **Dátumváltás:** Tegnap (lezárt) &bull; Ma (élő/közelgő) &bull; Holnap.
-- **Piacok oszlopai:**
-  - `KO`: Kezdési időpont / ÉLŐ jelzés / FT lezárt állapot
-  - `Mérkőzés`: Klubcímerek, csapatnevek, aktuális/végeredmény
-  - `1`: Hazai győzelem valószínűség (%) + szorzó (odds)
-  - `X`: Döntetlen valószínűség (%) + szorzó
-  - `2`: Vendég győzelem valószínűség (%) + szorzó
-  - `BTTS`: Mindkét csapat szerez gólt esélye (%)
-  - `>1.5`, `>2.5`, `>3.5`: Gólszám küszöbök esélyei
-  - `1.F >0.5`: Első félidei gól esélye
-- **Valószínűségi Hőtérkép:**
+### 1. Statisztikai Esély Rács (Stats Grid & Fókuszpiacok)
+- **0. Lépés &ndash; Fókuszpiac választó (Profi Prompt módszertan):**
+  - `[I] Mindent elemezz` (alapértelmezett)
+  - `[A] Over/Under 2.5`
+  - `[B] BTTS (Mindkét csapat szerez gólt)`
+  - `[G] 1X2 (Végeredmény)`
+  - `[D] 1. félidő Over 0.5`
+  - `[C] Over 1.5`
+  - *Kiválasztáskor a táblázat fejlécében és celláiban automatikusan aranyszínű fókuszkiemelés jelenik meg.*
+- **Valószínűségi Hőtérkép (8 piac):**
   - 🟩 `65%+`: Kiemelt szignál (emerald glow, erős modellbizalom)
   - 🟩 `55-64%`: Erős esély (türkiz / mentazöld)
   - 🟦 `45-54%`: Kiegyenlített / közepes
   - ⬜ `35-44%`: Mérsékelt
   - ⬛ `<35%`: Valószínűtlen
+- **Dátumváltás:** Tegnap (lezárt) &bull; Ma (élő/közelgő) &bull; Holnap.
 
-### 2. A Nap Kiemelt AI Tippjei (Top 3 Picks)
-- A modell által detektált legmagasabb várható értékű (**Expected Value / +EV**) események.
-- Modell vs. Bukmékeri valószínűség összevetése (pl. Modell 71% vs Piac 59% &rarr; **+19.3% Érték többlet**).
-- Szakmai magyar nyelvű indoklás a csapatok hazai/idegenbeli xG-je és védelmi stabilitása alapján.
+### 2. A Nap Kiemelt AI Tippjei (Robusztus Top 3 Picks)
+- **Kvantitatív szűrőn átment tippek:** Csak olyan események kerülhetnek a kiemelt válogatásba, amelyek a $\lambda$-rácson bizonyították stabilitásukat (`ROBUSZTUS` vagy `valószínű`).
+- **Kártyánkénti kvantitatív sáv:**
+  - `ROBUSZTUS ÉL` állapotjelző
+  - `Adatminőség: A-szint / B-szint`
+  - `Kelly: X.X% ajánlott bankroll tét`
+- Szakmai magyar indoklás az xG mutatók és védelmi stabilitás alapján.
 
-### 3. Részletes Mérkőzés Elemző Adatlap (Deep-Dive Modal)
-- Bármely meccsre kattintva megjelenik:
-  - Legutóbbi formaindikátorok (W/D/L zöld, sárga, piros pöttyök)
-  - xG átlagok és gólarányok
-  - 1X2 valószínűségi eloszlási grafikon
-  - Korábbi egymás elleni (H2H) eredmények
-  - Helyszín és időjárási körülmények
+### 3. Részletes Kvantitatív Meccselemzés (Match Deep-Dive Modal)
+- **Adatminőség szint:** `A-szint` (Top 5 liga), `B-szint` (másodosztályok), `C-szint` (gyengébb lefedettség).
+- **Dixon–Coles (1997) gólmátrix:** Bivariáns korrekció alacsony gólszámú cellákra ($\rho = -0.13$).
+- **Shin (1992) De-vigging:** Bukmékeri árrés (margin %) kimutatása és kedvenc-esélytelen torzítás szűrése.
+- **$\lambda$-rács Robusztussági Teszt:**
+  - $e = p \cdot \text{odds} - 1$ vizsgálata $\lambda_H, \lambda_A$ és $\rho$ variációk mentén.
+  - Ítélet: `ROBUSZTUS` (ha $\min(e) > +2\%$) &bull; `valószínű` (ha $\ge 80\%$ pozitív él) &bull; `ELVETVE` (ha $< 50\%$).
+- **$\lambda$-inverzió Gólpiac Ellenőrzés:**
+  - Piac által árazott $\lambda_{\text{mkt}}$ visszaszámolása az Over/Under szorzókból bisection keresővel.
+  - Nullszaldós küszöb ($\text{BE } \lambda$) összevetése a liga strukturális gólátlag sávjával.
+- **Negyed-Kelly Tétméret:** $f^* = \frac{b \cdot p - (1-p)}{b} \times 0.25$ alapján.
 
-### 4. Lebegő Szelvényépítő (Bet Slip Builder)
-- Bármely szorzóra vagy tippre kattintva a választás bekerül a szelvénybe.
-- Kiszámolja a kumulált szorzót, az együttes AI esélyt és a forintosított várható kifizetést.
-- Egy kattintással kimásolható a vágólapra vagy törölhető.
+### 4. Élő API Szinkronizáció & Kettős Gyorsítótár
+- **Football-Data.org API:** Éles token integrálva (`0a2ff5ef40ed4113a0ca28d6b9b122d8`).
+- **Kliensoldali Memóriacache (localStorage):** 5 perces TTL &ndash; az oldal megnyitásakor vagy újratöltésekor **0 API hívást indít**, védve a 10 kérés/perces ingyenes limitet.
+- **Kényszerített frissítés:** A fejlécben elhelyezett 🔄 **"Frissítés"** gombbal kérésre azonnal frissíthetők az élő eredmények.
+- **Vercel Serverless Proxy (`/api/matches`):** 60 másodperces CDN Edge cache-sel látja el a kéréseket és megszünteti a böngészős CORS korlátokat.
+- **Offline / Demó Mód:** A Beállítások (⚙️) menüben bármikor egy kattintással vissza lehet váltani a beépített offline szimulációra (pl. az OTP Bank Liga / NB I meccsek teszteléséhez).
 
-### 5. Verifikált Eredménykövető (Recent Winners)
-- Visszatekintő fül a lezárt mérkőzésekre, pipákkal és sikerességi aránnyal (pl. **83.3% pontosság** tegnap).
-
-### 6. Rendszer & API Beállítások
-- Váltás a beépített offline motor és a külső API (Football-Data / API-Football) kulcs között.
-- Állítható szignál-küszöbérték (50% &ndash; 75%).
+### 5. Lebegő Szelvényépítő & Eredménykövető
+- Kumulált szorzó, együttes AI esély és forintosított kifizetési kalkulátor.
+- Verifikált tegnapi eredmények zöld pipákkal és sikerességi aránnyal.
 
 ---
 
@@ -87,61 +93,62 @@ A rendszer kevesebb felesleges funkcióval, de sziklaszilárd, magas minőségű
 
 ```
 /home/attila/projects/soccerai/
-├── STATUS_REPORT.md                 <-- Ez a státusz jelentés
-├── README.md                        <-- Általános leírás és gyorsteszt
-├── package.json                     <-- Függőségek és npm scriptek
-├── vite.config.ts                   <-- Vite 8 + Tailwind v4 konfiguráció
+├── STATUS_REPORT.md                 <-- Ez a részletes státusz jelentés
+├── README.md                        <-- Fő dokumentáció élő linkekkel
+├── package.json                     <-- Függőségek és build scriptek
+├── vite.config.ts                   <-- Vite 8 + Tailwind v4 + Dev Proxy
 ├── tsconfig.json                    <-- TypeScript beállítások
-├── index.html                       <-- Belépési pont magyar meta címkékkel
-├── public/                          <-- Statikus elemek
+├── index.html                       <-- Belépési pont magyar címkékkel és fontokkal
+├── api/
+│   └── matches.ts                   <-- Vercel Serverless CORS proxy & Edge cache
 └── src/
-    ├── main.tsx                     <-- React gyökér komponens csatolása
-    ├── App.tsx                      <-- Főalkalmazás, állapotok és routing
-    ├── index.css                    <-- Tailwind v4 direktívák és sötét téma stílusok
+    ├── main.tsx                     <-- React belépési pont
+    ├── App.tsx                      <-- Állapotkezelés, API szinkronizáció és nézetek
+    ├── index.css                    <-- Tailwind v4 sötét stílusok és scrollbar
     ├── types/
-    │   └── football.ts              <-- TypeScript típusdefiníciók (Match, Odds, Team...)
+    │   └── football.ts              <-- QuantAnalysis, FocusMarket, Match és Odds típusok
     ├── services/
-    │   └── predictionEngine.ts      <-- Poisson & Dixon-Coles xG valószínűségszámító motor
+    │   ├── predictionEngine.ts      <-- Dixon-Coles, Shin de-vig, λ-rács, λ-inverzió, Kelly
+    │   └── footballDataApi.ts       <-- Football-Data.org kliens okos gyorsítótárral
     ├── data/
-    │   └── mockMatches.ts           <-- Prémium mérkőzésadatbázis (PL, LaLiga, Serie A, NB I...)
+    │   └── mockMatches.ts           <-- Prémium mintaadatbázis offline módhoz (NB I-gyel)
     └── components/
-        ├── Header.tsx               <-- Navigáció, élő modell pulzálás, szelvény számláló
-        ├── HeroKpi.tsx              <-- Fő üzenet, statisztikai számlálók és színmagyarázat
-        ├── TopPicks.tsx             <-- Napi 3 kiemelt AI tipp kártyák
-        ├── StatsGrid.tsx            <-- footballtipster.ai stílusú hőtérképes táblázat
-        ├── MatchDetailModal.tsx     <-- Részletes meccselemző felugró ablak
-        ├── BetSlipDrawer.tsx        <-- Szelvényépítő és nyereménykalkulátor
-        ├── ResultsView.tsx          <-- Tegnapi nyertesek és találati arány
+        ├── Header.tsx               <-- Navigáció, élő API státusz és azonnali Frissítés gomb
+        ├── HeroKpi.tsx              <-- Statisztikai számlálók és valószínűségi hőtérkép skála
+        ├── TopPicks.tsx             <-- Napi 3 kiemelt tipp kvantitatív robusztussági pecséttel
+        ├── StatsGrid.tsx            <-- Hőtérképes táblázat + Fókuszpiac chipek
+        ├── MatchDetailModal.tsx     <-- Kvantitatív elemző panel és formák
+        ├── BetSlipDrawer.tsx        <-- Szelvényépítő és nyereménykalkulátor (HUF)
+        ├── ResultsView.tsx          <-- Verifikált korábbi eredmények és sikerességi ráta
         └── SettingsModal.tsx        <-- API kulcs és modell testreszabás
 ```
 
 ---
 
-## 5. Indítás és Üzemeltetés
+## 5. Elérési Útvonalak és Parancsok
 
-A projekt önállóan futtatható a terminálból:
+* 🌐 **Élő Vercel Weboldal:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)
+* 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
+* 💻 **Helyi Fejlesztői Szerver:** `http://localhost:3000`
 
 ```bash
-# 1. Navigálás a mappába:
+# Projekt könyvtár:
 cd /home/attila/projects/soccerai
 
-# 2. Fejlesztői szerver indítása (jelenleg is fut):
+# Fejlesztői szerver futtatása (a háttérben aktív):
 npm run dev
 
-# 3. Éles verzió fordítása (ellenőrizve, hibamentes):
+# Éles build fordítása:
 npm run build
 
-# 4. Éles előnézet indítása:
+# Éles előnézet indítása:
 npm run preview
 ```
 
-**Helyi tesztelési URL:** `http://localhost:3000`  
-**Hálózati IP:** `http://213.199.38.177:3000`
-
 ---
 
-## 6. Következő Javasolt Lépések (Roadmap)
+## 6. Következő Mérföldkövek (Roadmap)
 
-1. **Telegram / E-mail Értesítő modul:** Napi top tippek kiküldése minden reggel automatikusan.
-2. **Élő Odds Frissítő Worker:** Ingyenes fogadóirodai API-k (pl. The-Odds-API) bekötése a szorzók valós idejű frissüléséhez.
-3. **Felhasználói Bankroll Tracker:** Virtuális tőke és fogadási előzmények naplózása és grafikonos hozamkövetés.
+1. **Játékvezető & Lapok Elemző Modul (`[K]` piac):** Játékvezetői foul/lap statisztikák integrálása rangadókra.
+2. **Szöglet Analitika (`[L]` piac):** Szerzett és engedett szögletek modellezése mély blokkos és pressing csapatoknál.
+3. **Automata Telegram Értesítő Bot:** Reggel 08:30-kor a robusztussági szűrőn átment Top 3 tipp kiküldése.
