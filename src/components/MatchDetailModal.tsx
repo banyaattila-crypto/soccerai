@@ -167,6 +167,68 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             </div>
           )}
 
+          {/* Kvantitatív Modellezés & Szűrők (Dixon-Coles & Shin) */}
+          {match.quantAnalysis && (
+            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  Kvantitatív Modellezés (Dixon-Coles &amp; Shin de-vig)
+                </span>
+                <span
+                  className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
+                    match.quantAnalysis.robustnessVerdict === 'ROBUSZTUS'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                      : 'bg-teal-500/20 text-teal-300 border-teal-500/30'
+                  }`}
+                >
+                  {match.quantAnalysis.robustnessVerdict}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Adatminőség</span>
+                  <span className="text-sm font-black text-white">{match.quantAnalysis.dataQuality}-szint</span>
+                  <span className="text-[9px] text-slate-500 block">Több forrásból</span>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Bukméker Vig</span>
+                  <span className="text-sm font-black text-amber-400">{match.quantAnalysis.shinMargin}%</span>
+                  <span className="text-[9px] text-slate-500 block">Shin de-vig margin</span>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Rács Pozitív Él</span>
+                  <span className="text-sm font-black text-emerald-400">{match.quantAnalysis.posPct}%</span>
+                  <span className="text-[9px] text-slate-500 block">λ-rács szűrő</span>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Negyed-Kelly Tét</span>
+                  <span className="text-sm font-black text-amber-300">{match.quantAnalysis.quarterKellyPct}%</span>
+                  <span className="text-[9px] text-slate-500 block">Max. tőkeallokáció</span>
+                </div>
+              </div>
+
+              {match.quantAnalysis.lambdaInversion && (
+                <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between text-slate-300 gap-1">
+                  <span>
+                    <strong>λ-inverzió:</strong> Piaci gólvárakozás:{' '}
+                    <strong className="text-white">
+                      {match.quantAnalysis.lambdaInversion.marketLambda}
+                    </strong>{' '}
+                    gól/meccs
+                  </span>
+                  <span className="text-emerald-400 font-semibold">
+                    {match.quantAnalysis.lambdaInversion.verdict}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 1X2 Valószínűségi megoszlás grafikon */}
           <div className="space-y-2">
             <div className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">

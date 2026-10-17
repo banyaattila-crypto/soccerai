@@ -41,6 +41,25 @@ export interface HeadToHead {
   homeWinner: boolean | null;
 }
 
+export interface QuantAnalysis {
+  dataQuality: 'A' | 'B' | 'C';
+  robustnessVerdict: 'ROBUSZTUS' | 'valószínű' | 'bizonytalan' | 'ELVETVE';
+  minEdge: number;
+  medianEdge: number;
+  posPct: number;
+  quarterKellyPct: number;
+  shinMargin: number;
+  shinProbs?: { home: number; draw: number; away: number };
+  lambdaInversion?: {
+    marketLambda: number;
+    beOver: number;
+    beUnder: number;
+    verdict: string;
+  };
+  keyFactors: string[];
+  riskLevel: 'Alacsony' | 'Közepes' | 'Magas';
+}
+
 export interface Match {
   id: string;
   leagueId: string;
@@ -66,7 +85,10 @@ export interface Match {
     reasoning: string;
     isTopPick?: boolean;
     expectedValue: number; // pl. +14.2% EV
+    robustnessVerdict?: 'ROBUSZTUS' | 'valószínű' | 'bizonytalan' | 'ELVETVE';
+    quarterKellyPct?: number;
   };
+  quantAnalysis?: QuantAnalysis;
   h2h?: HeadToHead[];
   venue?: string;
   weather?: string;
@@ -83,6 +105,7 @@ export interface League {
 export type DayFilter = 'yesterday' | 'today' | 'tomorrow';
 export type ViewMode = 'league' | 'time';
 export type SignalFilter = 'all' | 'strong_only' | 'value_only';
+export type FocusMarket = 'ALL' | 'OVER_25' | 'BTTS' | '1X2' | 'FH_OVER_05' | 'OVER_15';
 
 export interface BetSlipItem {
   matchId: string;
@@ -90,4 +113,5 @@ export interface BetSlipItem {
   marketLabel: string;
   odds: number;
   probability: number;
+  quarterKellyPct?: number;
 }

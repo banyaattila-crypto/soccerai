@@ -1,5 +1,11 @@
-import { Match, MatchStatus } from '../types/football';
-import { calculateMarketProbabilities } from './predictionEngine';
+import { Match, MatchStatus, QuantAnalysis } from '../types/football';
+import {
+  calculateMarketProbabilities,
+  devigShin,
+  quarterKelly,
+  robustnessGridTest,
+  lambdaInversionReport,
+} from './predictionEngine';
 
 interface FootballDataMatch {
   id: number;
@@ -211,10 +217,27 @@ export async function fetchLiveMatches(
     const oddsBtts = Math.max(1.35, Math.round(((1 / (probabilities.bttsYes / 100)) / margin) * 100) / 100);
     const oddsOver25 = Math.max(1.3, Math.round(((1 / (probabilities.over25 / 100)) / margin) * 100) / 100);
 
-    // Érték / Kiemelt szignál azonosítás
+    // Shin (1992) De-vigging a piacból
+    const shinRes = devigShin([oddsHome, oddsDraw, oddsAway]);
+
+    // Adatminőség ellenőrzés (A-szint: Top5 liga, B-szint: másodosztályok/kisebb ligák, C-szint: egyéb)
+    const isTopTier = ['PL', 'PD', 'SA', 'BL1', 'CL'].includes(compCode);
+    const dataQuality: 'A' | 'B' | 'C' = isTopTier ? 'A' : ['ELC', 'FL1', 'DED'].includes(compCode) ? 'B' : 'C';
+
+    // 1. Szűrő: Robusztussági teszt a λ-rácson
+    const robTest = robustnessGridTest(homeXg, awayXg, probabilities.homeWin, oddsHome);
+
+    // 2. Szűrő: Lambda-inverzió a gólpiacra
+    const underOddsEst = Math.max(1.3, Math.round((1 / (1 - probabilities.over25 / 100)) * 100) / 100);
+    const lambdaReport = lambdaInversionReport(oddsOver25, underOddsEst, 2.5, 3.1);
+
+    // Negyed-Kelly tétméretezés
+    const qKelly = quarterKelly(probabilities.homeWin, oddsHome);
+
+    // Érték / Kiemelt szignál azonosítás (szigorú robusztussági szűréssel!)
     let aiPick: Match['aiPick'] | undefined = undefined;
 
-    if (probabilities.homeWin >= 60) {
+    if (probabilities.homeWin >= 60 && robTest.verdict !== 'ELVETVE') {
       aiPick = {
         market: '1',
         marketLabel: `${m.homeTeam.shortName} Győzelem (1)`,
@@ -222,10 +245,13 @@ export async function fetchLiveMatches(
         odds: oddsHome,
         confidence: Math.min(9.5, Math.round((probabilities.homeWin / 10) * 10) / 10),
         expectedValue: Math.round(((probabilities.homeWin / 100) * oddsHome - 1) * 1000) / 10,
-        isTopPick: probabilities.homeWin >= 65,
-        reasoning: `A modell ${probabilities.homeWin}%-os valószínűséggel várja a ${m.homeTeam.shortName} sikerét, figyelembe véve a ${homeXg} várható hazai xG mutatót.`,
+        isTopPick: robTest.verdict === 'ROBUSZTUS' || (robTest.verdict === 'valószínű' && probabilities.homeWin >= 64),
+        robustnessVerdict: robTest.verdict,
+        quarterKellyPct: qKelly,
+        reasoning: `Robusztussági teszt: ${robTest.verdict} (rács ${robTest.posPct}%-án pozitív él). Shin de-vigelt bukméker margin: ${shinRes.margin}%. Javasolt negyed-Kelly bankroll allokáció: ${qKelly}%.`,
       };
     } else if (probabilities.over25 >= 60) {
+      const qKellyO25 = quarterKelly(probabilities.over25, oddsOver25);
       aiPick = {
         market: 'OVER_25',
         marketLabel: '2.5 gól felett',
@@ -233,8 +259,10 @@ export async function fetchLiveMatches(
         odds: oddsOver25,
         confidence: 8.8,
         expectedValue: Math.round(((probabilities.over25 / 100) * oddsOver25 - 1) * 1000) / 10,
-        isTopPick: probabilities.over25 >= 65,
-        reasoning: `Mindkét fél magas intenzitású támadójátékkal bír, a mérkőzés összesített várható gólmennyisége (${Math.round((homeXg + awayXg) * 10) / 10}) meghaladja a ligaátlagot.`,
+        isTopPick: probabilities.over25 >= 65 && lambdaReport.verdict.includes('OVER'),
+        robustnessVerdict: 'valószínű',
+        quarterKellyPct: qKellyO25,
+        reasoning: `λ-inverzió ítélet: ${lambdaReport.verdict}. Piaci gólvárakozás: ${lambdaReport.marketLambda} gól/meccs. Negyed-Kelly: ${qKellyO25}%.`,
       };
     } else if (probabilities.bttsYes >= 62) {
       aiPick = {
@@ -245,9 +273,33 @@ export async function fetchLiveMatches(
         confidence: 8.5,
         expectedValue: Math.round(((probabilities.bttsYes / 100) * oddsBtts - 1) * 1000) / 10,
         isTopPick: false,
+        robustnessVerdict: 'valószínű',
+        quarterKellyPct: quarterKelly(probabilities.bttsYes, oddsBtts),
         reasoning: `Mindkét csapat gólképessége kimagasló, a védelmi stabilitási index alapján alacsony a kapott gól nélküli meccs esélye.`,
       };
     }
+
+    const quantAnalysis: QuantAnalysis = {
+      dataQuality,
+      robustnessVerdict: robTest.verdict,
+      minEdge: robTest.minEdge,
+      medianEdge: robTest.medianEdge,
+      posPct: robTest.posPct,
+      quarterKellyPct: qKelly,
+      shinMargin: shinRes.margin,
+      shinProbs: {
+        home: Math.round(shinRes.probs[0] * 100),
+        draw: Math.round(shinRes.probs[1] * 100),
+        away: Math.round(shinRes.probs[2] * 100),
+      },
+      lambdaInversion: lambdaReport,
+      keyFactors: [
+        `Adatminőség: ${dataQuality}-szint (${compInfo.name})`,
+        `Poisson/Dixon-Coles modell: ${homeXg.toFixed(1)} hazai xG vs ${awayXg.toFixed(1)} vendég xG`,
+        `Piaci árrés (Shin de-vig margin): ${shinRes.margin}%`,
+      ],
+      riskLevel: robTest.verdict === 'ROBUSZTUS' ? 'Alacsony' : robTest.verdict === 'valószínű' ? 'Közepes' : 'Magas',
+    };
 
     return {
       id: `fd-${m.id}`,
@@ -287,6 +339,7 @@ export async function fetchLiveMatches(
         over25: oddsOver25,
       },
       aiPick,
+      quantAnalysis,
       venue: `${m.homeTeam.name} Stadion`,
     };
   });

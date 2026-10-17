@@ -157,8 +157,24 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     </div>
                   </div>
 
+                  {/* Kvantitatív Robusztussági & Kelly sáv */}
+                  {match.quantAnalysis && (
+                    <div className="mt-3 flex items-center justify-between gap-1 text-[10px] bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span className="flex items-center gap-1 font-bold text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        {match.quantAnalysis.robustnessVerdict}
+                      </span>
+                      <span className="text-slate-400">
+                        Adatminőség: <strong className="text-slate-200">{match.quantAnalysis.dataQuality}</strong>
+                      </span>
+                      <span className="text-amber-300 font-mono font-bold">
+                        Kelly: {match.quantAnalysis.quarterKellyPct}% tét
+                      </span>
+                    </div>
+                  )}
+
                   {/* AI Szöveges Indoklás */}
-                  <p className="mt-3 text-xs text-slate-300 leading-relaxed bg-[#070B14]/60 p-2.5 rounded-lg border border-slate-800/80">
+                  <p className="mt-2.5 text-xs text-slate-300 leading-relaxed bg-[#070B14]/60 p-2.5 rounded-lg border border-slate-800/80">
                     &ldquo;{pick.reasoning}&rdquo;
                   </p>
                 </div>

@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Match, DayFilter, ViewMode, BetSlipItem } from '../types/football';
+import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket } from '../types/football';
 import { LEAGUES } from '../data/mockMatches';
 import { getProbabilityColorClass } from '../services/predictionEngine';
-import { Search, Filter, Sparkles, Clock, CheckCircle2, ChevronRight, Layers } from 'lucide-react';
+import { Search, Filter, Sparkles, CheckCircle2, ChevronRight, Layers, Target } from 'lucide-react';
 
 interface StatsGridProps {
   matches: Match[];
@@ -25,6 +25,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>('league');
   const [onlyStrongSignals, setOnlyStrongSignals] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [focusMarket, setFocusMarket] = useState<FocusMarket>('ALL');
 
   // Meccsek szűrése a nap szerint
   const dayMatches = useMemo(() => {
@@ -223,6 +224,34 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
               Tipp: Kattints egy meccs sorára a részletes xG és H2H adatlaphoz!
             </div>
           </div>
+
+          {/* 0. Lépés: Fókuszpiac kiválasztása (Profi Prompt módszertan) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs border-t border-slate-800/60 pt-2 scrollbar-none">
+            <span className="text-[11px] font-bold text-amber-400 whitespace-nowrap flex items-center gap-1 mr-1">
+              <Target className="w-3.5 h-3.5" />
+              Fókuszpiac:
+            </span>
+            {[
+              { id: 'ALL', label: '[I] Minden piac' },
+              { id: 'OVER_25', label: '[A] Over/Under 2.5' },
+              { id: 'BTTS', label: '[B] BTTS (Mindkét gól)' },
+              { id: '1X2', label: '[G] 1X2 Végeredmény' },
+              { id: 'FH_OVER_05', label: '[D] 1.F Over 0.5' },
+              { id: 'OVER_15', label: '[C] Over 1.5' },
+            ].map((mkt) => (
+              <button
+                key={mkt.id}
+                onClick={() => setFocusMarket(mkt.id as FocusMarket)}
+                className={`px-2.5 py-1 rounded-md font-semibold whitespace-nowrap transition-all ${
+                  focusMarket === mkt.id
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                    : 'bg-slate-900/90 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                {mkt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ================= TÁBLÁZAT(OK) ================= */}
@@ -259,6 +288,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   onSelectMatch={onSelectMatch}
                   onCellBet={handleCellBet}
                   betSlipItems={betSlipItems}
+                  focusMarket={focusMarket}
                 />
               </div>
             ))}
@@ -271,6 +301,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
               onSelectMatch={onSelectMatch}
               onCellBet={handleCellBet}
               betSlipItems={betSlipItems}
+              focusMarket={focusMarket}
             />
           </div>
         )}
@@ -286,6 +317,7 @@ interface MatchTableProps {
   onSelectMatch: (match: Match) => void;
   onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
   betSlipItems: BetSlipItem[];
+  focusMarket: FocusMarket;
 }
 
 const MatchTable: React.FC<MatchTableProps> = ({
@@ -293,6 +325,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
   onSelectMatch,
   onCellBet,
   betSlipItems,
+  focusMarket,
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -302,14 +335,14 @@ const MatchTable: React.FC<MatchTableProps> = ({
           <tr className="border-b border-slate-800 bg-[#0B1222] text-slate-400 uppercase text-[10px] font-bold tracking-wider">
             <th className="py-3 px-3 w-16 text-center">KO / Állapot</th>
             <th className="py-3 px-4 min-w-[200px]">Mérkőzés</th>
-            <th className="py-3 px-2 text-center w-14">1 (Hazai)</th>
-            <th className="py-3 px-2 text-center w-14">X (Dönt.)</th>
-            <th className="py-3 px-2 text-center w-14">2 (Vendég)</th>
-            <th className="py-3 px-2 text-center w-14">BTTS (Gól mind2)</th>
-            <th className="py-3 px-2 text-center w-14">&gt; 1.5 Gól</th>
-            <th className="py-3 px-2 text-center w-14">&gt; 2.5 Gól</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === '1X2' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>1 (Hazai)</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === '1X2' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>X (Dönt.)</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === '1X2' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>2 (Vendég)</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === 'BTTS' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>BTTS (Gól mind2)</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === 'OVER_15' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>&gt; 1.5 Gól</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === 'OVER_25' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>&gt; 2.5 Gól</th>
             <th className="py-3 px-2 text-center w-14">&gt; 3.5 Gól</th>
-            <th className="py-3 px-2 text-center w-14">1.F &gt; 0.5</th>
+            <th className={`py-3 px-2 text-center w-14 ${focusMarket === 'FH_OVER_05' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>1.F &gt; 0.5</th>
             <th className="py-3 px-3 text-right w-16">Elemzés</th>
           </tr>
         </thead>
