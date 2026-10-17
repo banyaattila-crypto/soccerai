@@ -12,10 +12,17 @@ import { BetSlipDrawer } from './components/BetSlipDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { AboutModal } from './components/AboutModal';
 import { ResultsView } from './components/ResultsView';
+import { BankrollView } from './components/BankrollView';
 import { MethodologyView } from './components/MethodologyView';
 import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
 import { CheckCircle2 } from 'lucide-react';
+import {
+  createTrackedBet,
+  getTrackedBets,
+  getInitialBankroll,
+  calculateBankrollSummary,
+} from './services/bankrollService';
 
 const DEFAULT_API_KEY = '0a2ff5ef40ed4113a0ca28d6b9b122d8';
 
@@ -168,6 +175,29 @@ export function App() {
     setBetSlipItems([]);
   };
 
+  // Bankroll állapotkezelés
+  const [currentBankroll, setCurrentBankroll] = useState<number>(() => {
+    const b = getTrackedBets();
+    const c = getInitialBankroll();
+    const s = calculateBankrollSummary(b, c);
+    return s.currentBankroll;
+  });
+
+  const updateBankrollState = useCallback(() => {
+    const b = getTrackedBets();
+    const c = getInitialBankroll();
+    const s = calculateBankrollSummary(b, c);
+    setCurrentBankroll(s.currentBankroll);
+  }, []);
+
+  const handleSaveToTracker = (items: BetSlipItem[], stake: number, notes?: string) => {
+    createTrackedBet(items, stake, notes);
+    updateBankrollState();
+    setApiSuccessNotice(
+      `Szelvény (${items.length} esemény, ${stake.toLocaleString('hu-HU')} Ft) sikeresen rögzítve a Tétnaplóban!`
+    );
+  };
+
   // Dinamikus KPI kalkulációk a mai meccsekből
   const todayDateStr = useMemo(() => {
     const today = new Date();
@@ -209,10 +239,14 @@ export function App() {
         onOpenBetSlip={() => setBetSlipOpen(true)}
         betSlipCount={betSlipItems.length}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'bankroll') updateBankrollState();
+        }}
         isLiveApi={dataSource === 'api'}
         isLoading={isLoading}
         onRefresh={handleRefresh}
+        currentBankroll={currentBankroll}
       />
 
       {/* Sikeres API csatlakozás banner */}
@@ -259,6 +293,14 @@ export function App() {
           <ResultsView matches={matches} onSelectMatch={setSelectedMatch} />
         )}
 
+        {activeTab === 'bankroll' && (
+          <BankrollView
+            matches={matches}
+            onOpenBetSlip={() => setBetSlipOpen(true)}
+            onGoToGrid={() => setActiveTab('grid')}
+          />
+        )}
+
         {activeTab === 'methodology' && (
           <MethodologyView
             onGoToGrid={() => setActiveTab('grid')}
@@ -281,6 +323,12 @@ export function App() {
         items={betSlipItems}
         onRemoveItem={handleRemoveBetSlipItem}
         onClearAll={handleClearBetSlip}
+        onSaveToTracker={handleSaveToTracker}
+        onOpenBankroll={() => {
+          updateBankrollState();
+          setActiveTab('bankroll');
+        }}
+        currentBankroll={currentBankroll}
       />
 
       <SettingsModal

@@ -3,6 +3,17 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.6.0] - 2026-10-17
+
+### Hozzáadva (Added)
+- **Saját Bankroll Követő & Tétnapló (Bet Tracker, `BankrollView.tsx`):** Teljes értékű tőkemenedzsment és fogadáskövető modul dinamikus egyenlegszámítással, testreszabható kezdőtőkével és valós idejű nettó profit kalkulációval (+/- Ft).
+- **Személyes ROI % & Statisztikai KPI Rács:** Realizált megtérülés (ROI %), találati arány (Strike Rate %), függőben lévő lekötött tőke, valamint átlagos odds és tétösszeg követése.
+- **Közvetlen Szelvény Rögzítés a Szelvényépítőből (`BetSlipDrawer.tsx`):** Egykattintásos elmentés a tétnaplóba, beépített Negyed-Kelly kitettség ellenőrzéssel (>10% bankroll arány esetén intelligens kockázati figyelmeztetés) és opcionális jegyzeteléssel.
+- **Automatikus Szelvény Kiértékelés (Auto-Evaluate):** A mérkőzés adatbázisban található befejezett találkozók tényleges végeredményei alapján a függőben lévő szelvények egykattintásos automatikus kiértékelése és egyenleghez írása, intelligens korai veszteség-felismeréssel.
+- **Kézi Tét Rögzítés & Tetszőleges Esélyfelvitel:** Kézi felviteli modal egyedi, külső vagy offline mérkőzések és speciális oddsok naplózásához.
+- **Teljes Adatmentés & Biztonság (`bankrollService.ts`):** Tétnapló exportálása és importálása JSON formátumban, egykattintásos mintaadat-visszaállítás és kezdőtőke módosítás.
+- **5-oszlopos Navigáció & Élő Bankroll Chip (`Header.tsx`):** Élő egyenleg-kijelző chip a felső fejlécben és optimalizált 5-elemes mobil tab-váltó (`Top`, `Rács`, `Eredmény`, `Bankroll`, `Módszer`).
+
 ## [1.5.0] - 2026-10-17
 
 ### Hozzáadva (Added)

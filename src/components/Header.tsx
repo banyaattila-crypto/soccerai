@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { SlidersHorizontal, Ticket, RefreshCw, Info, Flame, LayoutGrid, Trophy, BookOpen, Download, Smartphone } from 'lucide-react';
+import {
+  SlidersHorizontal,
+  Ticket,
+  RefreshCw,
+  Info,
+  Flame,
+  LayoutGrid,
+  Trophy,
+  BookOpen,
+  Download,
+  Smartphone,
+  Wallet,
+} from 'lucide-react';
 import { Logo } from './Logo';
 import { APP_VERSION } from '../version';
 
-export type AppTab = 'picks' | 'grid' | 'results' | 'methodology';
+export type AppTab = 'picks' | 'grid' | 'results' | 'bankroll' | 'methodology';
 
 interface HeaderProps {
   onOpenSettings: () => void;
@@ -15,6 +27,7 @@ interface HeaderProps {
   isLiveApi: boolean;
   isLoading: boolean;
   onRefresh: () => void;
+  currentBankroll?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,13 +39,17 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   isLoading,
   onRefresh,
+  currentBankroll,
 }) => {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
 
   useEffect(() => {
     // Ellenőrizzük, hogy standalone PWA módban fut-e az alkalmazás
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+    if (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    ) {
       setIsStandalone(true);
     }
 
@@ -53,13 +70,12 @@ export const Header: React.FC<HeaderProps> = ({
       setInstallPrompt(null);
     }
   };
+
   return (
     <header className="sticky top-0 z-40 bg-[#070B14]/95 backdrop-blur-md border-b border-slate-800/80 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        
         {/* Felső Fő Sáv */}
         <div className="h-15 sm:h-16 flex items-center justify-between gap-2">
-          
           {/* Bal oldal: 3D WOW Focilabda Logó & Cím */}
           <div className="flex items-center gap-2.5 min-w-0">
             <Logo size={38} className="shrink-0" />
@@ -85,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Közép (asztali nézet): 4 Fókuszált Tab */}
+          {/* Közép (asztali nézet): 5 Fókuszált Tab */}
           <nav className="hidden md:flex items-center gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => setActiveTab('picks')}
@@ -124,6 +140,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('bankroll')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'bankroll'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Wallet className="w-3.5 h-3.5" />
+              <span>Tétnapló</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('methodology')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'methodology'
@@ -136,8 +164,24 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
 
-          {/* Jobb oldal: Műveletek (Frissítés, Szelvény, Névjegy, Beállítások) */}
+          {/* Jobb oldal: Műveletek (Bankroll chip, Frissítés, Szelvény, Névjegy, Beállítások) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Live Bankroll Chip */}
+            {currentBankroll !== undefined && (
+              <button
+                onClick={() => setActiveTab('bankroll')}
+                className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'bankroll'
+                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
+                }`}
+                title="Saját Bankroll & Tétnapló megnyitása"
+              >
+                <Wallet className="w-3.5 h-3.5 text-amber-400" />
+                <span>{currentBankroll.toLocaleString('hu-HU')} Ft</span>
+              </button>
+            )}
+
             {/* PWA Telepítés gomb vagy Natív PWA badge */}
             {installPrompt && (
               <button
@@ -156,7 +200,7 @@ export const Header: React.FC<HeaderProps> = ({
                 PWA Mód
               </span>
             )}
-            
+
             {/* Frissítés gomb */}
             <button
               onClick={onRefresh}
@@ -164,8 +208,10 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-slate-300 transition-colors disabled:opacity-50 cursor-pointer"
               title="Mérkőzések frissítése most"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="hidden lg:inline">{isLoading ? 'Frissül...' : 'Frissítés'}</span>
+              <RefreshCw
+                className={`w-3.5 h-3.5 text-amber-400 ${isLoading ? 'animate-spin' : ''}`}
+              />
+              <span className="hidden xl:inline">{isLoading ? 'Frissül...' : 'Frissítés'}</span>
             </button>
 
             {/* Szelvény számláló gomb */}
@@ -201,27 +247,26 @@ export const Header: React.FC<HeaderProps> = ({
               <SlidersHorizontal className="w-4 h-4" />
             </button>
           </div>
-
         </div>
 
-        {/* Mobilon megjelenő másodlagos kompakt 4-oszlopos Tab-sáv */}
+        {/* Mobilon megjelenő másodlagos kompakt 5-oszlopos Tab-sáv */}
         <div className="md:hidden pb-2 pt-0.5">
-          <nav className="grid grid-cols-4 gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800/90 text-center">
+          <nav className="grid grid-cols-5 gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800/90 text-center">
             <button
               onClick={() => setActiveTab('picks')}
-              className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 ${
+              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'picks'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <Flame className="w-3 h-3 shrink-0" />
-              <span className="truncate">Top Tippek</span>
+              <span className="truncate">Top</span>
             </button>
 
             <button
               onClick={() => setActiveTab('grid')}
-              className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 ${
+              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'grid'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -233,7 +278,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => setActiveTab('results')}
-              className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 ${
+              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'results'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -244,19 +289,30 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('bankroll')}
+              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
+                activeTab === 'bankroll'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Wallet className="w-3 h-3 shrink-0" />
+              <span className="truncate">Bankroll</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('methodology')}
-              className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 ${
+              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'methodology'
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <BookOpen className="w-3 h-3 shrink-0" />
-              <span className="truncate">Segédlet</span>
+              <span className="truncate">Módszer</span>
             </button>
           </nav>
         </div>
-
       </div>
     </header>
   );

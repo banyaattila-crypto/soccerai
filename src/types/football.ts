@@ -145,3 +145,52 @@ export interface BetSlipItem {
   probability: number;
   quarterKellyPct?: number;
 }
+
+export type TrackedBetStatus = 'PENDING' | 'WON' | 'LOST' | 'VOID';
+
+export interface TrackedBetItem {
+  matchId: string;
+  matchTitle: string;
+  marketLabel: string;
+  odds: number;
+  probability: number;
+  quarterKellyPct?: number;
+  homeScore?: number;
+  awayScore?: number;
+  isWon?: boolean;
+}
+
+export interface TrackedBet {
+  id: string;
+  createdAt: string; // ISO dátum formátum
+  stake: number; // Ft
+  totalOdds: number;
+  potentialWin: number; // Ft
+  status: TrackedBetStatus;
+  items: TrackedBetItem[];
+  notes?: string;
+  settledAt?: string;
+  netProfit?: number; // WON: potentialWin - stake, LOST: -stake, VOID: 0
+}
+
+export interface BankrollConfig {
+  initialBankroll: number; // Ft
+  currency: string;
+}
+
+export interface BankrollSummary {
+  initialBankroll: number;
+  currentBankroll: number;
+  totalStaked: number;
+  netProfit: number;
+  roiPct: number;
+  totalBets: number;
+  wonBets: number;
+  lostBets: number;
+  pendingBets: number;
+  voidBets: number;
+  winRate: number; // %
+  avgOdds: number;
+  avgStake: number;
+}
+
