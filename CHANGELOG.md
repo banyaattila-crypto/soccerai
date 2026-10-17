@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.5.0] - 2026-10-17
+
+### Hozzáadva (Added)
+- **Progresszív Webalkalmazás (PWA) Támogatás (`manifest.json`):** Mobilra és asztali böngészőbe közvetlenül telepíthető natív standalone alkalmazásként böngészősáv nélkül.
+- **Intelligens Service Worker (`sw.js`):** Kettős gyorsítótárazási stratégia (Cache-First a statikus eszközökre, Network-First az API hívásokra) intelligens offline tartalék üzemmóddal.
+- **Alkalmazáson belüli Telepítés Rendszer (`Header.tsx`):** Egy kattintásos közvetlen telepítés indító gomb az automatikus `beforeinstallprompt` esemény alapján, valamint Standalone PWA állapotjelző jelvény.
+- **Nagyfelbontású PWA Ikoncsomag (`public/icons/`):** 192x192 és 512x512 méretű PNG ikonok, Apple Touch Icon és frissített 3D SoccerAI SVG logó.
+
 ## [1.4.0] - 2026-10-17
 
 ### Hozzáadva (Added)

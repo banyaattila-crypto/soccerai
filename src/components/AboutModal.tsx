@@ -107,6 +107,14 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* PWA & Offline működés státusz */}
+          <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800/80 text-[11px] text-slate-400 flex items-start gap-2.5">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-slate-200">Progresszív Webalkalmazás (PWA):</strong> Telepíthető appként mobilra és asztali számítógépre. Service Worker alapú intelligens offline működés és villámgyors betöltés.
+            </div>
+          </div>
+
         </div>
 
         {/* Lábléc gombok & Külső linkek */}

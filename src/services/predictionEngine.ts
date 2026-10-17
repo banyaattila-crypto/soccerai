@@ -1,4 +1,4 @@
-import { MarketProbabilities, QuantAnalysis } from '../types/football';
+import { MarketProbabilities } from '../types/football';
 
 const MAXG = 8;
 

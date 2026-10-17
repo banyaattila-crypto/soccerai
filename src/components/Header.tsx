@@ -1,5 +1,5 @@
-import React from 'react';
-import { SlidersHorizontal, Ticket, RefreshCw, Info, Flame, LayoutGrid, Trophy, BookOpen } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { SlidersHorizontal, Ticket, RefreshCw, Info, Flame, LayoutGrid, Trophy, BookOpen, Download, Smartphone } from 'lucide-react';
 import { Logo } from './Logo';
 import { APP_VERSION } from '../version';
 
@@ -27,6 +27,32 @@ export const Header: React.FC<HeaderProps> = ({
   isLoading,
   onRefresh,
 }) => {
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Ellenőrizzük, hogy standalone PWA módban fut-e az alkalmazás
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+      setIsStandalone(true);
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
   return (
     <header className="sticky top-0 z-40 bg-[#070B14]/95 backdrop-blur-md border-b border-slate-800/80 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -112,6 +138,24 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Jobb oldal: Műveletek (Frissítés, Szelvény, Névjegy, Beállítások) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* PWA Telepítés gomb vagy Natív PWA badge */}
+            {installPrompt && (
+              <button
+                onClick={handleInstallClick}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-[11px] shadow-md shadow-amber-500/20 transition-all cursor-pointer animate-pulse"
+                title="SoccerAI telepítése natív alkalmazásként"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Telepítés</span>
+              </button>
+            )}
+
+            {isStandalone && (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                <Smartphone className="w-3 h-3" />
+                PWA Mód
+              </span>
+            )}
             
             {/* Frissítés gomb */}
             <button

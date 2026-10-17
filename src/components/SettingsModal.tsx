@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Server, Key, Check, Info } from 'lucide-react';
+import { X, Server, Key, Check } from 'lucide-react';
 import { APP_VERSION } from '../version';
 
 interface SettingsModalProps {

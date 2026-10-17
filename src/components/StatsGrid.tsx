@@ -595,7 +595,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
   matches,
   onSelectMatch,
   onCellBet,
-  betSlipItems,
+  betSlipItems: _betSlipItems,
   focusMarket,
 }) => {
   return (

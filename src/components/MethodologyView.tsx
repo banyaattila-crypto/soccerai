@@ -4,11 +4,8 @@ import {
   Calculator,
   Activity,
   Scale,
-  Database,
   Layers,
   Sparkles,
-  CheckCircle2,
-  AlertTriangle,
 } from 'lucide-react';
 
 interface MethodologyViewProps {

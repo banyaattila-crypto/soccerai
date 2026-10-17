@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BetSlipItem } from '../types/football';
-import { X, Trash2, Ticket, Sparkles, Copy, Check, TrendingUp } from 'lucide-react';
+import { X, Trash2, Ticket, Copy, Check, TrendingUp } from 'lucide-react';
 
 interface BetSlipDrawerProps {
   isOpen: boolean;
