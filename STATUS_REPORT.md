@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.1.0`** (SemVer 2.0.0)  
+**Aktuális verzió:** 🏷️ **`v1.1.1`** (SemVer 2.0.0)  
 **Dátum:** 2026. október 17.  
-**Állapot:** ✅ **Hivatalos v1.1.0 Kiadás Élesítve (GitHub Release + Vercel)**  
-**GitHub Release:** [https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.1.0](https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.1.0)  
+**Állapot:** ✅ **Hivatalos v1.1.1 Kiadás Élesítve (GitHub Release + Vercel)**  
+**GitHub Release:** [https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.1.1](https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.1.1)  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000`  
@@ -16,12 +16,14 @@
 
 A **SoccerAI** egy független, professzionális, kompakt és prémium sötét témájú magyar nyelvű labdarúgó kvantitatív statisztikai és gépi tanulási predikciós platform.
 
-A mai fejlesztési ciklusban sikeresen kiadásra került a **`v1.1.0`** éles verzió (a `v1.0.0` alapkiadásra építve):
-1. **Kompakt 4 füles Dashboard felépítés (`v1.1.0`):** A hosszú függőleges görgetést megszüntetve az alkalmazás 4 szigorúan szétválasztott fülre épül: `🔥 Napi Top Tippek` (alapértelmezett nyitó fül), `📊 Mérkőzés Rács`, `🏆 Eredmények` és `📐 Módszertan`.
-2. **Keskeny 1 soros Állapotsáv (`HeroKpi.tsx` — `v1.1.0`):** A korábbi ~400px magas nyitó szekciót egyetlen keskeny napi összefoglaló sáv és hőtérkép jelmagyarázat váltotta fel.
-3. **Alapértelmezett Premier League szűrő & Accordion ligák (`StatsGrid.tsx` — `v1.1.0`):** A Mérkőzés Rács a Premier League mérkőzéseivel nyit, a *Minden Bajnokság* nézetben pedig a ligák fejlécére kattintva harmonika-szerűen összecsukhatók/kinyithatók a táblázatok.
-4. **Dedikált Módszertan & Segédlet fül (`MethodologyView.tsx` — `v1.1.0`):** Részletes referencia fül a hőtérkép színskála, a fókuszpiacok és a 4 pilléres kvantitatív modell bemutatásával.
-5. **SemVer 2.0.0 Release Manager Skill & Alkalmazáson belüli Verziókijelzés (`AboutModal.tsx`):** A fejlécben a logó mellett lévő kattintható `v1.1.0` jelvény, az Info gomb (ℹ️), a Beállítások menü és a lábléc is mutatja az éppen futó verziót és az újdonságokat.
+A mai fejlesztési ciklusban kiadásra került a **`v1.1.1`** javító kiadás:
+1. **Valós eredmény-kiértékelés (`ResultsView.tsx` — `v1.1.1`):** A befejezett mérkőzések kiértékelése a valós gólokból történik (`evaluatePickWon`). A Millwall–Lincoln City (2:2) és a többi lezárult meccs 2.5 felett és BTTS tippje mostantól helyesen zöld nyertes tippként jelenik meg.
+2. **Dinamikus sikerességi ráta (`v1.1.1`):** A korábbi fix 83.3% helyett a felület a lezárult mérkőzések tényleges kimeneteléből számítja ki a modell pontosságát.
+3. **Diverzifikált piackiválasztó motor (`footballDataApi.ts` — `v1.1.1`):** Megszűnt az egyoldalú Over 2.5 dominancia; a rendszer versenybe állítja a BTTS, Over 2.5, BTTS & Over, 1X2 és Under 2.5 piacokat és a legmagasabb várható értékűt (+EV) választja.
+4. **Kompakt 4 füles Dashboard felépítés (`v1.1.0`):** Különválasztott `🔥 Napi Top Tippek` (alapértelmezett nyitó fül), `📊 Mérkőzés Rács`, `🏆 Eredmények` és `📐 Módszertan`.
+5. **Keskeny 1 soros Állapotsáv (`HeroKpi.tsx` — `v1.1.0`):** 70%-kal csökkentett függőleges kezdőoldali magasság.
+6. **Alapértelmezett Premier League szűrő & Accordion ligák (`StatsGrid.tsx` — `v1.1.0`).**
+7. **SemVer 2.0.0 Release Manager Skill & Alkalmazáson belüli Verziókijelzés (`AboutModal.tsx`).**
 6. **Mobil menüsor & Touch Pan védelem:** A felső navigáció kis képernyőkön sem lóg ki, a vízszintes elcsúszást globális `touch-action: pan-y; overflow-x: hidden;` védi.
 7. **Bajnokság szűrés (39 mérkőzés) & 10 perces háttérfrissítés:** Minden Football-Data.org bajnokság kanonikusan szűrhető, és aktív böngészőfül esetén 10 percenként automatikusan frissül.
 8. **Egyedi 3D "WOW" Focilabda Vektor Logó (`Logo.tsx`):** Fémes aranygyűrűvel és AI orbitális energiapályákkal ellátott 3D futball-labda logó.

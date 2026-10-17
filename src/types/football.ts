@@ -77,7 +77,7 @@ export interface Match {
   probabilities: MarketProbabilities;
   odds: MatchOdds;
   aiPick?: {
-    market: '1' | 'X' | '2' | 'BTTS_YES' | 'OVER_25' | 'OVER_15' | 'FH_OVER_05';
+    market: '1' | 'X' | '2' | 'BTTS_YES' | 'OVER_25' | 'UNDER_25' | 'OVER_15' | 'FH_OVER_05' | 'BTTS_AND_OVER25';
     marketLabel: string;
     probability: number;
     odds: number;

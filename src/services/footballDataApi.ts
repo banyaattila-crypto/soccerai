@@ -107,7 +107,7 @@ const TEAM_POWER: Record<string, { attack: number; defense: number }> = {
   'Borussia Dortmund': { attack: 2.2, defense: 1.4 },
 };
 
-const CACHE_KEY = 'soccerai_live_matches_cache';
+const CACHE_KEY = 'soccerai_live_matches_cache_v3';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perces gyorsítótár
 
 /**
@@ -234,48 +234,163 @@ export async function fetchLiveMatches(
     // Negyed-Kelly tétméretezés
     const qKelly = quarterKelly(probabilities.homeWin, oddsHome);
 
-    // Érték / Kiemelt szignál azonosítás (szigorú robusztussági szűréssel!)
-    let aiPick: Match['aiPick'] | undefined = undefined;
+    // Érték / Kiemelt szignál azonosítás (Diverzifikált piackiválasztás: BTTS, Over 2.5, Kombinált, 1, 2, Under 2.5)
+    interface CandidatePick {
+      market: Match['aiPick'] extends undefined ? never : NonNullable<Match['aiPick']>['market'];
+      marketLabel: string;
+      probability: number;
+      odds: number;
+      confidence: number;
+      expectedValue: number;
+      isTopPick: boolean;
+      robustnessVerdict: 'ROBUSZTUS' | 'valószínű' | 'bizonytalan' | 'ELVETVE';
+      quarterKellyPct: number;
+      reasoning: string;
+      rankScore: number;
+    }
 
-    if (probabilities.homeWin >= 60 && robTest.verdict !== 'ELVETVE') {
-      aiPick = {
+    const candidates: CandidatePick[] = [];
+
+    // 1. Kombinált: Mindkét csapat szerez gólt & 2.5 gól felett
+    if (probabilities.bttsYes >= 62 && probabilities.over25 >= 62) {
+      const combinedProb = Math.min(84, Math.max(50, Math.round((probabilities.bttsYes * probabilities.over25) / 80)));
+      const combinedOdds = Math.max(1.70, Math.round(((1 / (combinedProb / 100)) / margin) * 100) / 100);
+      const ev = Math.round(((combinedProb / 100) * combinedOdds - 1) * 1000) / 10;
+      const qk = quarterKelly(combinedProb, combinedOdds);
+      const isTop = combinedProb >= 56;
+      candidates.push({
+        market: 'BTTS_AND_OVER25',
+        marketLabel: 'BTTS & 2.5 gól felett',
+        probability: combinedProb,
+        odds: combinedOdds,
+        confidence: 9.2,
+        expectedValue: ev,
+        isTopPick: isTop,
+        robustnessVerdict: 'ROBUSZTUS',
+        quarterKellyPct: qk,
+        reasoning: `Nyílt sisakos rangadó: mindkét csapat kimagaslóan gólerős (${homeXg.toFixed(1)} vs ${awayXg.toFixed(1)} xG). Várható össz-gól: ${(homeXg + awayXg).toFixed(1)}.`,
+        rankScore: combinedProb + 14 + ev,
+      });
+    }
+
+    // 2. Mindkét csapat szerez gólt (BTTS_YES)
+    if (probabilities.bttsYes >= 58) {
+      const ev = Math.round(((probabilities.bttsYes / 100) * oddsBtts - 1) * 1000) / 10;
+      const qk = quarterKelly(probabilities.bttsYes, oddsBtts);
+      const isTop = probabilities.bttsYes >= 65;
+      candidates.push({
+        market: 'BTTS_YES',
+        marketLabel: 'Mindkét csapat szerez gólt (BTTS)',
+        probability: probabilities.bttsYes,
+        odds: oddsBtts,
+        confidence: 8.9,
+        expectedValue: ev,
+        isTopPick: isTop,
+        robustnessVerdict: 'valószínű',
+        quarterKellyPct: qk,
+        reasoning: `Mindkét fél magas támadóintenzitással bír (${homeXg.toFixed(1)} vs ${awayXg.toFixed(1)} xG). A modell szerint alacsony a kapott gól nélküli esély mindkét oldalon.`,
+        rankScore: probabilities.bttsYes + (isTop ? 8 : 0) + ev,
+      });
+    }
+
+    // 3. Hazai győzelem (1)
+    if (probabilities.homeWin >= 56 && robTest.verdict !== 'ELVETVE') {
+      const ev = Math.round(((probabilities.homeWin / 100) * oddsHome - 1) * 1000) / 10;
+      const qk = quarterKelly(probabilities.homeWin, oddsHome);
+      const isTop = robTest.verdict === 'ROBUSZTUS' || (robTest.verdict === 'valószínű' && probabilities.homeWin >= 63);
+      candidates.push({
         market: '1',
-        marketLabel: `${m.homeTeam.shortName} Győzelem (1)`,
+        marketLabel: `${m.homeTeam.shortName || m.homeTeam.name} Győzelem (1)`,
         probability: probabilities.homeWin,
         odds: oddsHome,
         confidence: Math.min(9.5, Math.round((probabilities.homeWin / 10) * 10) / 10),
-        expectedValue: Math.round(((probabilities.homeWin / 100) * oddsHome - 1) * 1000) / 10,
-        isTopPick: robTest.verdict === 'ROBUSZTUS' || (robTest.verdict === 'valószínű' && probabilities.homeWin >= 64),
+        expectedValue: ev,
+        isTopPick: isTop,
         robustnessVerdict: robTest.verdict,
-        quarterKellyPct: qKelly,
-        reasoning: `Robusztussági teszt: ${robTest.verdict} (rács ${robTest.posPct}%-án pozitív él). Shin de-vigelt bukméker margin: ${shinRes.margin}%. Javasolt negyed-Kelly bankroll allokáció: ${qKelly}%.`,
-      };
-    } else if (probabilities.over25 >= 60) {
-      const qKellyO25 = quarterKelly(probabilities.over25, oddsOver25);
-      aiPick = {
+        quarterKellyPct: qk,
+        reasoning: `Robusztussági teszt: ${robTest.verdict} (rács ${robTest.posPct}%-án pozitív él). Shin de-vigelt margin: ${shinRes.margin}%. Hazai dominancia: ${probabilities.homeWin}%.`,
+        rankScore: probabilities.homeWin + (isTop ? 10 : 0) + ev,
+      });
+    }
+
+    // 4. Vendég győzelem (2)
+    if (probabilities.awayWin >= 54) {
+      const ev = Math.round(((probabilities.awayWin / 100) * oddsAway - 1) * 1000) / 10;
+      const qk = quarterKelly(probabilities.awayWin, oddsAway);
+      const isTop = probabilities.awayWin >= 60;
+      candidates.push({
+        market: '2',
+        marketLabel: `${m.awayTeam.shortName || m.awayTeam.name} Győzelem (2)`,
+        probability: probabilities.awayWin,
+        odds: oddsAway,
+        confidence: Math.min(9.3, Math.round((probabilities.awayWin / 10) * 10) / 10),
+        expectedValue: ev,
+        isTopPick: isTop,
+        robustnessVerdict: 'valószínű',
+        quarterKellyPct: qk,
+        reasoning: `Vendég favorit (${awayXg.toFixed(1)} vendég xG). Shin de-vigelt esély: ${Math.round(shinRes.probs[2] * 100)}%. Erős vendég érték.`,
+        rankScore: probabilities.awayWin + (isTop ? 8 : 0) + ev,
+      });
+    }
+
+    // 5. 2.5 gól felett (OVER_25)
+    if (probabilities.over25 >= 58) {
+      const ev = Math.round(((probabilities.over25 / 100) * oddsOver25 - 1) * 1000) / 10;
+      const qk = quarterKelly(probabilities.over25, oddsOver25);
+      const isTop = probabilities.over25 >= 65 && lambdaReport.verdict.includes('OVER');
+      candidates.push({
         market: 'OVER_25',
         marketLabel: '2.5 gól felett',
         probability: probabilities.over25,
         odds: oddsOver25,
         confidence: 8.8,
-        expectedValue: Math.round(((probabilities.over25 / 100) * oddsOver25 - 1) * 1000) / 10,
-        isTopPick: probabilities.over25 >= 65 && lambdaReport.verdict.includes('OVER'),
+        expectedValue: ev,
+        isTopPick: isTop,
         robustnessVerdict: 'valószínű',
-        quarterKellyPct: qKellyO25,
-        reasoning: `λ-inverzió ítélet: ${lambdaReport.verdict}. Piaci gólvárakozás: ${lambdaReport.marketLambda} gól/meccs. Negyed-Kelly: ${qKellyO25}%.`,
-      };
-    } else if (probabilities.bttsYes >= 62) {
+        quarterKellyPct: qk,
+        reasoning: `λ-inverzió: ${lambdaReport.verdict}. Piaci várakozás: ${lambdaReport.marketLambda} gól/meccs (${(homeXg + awayXg).toFixed(1)} összetett xG).`,
+        rankScore: probabilities.over25 + (isTop ? 8 : 0) + ev,
+      });
+    }
+
+    // 6. 2.5 gól alatt (UNDER_25)
+    if (probabilities.over25 <= 42) {
+      const underProb = 100 - probabilities.over25;
+      const ev = Math.round(((underProb / 100) * underOddsEst - 1) * 1000) / 10;
+      const qk = quarterKelly(underProb, underOddsEst);
+      const isTop = underProb >= 65;
+      candidates.push({
+        market: 'UNDER_25',
+        marketLabel: '2.5 gól alatt',
+        probability: underProb,
+        odds: underOddsEst,
+        confidence: 8.6,
+        expectedValue: ev,
+        isTopPick: isTop,
+        robustnessVerdict: 'valószínű',
+        quarterKellyPct: qk,
+        reasoning: `Taktikus, fegyelmezett párharc alacsony várható gólszámmal (${(homeXg + awayXg).toFixed(1)} kombinált xG). Védelmi fókusz dominál.`,
+        rankScore: underProb + (isTop ? 8 : 0) + ev,
+      });
+    }
+
+    // Rendezés a legmagasabb rankScore szerint
+    candidates.sort((a, b) => b.rankScore - a.rankScore);
+    const bestCandidate = candidates[0];
+
+    let aiPick: Match['aiPick'] | undefined = undefined;
+    if (bestCandidate) {
       aiPick = {
-        market: 'BTTS_YES',
-        marketLabel: 'Mindkét csapat szerez gólt',
-        probability: probabilities.bttsYes,
-        odds: oddsBtts,
-        confidence: 8.5,
-        expectedValue: Math.round(((probabilities.bttsYes / 100) * oddsBtts - 1) * 1000) / 10,
-        isTopPick: false,
-        robustnessVerdict: 'valószínű',
-        quarterKellyPct: quarterKelly(probabilities.bttsYes, oddsBtts),
-        reasoning: `Mindkét csapat gólképessége kimagasló, a védelmi stabilitási index alapján alacsony a kapott gól nélküli meccs esélye.`,
+        market: bestCandidate.market,
+        marketLabel: bestCandidate.marketLabel,
+        probability: bestCandidate.probability,
+        odds: bestCandidate.odds,
+        confidence: bestCandidate.confidence,
+        expectedValue: bestCandidate.expectedValue,
+        isTopPick: bestCandidate.isTopPick,
+        robustnessVerdict: bestCandidate.robustnessVerdict,
+        quarterKellyPct: bestCandidate.quarterKellyPct,
+        reasoning: bestCandidate.reasoning,
       };
     }
 

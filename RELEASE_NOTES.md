@@ -1,15 +1,13 @@
-# SoccerAI PRO v1.1.0 - Kompakt 4 Füles Dashboard, Premier League Szűrő és Módszertan Nézet
+# SoccerAI PRO v1.1.1 - Eredménykiértékelési Javítás & Sokszínű Piacválasztás
 
-A **SoccerAI PRO `v1.1.0`** kiadás egy jelentős felhasználói élmény (UX) és elrendezésbeli fejlesztést hoz: a korábbi hosszú, egymás alá fűzött főoldalt egy **villámgyorsan áttekinthető, 4 füles kompakt Dashboard** váltotta fel, amely több mint 70%-kal csökkenti a függőleges görgetést.
+A **SoccerAI PRO `v1.1.1`** javító kiadás két kritikus pontosságot érintő problémát orvosol a felhasználói visszajelzések alapján:
 
-## ✨ Újdonságok (Added)
-- **4 önálló, szigorúan szétválasztott fül (`Header.tsx`, `App.tsx`):**
-  1. **🔥 Napi Top Tippek (alapértelmezett nyitó fül):** Csak a Top 3 Robusztus AI Főtippet jeleníti meg egy sorban, alatta pedig legfeljebb 6 db kompakt kártyán a további erős (60%+) szignálokat — a teljes táblázat duplikálása nélkül.
-  2. **📊 Mérkőzés Rács:** Azonnal a szűrősávval és a hőtérkép táblázattal indul.
-  3. **🏆 Eredmények:** Verifikált múltbeli tippek és találati arány statisztika.
-  4. **📐 Módszertan & Segédlet (`MethodologyView.tsx`):** Dedikált referencia fül a hőtérkép színskála, a fókuszpiacok és a 4 pilléres kvantitatív modell (Dixon–Coles, Shin de-vigging, $\lambda$-rács robusztusság, Negyed-Kelly) magyarázatával.
-- **Összecsukható (Accordion) bajnokság-panelek (`StatsGrid.tsx`):** A *Minden Bajnokság* nézetben a ligák fejlécére kattintva egyenként összecsukhatók és kinyithatók a táblázatok, ligánkénti erős szignál-számlálóval.
-
-## 🔄 Változások (Changed)
-- **Keskeny, 1 soros Állapotsáv & Hőtérkép Jelmagyarázat (`HeroKpi.tsx`):** A korábbi magas nyitóblokk helyett egyetlen keskeny sáv mutatja a napi összefoglalót (`Ma: X meccs • Y bajnokság • Z kiemelt jel`) és a hőtérkép színkódjait.
-- **Alapértelmezett Premier League szűrő (`StatsGrid.tsx`):** A *Mérkőzés Rács* fül alapértelmezés szerint a **🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League** meccseivel nyit (ha az adott napon nincs PL-mérkőzés, automatikusan átvált az összes ligára).
+## 🐛 Javítások (Fixed)
+- **Valós eredmény-kiértékelés (`ResultsView.tsx`):** A korábbi tesztkód helyébe az `evaluatePickWon` determinisztikus kiértékelő lépett, amely a tényleges gólokból számolja a nyertességet. A **Millwall – Lincoln City (2:2)** mérkőzés 2.5 gól feletti és BTTS tippje mostantól helyesen zöld **NYERTES TIPP**-ként szerepel!
+- **Dinamikus Sikerességi Ráta:** A korábbi beégetett 83.3% helyett a felület a lezárult mérkőzések tényleges kimeneteléből számítja ki a modell pontosságát.
+- **Diverzifikált Piacválasztás (`footballDataApi.ts`):** Megszűnt az egyoldalú Over 2.5 dominancia. A rendszer minden meccsnél az elérhető legmagasabb várható értékű (+EV) piacot választja:
+  - ⚽ **Mindkét csapat szerez gólt (BTTS)**
+  - 📈 **2.5 gól felett (Over 2.5)**
+  - 🔥 **Kombinált: BTTS & 2.5 gól felett**
+  - 🛡️ **2.5 gól alatt (Under 2.5)**
+  - 🏠 **Hazai győzelem (1)** és ✈️ **Vendég győzelem (2)**
