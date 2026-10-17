@@ -2,6 +2,9 @@
 
 > A **[footballtipster.ai](https://footballtipster.ai)** mintájára készült kompakt, prémium sötét témájú magyar nyelvű labdarúgó statisztikai és prediktív hőtérképes rendszer.
 
+- 🌐 **Élő Vercel URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)
+- 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
+
 ---
 
 ## 🌟 Főbb Jellemzők

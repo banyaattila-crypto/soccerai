@@ -3,8 +3,10 @@
 **Projekt azonosító:** `soccerai` (TippMester.ai)  
 **Hivatkozási minta:** [footballtipster.ai](https://footballtipster.ai)  
 **Dátum:** 2026. október 17.  
-**Állapot:** ✅ **Működőképes, tesztelt, aktív fejlesztői fázis (v1.0-RC)**  
-**Kiszolgáló port:** `http://localhost:3000`  
+**Állapot:** ✅ **Működőképes, tesztelt, élesítve GitHub-on és Vercel-en**  
+**GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
+**Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
+**Helyi szerver port:** `http://localhost:3000`  
 **Projekt elérési útja:** `/home/attila/projects/soccerai` (és szimbolikus hivatkozással: `~/soccerai`)
 
 ---
