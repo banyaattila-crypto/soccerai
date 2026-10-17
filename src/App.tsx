@@ -35,7 +35,7 @@ export function App() {
 
   // Élő meccsek betöltése
   const loadMatches = useCallback(
-    async (source: 'builtin' | 'api', key: string) => {
+    async (source: 'builtin' | 'api', key: string, forceRefresh: boolean = false) => {
       if (source === 'builtin') {
         setMatches(MOCK_MATCHES);
         setApiSuccessNotice(null);
@@ -44,7 +44,7 @@ export function App() {
 
       setIsLoading(true);
       try {
-        const live = await fetchLiveMatches(key);
+        const live = await fetchLiveMatches(key, forceRefresh);
         if (live && live.length > 0) {
           setMatches(live);
           setApiSuccessNotice(
@@ -66,7 +66,7 @@ export function App() {
 
   // Első betöltéskor
   useEffect(() => {
-    loadMatches(dataSource, apiKey);
+    loadMatches(dataSource, apiKey, false);
   }, [dataSource, apiKey, loadMatches]);
 
   // Értesítés eltüntetése 5mp után
@@ -78,13 +78,13 @@ export function App() {
   }, [apiSuccessNotice]);
 
   const handleRefresh = () => {
-    loadMatches(dataSource, apiKey);
+    loadMatches(dataSource, apiKey, true);
   };
 
   const handleSaveConfig = (newSource: 'builtin' | 'api', newKey: string) => {
     setDataSource(newSource);
     setApiKey(newKey);
-    loadMatches(newSource, newKey);
+    loadMatches(newSource, newKey, true);
   };
 
   // Szelvényhez adás (duplikáció szűréssel)

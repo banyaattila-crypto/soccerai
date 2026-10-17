@@ -101,10 +101,32 @@ const TEAM_POWER: Record<string, { attack: number; defense: number }> = {
   'Borussia Dortmund': { attack: 2.2, defense: 1.4 },
 };
 
+const CACHE_KEY = 'soccerai_live_matches_cache';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perces gyorsítótár
+
 /**
- * Lekéri az élő mérkőzéseket a football-data.org API-ról
+ * Lekéri az élő mérkőzéseket a football-data.org API-ról okos gyorsítótárral
  */
-export async function fetchLiveMatches(apiKey: string = '0a2ff5ef40ed4113a0ca28d6b9b122d8'): Promise<Match[]> {
+export async function fetchLiveMatches(
+  apiKey: string = '0a2ff5ef40ed4113a0ca28d6b9b122d8',
+  forceRefresh: boolean = false
+): Promise<Match[]> {
+  // Ha nem kényszerített frissítés, nézzük meg a gyorsítótárat (0 API hívás!)
+  if (!forceRefresh) {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL_MS && Array.isArray(data) && data.length > 0) {
+          console.log('⚡ Gyorsítótárazott (cached) élő meccsek használata, 0 API hívás!');
+          return data;
+        }
+      }
+    } catch {
+      // cache hiba esetén folytatjuk az API hívással
+    }
+  }
+
   // Próbáljuk a helyi proxy végpontot, ha sikertelen, közvetlen football-data végpontot
   const endpoints = [
     '/api/matches',
@@ -268,6 +290,16 @@ export async function fetchLiveMatches(apiKey: string = '0a2ff5ef40ed4113a0ca28d
       venue: `${m.homeTeam.name} Stadion`,
     };
   });
+
+  // Gyorsítótárba mentés a kvóta kímélése érdekében
+  try {
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ timestamp: Date.now(), data: matches })
+    );
+  } catch {
+    // quota hiba esetén csendben továbblép
+  }
 
   return matches;
 }
