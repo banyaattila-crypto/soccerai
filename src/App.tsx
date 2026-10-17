@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { MOCK_MATCHES, LEAGUES } from './data/mockMatches';
 import { fetchLiveMatches } from './services/footballDataApi';
-import { Header } from './components/Header';
+import { Header, AppTab } from './components/Header';
 import { HeroKpi } from './components/HeroKpi';
 import { TopPicks } from './components/TopPicks';
 import { StatsGrid } from './components/StatsGrid';
@@ -11,15 +11,17 @@ import { BetSlipDrawer } from './components/BetSlipDrawer';
 import { SettingsModal } from './components/SettingsModal';
 import { AboutModal } from './components/AboutModal';
 import { ResultsView } from './components/ResultsView';
+import { MethodologyView } from './components/MethodologyView';
 import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
-import { Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 const DEFAULT_API_KEY = '0a2ff5ef40ed4113a0ca28d6b9b122d8';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
-  const [activeTab, setActiveTab] = useState<'grid' | 'picks' | 'results'>('grid');
+  // Alapértelmezett fül: Napi Top Tippek ('picks')
+  const [activeTab, setActiveTab] = useState<AppTab>('picks');
   const [dayFilter, setDayFilter] = useState<DayFilter>('today');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [betSlipOpen, setBetSlipOpen] = useState<boolean>(false);
@@ -182,69 +184,47 @@ export function App() {
         </div>
       )}
 
-      {/* 2. Hero Szekció KPI Mutatókkal & Jelmagyarázattal */}
+      {/* 2. Kompakt Állapotsáv & Hőtérkép Jelmagyarázat */}
       <HeroKpi
         matchCount={todayMatches.length}
         leagueCount={distinctLeagueCount}
         strongSignalCount={strongSignalsCount}
-        onExplorePicks={() => {
-          setActiveTab('picks');
-          window.scrollTo({ top: 300, behavior: 'smooth' });
-        }}
+        onExplorePicks={() => setActiveTab('picks')}
+        onOpenMethodology={() => setActiveTab('methodology')}
       />
 
-      {/* 3. Fő Tartalom az aktív fül szerint */}
+      {/* 3. Fő Tartalom az aktív fül szerint (minden fül szigorúan csak a saját nézetét mutatja) */}
       <main className="flex-1">
-        {activeTab === 'grid' && (
-          <>
-            {/* Kiemelt tippek kompakt ajánló */}
-            <TopPicks
-              matches={todayMatches}
-              onSelectMatch={setSelectedMatch}
-              onAddToBetSlip={handleAddToBetSlip}
-              betSlipItems={betSlipItems}
-            />
-
-            {/* A fő statisztikai rács táblázat */}
-            <StatsGrid
-              matches={matches}
-              dayFilter={dayFilter}
-              setDayFilter={setDayFilter}
-              onSelectMatch={setSelectedMatch}
-              onAddToBetSlip={handleAddToBetSlip}
-              betSlipItems={betSlipItems}
-            />
-          </>
+        {activeTab === 'picks' && (
+          <TopPicks
+            matches={todayMatches}
+            onSelectMatch={setSelectedMatch}
+            onAddToBetSlip={handleAddToBetSlip}
+            betSlipItems={betSlipItems}
+            onSwitchToGrid={() => setActiveTab('grid')}
+          />
         )}
 
-        {activeTab === 'picks' && (
-          <div className="py-6">
-            <TopPicks
-              matches={todayMatches}
-              onSelectMatch={setSelectedMatch}
-              onAddToBetSlip={handleAddToBetSlip}
-              betSlipItems={betSlipItems}
-            />
-
-            {/* További esélyes mérkőzések listája */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-              <h3 className="text-xl font-bold text-white mb-4">
-                További Magas Várható Értékű (Value) Események
-              </h3>
-              <StatsGrid
-                matches={matches}
-                dayFilter="today"
-                setDayFilter={setDayFilter}
-                onSelectMatch={setSelectedMatch}
-                onAddToBetSlip={handleAddToBetSlip}
-                betSlipItems={betSlipItems}
-              />
-            </div>
-          </div>
+        {activeTab === 'grid' && (
+          <StatsGrid
+            matches={matches}
+            dayFilter={dayFilter}
+            setDayFilter={setDayFilter}
+            onSelectMatch={setSelectedMatch}
+            onAddToBetSlip={handleAddToBetSlip}
+            betSlipItems={betSlipItems}
+          />
         )}
 
         {activeTab === 'results' && (
           <ResultsView matches={matches} onSelectMatch={setSelectedMatch} />
+        )}
+
+        {activeTab === 'methodology' && (
+          <MethodologyView
+            onGoToGrid={() => setActiveTab('grid')}
+            onGoToPicks={() => setActiveTab('picks')}
+          />
         )}
       </main>
 

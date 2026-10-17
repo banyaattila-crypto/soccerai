@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.0.0`** (SemVer 2.0.0)  
+**Aktuális verzió:** 🏷️ **`v1.1.0`** (SemVer 2.0.0)  
 **Dátum:** 2026. október 17.  
-**Állapot:** ✅ **Hivatalos Első Kiadás (v1.0.0) Élesítve (GitHub Release + Vercel)**  
-**GitHub Release:** [https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.0.0](https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.0.0)  
+**Állapot:** ✅ **Hivatalos v1.1.0 Kiadás Élesítve (GitHub Release + Vercel)**  
+**GitHub Release:** [https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.1.0](https://github.com/banyaattila-crypto/soccerai/releases/tag/v1.1.0)  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000`  
@@ -16,15 +16,15 @@
 
 A **SoccerAI** egy független, professzionális, kompakt és prémium sötét témájú magyar nyelvű labdarúgó kvantitatív statisztikai és gépi tanulási predikciós platform.
 
-A mai fejlesztési ciklusban sikeresen kiadásra került a hivatalos **`v1.0.0`** éles verzió:
-1. **SemVer 2.0.0 Release Manager Skill elmentve & élesítve:** A rendszer mostantól automatizáltan kezeli a szemantikus verziózást, a [CHANGELOG.md](file:///home/attila/projects/soccerai/CHANGELOG.md) naplózást és a GitHub Release-eket.
-2. **Alkalmazáson belüli Verziókijelzés & Névjegy Modál (`AboutModal.tsx`):** A fejlécben a logó mellett lévő kattintható `v1.0.0` jelvény, az új Info gomb (ℹ️), a Beállítások menü és a lábléc is mutatja az éppen futó verziót, a kiadás dátumát és az újdonságokat.
-3. **Mobil menüsor elrendezés (Header Overflow Fix):** A felső navigáció kis képernyőkön sem lóg ki; dedikált, reszponzív alsó gombsorba rendeztük a füleket.
-4. **Mobilos vízszintes oldalelmozdulás megszüntetése (Touch Pan Fix):** Globális `touch-action: pan-y; overflow-x: hidden;` és táblázat-szintű `touch-pan-x` + overscroll izoláció.
-5. **Bajnokság szűrés és csoportosítás hiba (League Filter Bugfix):** A Football-Data.org API kódjait (`PD`, `SA`, `BL1`, `ELC`, `FL1`, `DED`, `BSA`) kanonikusan összekötöttük a ligákkal, így mind a 39 mai mérkőzés elérhető és szűrhető!
-6. **Minden külső hivatkozás és webcím eltávolítása:** Teljes önálló arculat megteremtése.
-7. **Intelligens 10 perces háttérfrissítés:** Automatikus frissítés csak aktív böngészőfül mellett.
-8. **Egyedi 3D "WOW" Focilabda Vektor Logó (`Logo.tsx`):** Szemkápráztató, fémes aranygyűrűvel, AI orbitális energiapályákkal ellátott 3D futball-labda logó.
+A mai fejlesztési ciklusban sikeresen kiadásra került a **`v1.1.0`** éles verzió (a `v1.0.0` alapkiadásra építve):
+1. **Kompakt 4 füles Dashboard felépítés (`v1.1.0`):** A hosszú függőleges görgetést megszüntetve az alkalmazás 4 szigorúan szétválasztott fülre épül: `🔥 Napi Top Tippek` (alapértelmezett nyitó fül), `📊 Mérkőzés Rács`, `🏆 Eredmények` és `📐 Módszertan`.
+2. **Keskeny 1 soros Állapotsáv (`HeroKpi.tsx` — `v1.1.0`):** A korábbi ~400px magas nyitó szekciót egyetlen keskeny napi összefoglaló sáv és hőtérkép jelmagyarázat váltotta fel.
+3. **Alapértelmezett Premier League szűrő & Accordion ligák (`StatsGrid.tsx` — `v1.1.0`):** A Mérkőzés Rács a Premier League mérkőzéseivel nyit, a *Minden Bajnokság* nézetben pedig a ligák fejlécére kattintva harmonika-szerűen összecsukhatók/kinyithatók a táblázatok.
+4. **Dedikált Módszertan & Segédlet fül (`MethodologyView.tsx` — `v1.1.0`):** Részletes referencia fül a hőtérkép színskála, a fókuszpiacok és a 4 pilléres kvantitatív modell bemutatásával.
+5. **SemVer 2.0.0 Release Manager Skill & Alkalmazáson belüli Verziókijelzés (`AboutModal.tsx`):** A fejlécben a logó mellett lévő kattintható `v1.1.0` jelvény, az Info gomb (ℹ️), a Beállítások menü és a lábléc is mutatja az éppen futó verziót és az újdonságokat.
+6. **Mobil menüsor & Touch Pan védelem:** A felső navigáció kis képernyőkön sem lóg ki, a vízszintes elcsúszást globális `touch-action: pan-y; overflow-x: hidden;` védi.
+7. **Bajnokság szűrés (39 mérkőzés) & 10 perces háttérfrissítés:** Minden Football-Data.org bajnokság kanonikusan szűrhető, és aktív böngészőfül esetén 10 percenként automatikusan frissül.
+8. **Egyedi 3D "WOW" Focilabda Vektor Logó (`Logo.tsx`):** Fémes aranygyűrűvel és AI orbitális energiapályákkal ellátott 3D futball-labda logó.
 
 ---
 

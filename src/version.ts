@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.0.0';
-export const APP_RELEASE_NAME = 'SoccerAI PRO Initial Production Release';
+export const APP_VERSION = '1.1.0';
+export const APP_RELEASE_NAME = 'Kompakt 4 Füles Dashboard & Módszertan Kiadás';
 export const APP_RELEASE_DATE = '2026-10-17';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,12 +16,10 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Élő Football-Data.org API integráció & Vercel Edge caching',
-    'Dixon–Coles (1997) korrigált Poisson gólmátrix (ρ = -0.13)',
-    'Shin (1992) de-vigging bukmékeri árrés és kedvenc-torzítás szűrés',
-    'λ-rács robusztussági szűrő & Negyed-Kelly tétméretezés',
-    '3D SoccerAI vektoros logó & mobilos érintésvédelmi fixek',
-    'Dinamikus ligaszűrő 39 valós európai mérkőzéshez',
-    '10 perces automata háttérfrissítés aktív fül mellett',
+    'Kompakt 4 füles Dashboard felépítés: Napi Top Tippek (alapértelmezett), Mérkőzés Rács, Eredmények, Módszertan',
+    'Keskeny, 1 soros KPI Állapotsáv & Hőtérkép Jelmagyarázat (70%-kal rövidebb kezdőoldal)',
+    'Alapértelmezett Premier League szűrő a Mérkőzés Rácsban + harmonika-szerűen összecsukható (accordion) ligák',
+    'Dedikált Módszertan & Hőtérkép Segédlet fül (Dixon–Coles, Shin de-vigging, λ-rács, Negyed-Kelly)',
+    'Élő Football-Data.org API integráció, 3D vektoros logó & 10 perces automata háttérfrissítés',
   ],
 };

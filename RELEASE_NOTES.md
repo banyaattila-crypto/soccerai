@@ -1,29 +1,15 @@
-# 🚀 SoccerAI PRO v1.0.0 - Hivatalos Éles Kiadás
+# SoccerAI PRO v1.1.0 - Kompakt 4 Füles Dashboard, Premier League Szűrő és Módszertan Nézet
 
-Első stabil, produkciós kiadás (v1.0.0).
+A **SoccerAI PRO `v1.1.0`** kiadás egy jelentős felhasználói élmény (UX) és elrendezésbeli fejlesztést hoz: a korábbi hosszú, egymás alá fűzött főoldalt egy **villámgyorsan áttekinthető, 4 füles kompakt Dashboard** váltotta fel, amely több mint 70%-kal csökkenti a függőleges görgetést.
 
-## 🌟 Főbb Újdonságok és Képességek
+## ✨ Újdonságok (Added)
+- **4 önálló, szigorúan szétválasztott fül (`Header.tsx`, `App.tsx`):**
+  1. **🔥 Napi Top Tippek (alapértelmezett nyitó fül):** Csak a Top 3 Robusztus AI Főtippet jeleníti meg egy sorban, alatta pedig legfeljebb 6 db kompakt kártyán a további erős (60%+) szignálokat — a teljes táblázat duplikálása nélkül.
+  2. **📊 Mérkőzés Rács:** Azonnal a szűrősávval és a hőtérkép táblázattal indul.
+  3. **🏆 Eredmények:** Verifikált múltbeli tippek és találati arány statisztika.
+  4. **📐 Módszertan & Segédlet (`MethodologyView.tsx`):** Dedikált referencia fül a hőtérkép színskála, a fókuszpiacok és a 4 pilléres kvantitatív modell (Dixon–Coles, Shin de-vigging, $\lambda$-rács robusztusság, Negyed-Kelly) magyarázatával.
+- **Összecsukható (Accordion) bajnokság-panelek (`StatsGrid.tsx`):** A *Minden Bajnokság* nézetben a ligák fejlécére kattintva egyenként összecsukhatók és kinyithatók a táblázatok, ligánkénti erős szignál-számlálóval.
 
-### 1. Kvantitatív Modellezés & Értékszűrők
-- **Dixon–Coles (1997) Bivariáns Poisson korrekció** ($\rho = -0.13$) az alacsony gólszámú cellák pontosítására.
-- **Shin (1992) De-vigging**: a bukmékeri árrés (margin %) és a kedvenc-esélytelen torzítás kiszűrése a tiszta valószínűségekért.
-- **$\lambda$-rács Robusztussági Teszt**: szimulált paraméter-perturbációk (`ROBUSZTUS`, `valószínű`, `ELVETVE`).
-- **$\lambda$-inverzió Gólpiac Ellenőrzés**: a piac által árazott gólvárható érték visszafejtése bisection keresővel.
-- **Negyed-Kelly (Quarter-Kelly) Tétméretezés**: konzervatív bankroll-menedzsment ajánlások.
-
-### 2. Valós Adatok & Védett API Integráció
-- **Élő Football-Data.org API v4 integráció** éles kulccsal.
-- **Kettős gyorsítótár (Rate-Limit védelem)**: 5 perces kliensoldali memória-cache (0 API hívás újratöltéskor) + 60 másodperces Vercel Edge cache.
-- **Dinamikus Bajnokság-lefedettség**: 39 mai mérkőzés a Premier League, La Liga, Serie A, Bundesliga, Championship és Ligue 1 ligákból.
-- **10 perces intelligens háttérfrissítés**: automatikus szinkronizáció aktív böngészőfül mellett.
-
-### 3. Prémium Felhasználói Élmény & Mobilvédelem
-- **Egyedi 3D Vektoros Focilabda Logó** (`Logo.tsx`) arany techno-gyűrűvel és AI orbitális ívekkel.
-- **Mobilos Érintésvédelem**: `touch-pan-y` globális rögzítés és táblázat-szintű `touch-pan-x` + overscroll izoláció, megelőzve az oldal elcsúszását.
-- **Reszponzív Alsó Gombsor**: a navigáció sosem lóg ki a képernyőből kis mobilokon sem.
-- **Alkalmazáson belüli Névjegy & Verzióinformáció**: kattintható `v1.0.0` jelvény a fejlécben és a láblécben, közvetlen elérhetőséggel a release jegyzetekhez.
-
----
-
-- 🌐 **Élő Vercel URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)
-- 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
+## 🔄 Változások (Changed)
+- **Keskeny, 1 soros Állapotsáv & Hőtérkép Jelmagyarázat (`HeroKpi.tsx`):** A korábbi magas nyitóblokk helyett egyetlen keskeny sáv mutatja a napi összefoglalót (`Ma: X meccs • Y bajnokság • Z kiemelt jel`) és a hőtérkép színkódjait.
+- **Alapértelmezett Premier League szűrő (`StatsGrid.tsx`):** A *Mérkőzés Rács* fül alapértelmezés szerint a **🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League** meccseivel nyit (ha az adott napon nincs PL-mérkőzés, automatikusan átvált az összes ligára).
