@@ -92,6 +92,36 @@ export interface Match {
   h2h?: HeadToHead[];
   venue?: string;
   weather?: string;
+  apiSportsFixtureId?: number;
+  realOdds?: FixtureRealOdds;
+}
+
+export interface BookmakerOddsItem {
+  name: string;
+  home?: number;
+  draw?: number;
+  away?: number;
+  over25?: number;
+  under25?: number;
+  bttsYes?: number;
+  bttsNo?: number;
+  margin?: number; // Bukméker árrés (%)
+}
+
+export interface FixtureRealOdds {
+  fixtureId: number;
+  updatedAt: string;
+  bookmakers: BookmakerOddsItem[];
+  pinnacle?: BookmakerOddsItem;
+  bet365?: BookmakerOddsItem;
+  bestOdds: {
+    home?: { odd: number; bookmaker: string };
+    draw?: { odd: number; bookmaker: string };
+    away?: { odd: number; bookmaker: string };
+    over25?: { odd: number; bookmaker: string };
+    under25?: { odd: number; bookmaker: string };
+    bttsYes?: { odd: number; bookmaker: string };
+  };
 }
 
 export interface League {

@@ -1,4 +1,4 @@
-import { Match, MatchStatus, QuantAnalysis } from '../types/football';
+import { Match, MatchStatus, QuantAnalysis, FixtureRealOdds, BookmakerOddsItem } from '../types/football';
 import {
   calculateMarketProbabilities,
   devigShin,
@@ -9,7 +9,10 @@ import {
 
 export const API_SPORTS_DEFAULT_KEY = 'b088263aae59a54a7f9a597f1ce83644';
 const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v1';
+const FIXTURE_LOOKUP_KEY = 'soccerai_fixture_lookup_v1';
+const ODDS_CACHE_PREFIX = 'soccerai_odds_cache_';
 const CACHE_TTL_MS = 45 * 60 * 1000; // 45 perces intelligens gyorsítótár
+const ODDS_CACHE_TTL_MS = 60 * 60 * 1000; // 60 perces odds gyorsítótár
 
 export interface ApiSportsLeagueConfig {
   id: number;
@@ -87,6 +90,20 @@ export async function fetchApiSportsMatches(
   if (!rawData || !rawData.response) {
     console.warn('API-Sports meccsek lekérése sikertelen:', lastError?.message);
     return [];
+  }
+
+  // Csapatnév -> API-Sports Fixture ID keresőtérkép mentése (ingyenes illesztés más ligákhoz)
+  try {
+    const lookup: Record<string, number> = {};
+    for (const item of rawData.response) {
+      if (item.teams?.home?.name && item.teams?.away?.name && item.fixture?.id) {
+        const key = `${normalizeTeamName(item.teams.home.name)}_${normalizeTeamName(item.teams.away.name)}`;
+        lookup[key] = item.fixture.id;
+      }
+    }
+    localStorage.setItem(FIXTURE_LOOKUP_KEY, JSON.stringify(lookup));
+  } catch {
+    // böngészős tárolási hiba esetén csendben folytatjuk
   }
 
   // 3. Csak a támogatott ligák szűrése
@@ -341,6 +358,7 @@ export async function fetchApiSportsMatches(
       aiPick,
       quantAnalysis,
       venue: f.fixture.venue?.name ? `${f.fixture.venue.name}, ${f.fixture.venue.city || ''}` : undefined,
+      apiSportsFixtureId: f.fixture.id,
     };
   });
 
@@ -355,4 +373,199 @@ export async function fetchApiSportsMatches(
   }
 
   return matches;
+}
+
+/**
+ * Normalizálja a csapatnevet diakritikus jelek és klub előtagok/utótagok nélkül a pontos párosításhoz.
+ */
+export function normalizeTeamName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^(fc|afc|cf|sc|rc|ac|as|ss|bv|sv|vfb|vfl|rb|ud|ca)\s+/i, '')
+    .replace(/\s+(fc|cf|sc|afc|cd|sad)$/i, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Megkeresi egy meccshez tartozó API-Sports Fixture ID-t (ha van).
+ */
+export function resolveApiSportsFixtureId(match: Match): number | null {
+  if (match.apiSportsFixtureId) return match.apiSportsFixtureId;
+  if (match.id.startsWith('apisports-')) {
+    const num = Number(match.id.replace('apisports-', ''));
+    if (!isNaN(num) && num > 0) return num;
+  }
+  try {
+    const raw = localStorage.getItem(FIXTURE_LOOKUP_KEY);
+    if (raw) {
+      const lookup = JSON.parse(raw);
+      const key = `${normalizeTeamName(match.homeTeam.name)}_${normalizeTeamName(match.awayTeam.name)}`;
+      if (lookup[key]) return lookup[key];
+    }
+  } catch {
+    // csendben folytatjuk
+  }
+  return null;
+}
+
+/**
+ * Lekéri a valós bukmékeri oddsokat (Pinnacle, Bet365, William Hill stb.) egy adott mérkőzéshez.
+ * 60 perces helyi gyorsítótárral védve a napi 100 API kéréses kvótát.
+ */
+export async function fetchFixtureOdds(
+  fixtureId: number,
+  apiKey: string = API_SPORTS_DEFAULT_KEY,
+  forceRefresh = false
+): Promise<FixtureRealOdds | null> {
+  const cacheKey = `${ODDS_CACHE_PREFIX}${fixtureId}`;
+
+  // 1. Gyorsítótár ellenőrzése (0 API hívás!)
+  if (!forceRefresh) {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { timestamp, data } = JSON.parse(cached);
+        if (Date.now() - timestamp < ODDS_CACHE_TTL_MS && data) {
+          console.log(`⚡ API-Sports gyorsítótárazott bukmékeri oddsok betöltve (Fixture: ${fixtureId}, 0 API hívás)`);
+          return data;
+        }
+      }
+    } catch {
+      // cache olvasási hiba esetén folytatjuk
+    }
+  }
+
+  // 2. Végpontok: helyi Vite proxy, Vercel proxy, direct fallback
+  const endpoints = [
+    `/api/apisports?fixture=${fixtureId}`,
+    `https://v3.football.api-sports.io/odds?fixture=${fixtureId}`,
+  ];
+
+  let rawData: any = null;
+  let lastError: Error | null = null;
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'x-apisports-key': apiKey,
+        },
+      });
+
+      if (res.ok) {
+        rawData = await res.json();
+        if (rawData && rawData.response && Array.isArray(rawData.response)) {
+          break;
+        }
+      }
+    } catch (err: any) {
+      lastError = err;
+    }
+  }
+
+  if (!rawData || !rawData.response || rawData.response.length === 0) {
+    console.warn(`Nem található bukmékeri odds a ${fixtureId} meccshez:`, lastError?.message);
+    return null;
+  }
+
+  const fixtureResp = rawData.response[0];
+  const rawBookmakers = fixtureResp.bookmakers || [];
+  if (rawBookmakers.length === 0) {
+    return null;
+  }
+
+  // 3. Bukmékerek és piacok feldolgozása
+  const parsedBookmakers: BookmakerOddsItem[] = [];
+
+  for (const b of rawBookmakers) {
+    const mw = b.bets?.find((x: any) => x.name === 'Match Winner');
+    const ou = b.bets?.find((x: any) => x.name === 'Goals Over/Under');
+    const btts = b.bets?.find((x: any) => x.name === 'Both Teams Score');
+
+    const homeVal = mw?.values?.find((v: any) => v.value === 'Home')?.odd;
+    const drawVal = mw?.values?.find((v: any) => v.value === 'Draw')?.odd;
+    const awayVal = mw?.values?.find((v: any) => v.value === 'Away')?.odd;
+
+    const home = homeVal ? Number(homeVal) : undefined;
+    const draw = drawVal ? Number(drawVal) : undefined;
+    const away = awayVal ? Number(awayVal) : undefined;
+
+    const over25Val = ou?.values?.find((v: any) => v.value === 'Over 2.5')?.odd;
+    const under25Val = ou?.values?.find((v: any) => v.value === 'Under 2.5')?.odd;
+    const over25 = over25Val ? Number(over25Val) : undefined;
+    const under25 = under25Val ? Number(under25Val) : undefined;
+
+    const bttsYesVal = btts?.values?.find((v: any) => v.value === 'Yes')?.odd;
+    const bttsNoVal = btts?.values?.find((v: any) => v.value === 'No')?.odd;
+    const bttsYes = bttsYesVal ? Number(bttsYesVal) : undefined;
+    const bttsNo = bttsNoVal ? Number(bttsNoVal) : undefined;
+
+    let margin: number | undefined = undefined;
+    if (home && draw && away) {
+      margin = Math.round(((1 / home + 1 / draw + 1 / away) - 1) * 1000) / 10;
+    }
+
+    parsedBookmakers.push({
+      name: b.name,
+      home,
+      draw,
+      away,
+      over25,
+      under25,
+      bttsYes,
+      bttsNo,
+      margin,
+    });
+  }
+
+  // Kiemelt bukmékerek kinyerése (Pinnacle & Bet365)
+  const pinnacle = parsedBookmakers.find((b) => b.name.toLowerCase().includes('pinnacle'));
+  const bet365 = parsedBookmakers.find((b) => b.name.toLowerCase().includes('bet365'));
+
+  // Legjobb elérhető szorzók kiválasztása
+  let bestHome: { odd: number; bookmaker: string } | undefined;
+  let bestDraw: { odd: number; bookmaker: string } | undefined;
+  let bestAway: { odd: number; bookmaker: string } | undefined;
+  let bestOver25: { odd: number; bookmaker: string } | undefined;
+  let bestUnder25: { odd: number; bookmaker: string } | undefined;
+  let bestBttsYes: { odd: number; bookmaker: string } | undefined;
+
+  for (const b of parsedBookmakers) {
+    if (b.home && (!bestHome || b.home > bestHome.odd)) bestHome = { odd: b.home, bookmaker: b.name };
+    if (b.draw && (!bestDraw || b.draw > bestDraw.odd)) bestDraw = { odd: b.draw, bookmaker: b.name };
+    if (b.away && (!bestAway || b.away > bestAway.odd)) bestAway = { odd: b.away, bookmaker: b.name };
+    if (b.over25 && (!bestOver25 || b.over25 > bestOver25.odd)) bestOver25 = { odd: b.over25, bookmaker: b.name };
+    if (b.under25 && (!bestUnder25 || b.under25 > bestUnder25.odd)) bestUnder25 = { odd: b.under25, bookmaker: b.name };
+    if (b.bttsYes && (!bestBttsYes || b.bttsYes > bestBttsYes.odd)) bestBttsYes = { odd: b.bttsYes, bookmaker: b.name };
+  }
+
+  const result: FixtureRealOdds = {
+    fixtureId,
+    updatedAt: new Date().toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }),
+    bookmakers: parsedBookmakers,
+    pinnacle,
+    bet365,
+    bestOdds: {
+      home: bestHome,
+      draw: bestDraw,
+      away: bestAway,
+      over25: bestOver25,
+      under25: bestUnder25,
+      bttsYes: bestBttsYes,
+    },
+  };
+
+  // Mentés a gyorsítótárba
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({ timestamp: Date.now(), data: result })
+    );
+  } catch (err) {
+    console.warn('Nem sikerült elmenteni az odds cache-t:', err);
+  }
+
+  return result;
 }

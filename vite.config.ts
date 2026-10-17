@@ -20,7 +20,12 @@ export default defineConfig({
       '/api/apisports': {
         target: 'https://v3.football.api-sports.io',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/apisports/, '/fixtures'),
+        rewrite: (path) => {
+          if (path.includes('fixture=')) {
+            return path.replace(/^\/api\/apisports/, '/odds');
+          }
+          return path.replace(/^\/api\/apisports/, '/fixtures');
+        },
         headers: {
           'x-apisports-key': 'b088263aae59a54a7f9a597f1ce83644'
         }

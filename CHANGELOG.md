@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.3.0] - 2026-10-17
+
+### Hozzáadva (Added)
+- **Élő Bukmékeri Odds Integráció (`apiSportsClient.ts`, `api/apisports.ts`):** Valós piaci szorzók lekérése az API-Sports `/odds` végponton keresztül Pinnacle, Bet365, William Hill, BetVictor és Marathonbet irodáktól 1X2, Over/Under 2.5 és BTTS piacokra.
+- **Piaci Élek és Érték (+EV %) Kijelzés (`MatchDetailModal.tsx`):** A meccs részletezőben megjelenő dedikált panel, amely összehasonlítja a kvantitatív Dixon–Coles fair szorzókat a valós bukmékeri oddsokkal, kiszámítja a bukmékeri árrést (vig) és zölddel jelzi a pozitív várható értéket (+EV).
+- **Pinnacle vs Bet365 vs Legjobb Piaci Oddsok Fülválasztó:** Egy kattintásos váltás az éles záró árak (Pinnacle), a mainstream piac (Bet365) és az egész piac legjobb szorzói között.
+- **60 perces Odds Kvóta-védelem:** Napi 100 API kéréses limit megóvása igény szerinti (on-demand) meccsszintű lekéréssel és helyi gyorsítótárazással.
+
 ## [1.2.1] - 2026-10-17
 
 ### Hozzáadva (Added)

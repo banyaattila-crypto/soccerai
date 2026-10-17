@@ -18,10 +18,15 @@ export default async function handler(req: any, res: any) {
     process.env.API_SPORTS_KEY ||
     'b088263aae59a54a7f9a597f1ce83644';
 
-  const { date } = req.query || {};
-  const targetDate = date || new Date().toISOString().split('T')[0];
+  const { date, fixture, endpoint } = req.query || {};
 
-  const url = `https://v3.football.api-sports.io/fixtures?date=${targetDate}`;
+  let url: string;
+  if (endpoint === 'odds' || fixture) {
+    url = `https://v3.football.api-sports.io/odds?fixture=${fixture}`;
+  } else {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    url = `https://v3.football.api-sports.io/fixtures?date=${targetDate}`;
+  }
 
   try {
     const apiRes = await fetch(url, {
