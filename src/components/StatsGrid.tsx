@@ -16,6 +16,8 @@ import {
   Target,
   Table,
   LayoutGrid,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 
 interface StatsGridProps {
@@ -690,10 +692,17 @@ const MatchTable: React.FC<MatchTableProps> = ({
                 {/* 1. KO / Állapot */}
                 <td className="py-3 px-3 text-center">
                   {isFinished ? (
-                    <span className="inline-flex items-center gap-1 font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                      <CheckCircle2 className="w-3 h-3" />
-                      FT
-                    </span>
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="inline-flex items-center gap-1 font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                        <CheckCircle2 className="w-3 h-3" />
+                        FT
+                      </span>
+                      {(match.kickoffDate || match.kickoffTime) && (
+                        <span className="text-[10px] font-mono text-slate-400 mt-1 whitespace-nowrap">
+                          {match.kickoffDate ? match.kickoffDate.slice(5) : ''} {match.kickoffTime}
+                        </span>
+                      )}
+                    </div>
                   ) : match.status === 'LIVE' ? (
                     <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
@@ -894,10 +903,25 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
 
               <div className="flex items-center gap-1.5 shrink-0">
                 {isFinished ? (
-                  <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    FT
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      FT
+                    </span>
+                    {(match.kickoffDate || match.kickoffTime) && (
+                      <span className="font-mono text-[10px] text-slate-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 flex items-center gap-1">
+                        <Calendar className="w-2.5 h-2.5 text-amber-400/80 shrink-0" />
+                        <span>{match.kickoffDate}</span>
+                        {match.kickoffTime && (
+                          <>
+                            <span className="text-slate-600">&bull;</span>
+                            <Clock className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                            <span>{match.kickoffTime}</span>
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 ) : isLive ? (
                   <span className="font-bold text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500" />

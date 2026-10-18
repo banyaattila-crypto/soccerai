@@ -12,6 +12,8 @@ import {
   BarChart3,
   Check,
   Archive,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import { MOCK_MATCHES } from '../data/mockMatches';
 import { getArchivedFinishedMatches } from '../services/historyService';
@@ -598,20 +600,43 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                   onClick={() => onSelectMatch(match)}
                   className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 hover:border-slate-700 cursor-pointer transition-all space-y-3.5 shadow-lg group hover:shadow-amber-500/5"
                 >
-                  {/* Fejléc: Liga és Piaci kategória címke */}
-                  <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span className="flex items-center gap-1.5 font-semibold text-slate-300">
-                      <span>{match.leagueFlag}</span>
-                      <span>{match.leagueName}</span>
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700/80">
-                        {category}
+                  {/* Fejléc: Liga, Dátum+Időpont és Piaci kategória címke */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span className="flex items-center gap-1.5 font-semibold text-slate-300 truncate">
+                        <span>{match.leagueFlag}</span>
+                        <span className="truncate">{match.leagueName}</span>
                       </span>
-                      <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded text-[10px]">
-                        LEZÁRULT
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/80">
+                          {category}
+                        </span>
+                        <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded text-[10px]">
+                          LEZÁRULT
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Lejátszás időpontja: dátum + kezdési időpont */}
+                    {(match.kickoffDate || match.kickoffTime) && (
+                      <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+                        {match.kickoffDate && (
+                          <span className="inline-flex items-center gap-1 text-slate-300">
+                            <Calendar className="w-3 h-3 text-amber-400/90 shrink-0" />
+                            <span>{match.kickoffDate}</span>
+                          </span>
+                        )}
+                        {match.kickoffDate && match.kickoffTime && (
+                          <span className="text-slate-600">&bull;</span>
+                        )}
+                        {match.kickoffTime && (
+                          <span className="inline-flex items-center gap-1 text-slate-400">
+                            <Clock className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span>{match.kickoffTime}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Csapatok összecsapása és eredmény */}

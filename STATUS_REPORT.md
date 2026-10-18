@@ -30,12 +30,14 @@ A **`v1.9.0`** kiadás az „A” útvonalnak megfelelően átfogó tudományos 
    - A szimulált szorzókból számított önbeteljesítő „Valós érték: +X%” felirat megszűnt, a felület tiszta fair szorzót mutat.
 5. **Dixon–Coles Paraméter-panel (`MatchDetailModal.tsx`):**
    - A mérkőzés részleteiben transzparensen megjelenik mindkét klub illesztett $\alpha$ és $\beta$ paramétere, a hazai előny és az illesztéshez felhasznált meccsszám.
-5. **Tartós Fogadási Szelvény Tárolás (Draft Persistence, `App.tsx`):**
+6. **Tartós Fogadási Szelvény Tárolás (Draft Persistence, `App.tsx`):**
    - Az összeállított szelvénytervezet a böngésző tárában (`localStorage`) oldalfrissítés vagy PWA újraindítás után is megmarad.
-6. **Gördíthető Beállítások Modal & Dedikált Vissza Gombok (`SettingsModal.tsx`):**
+7. **Gördíthető Beállítások Modal & Dedikált Vissza Gombok (`SettingsModal.tsx`):**
    - `max-h-[90vh]` méretezés görgethető tartalommal, és jól látható „← Vissza” navigációs gombok a fejlécben és a láblécben.
-7. **Teljes Szélességű Bajnokság Választó & Görgető Nyilak (`StatsGrid.tsx`):**
+8. **Teljes Szélességű Bajnokság Választó & Görgető Nyilak (`StatsGrid.tsx`):**
    - A LaLiga után lévő ligák sem vágódnak le többé; dedikált sáv bal/jobb görgetőgombokkal és „Összes liga kibontása” több soros nézettel.
+9. **Lezárult Mérkőzések Dátuma és Időpontja (`ResultsView.tsx`, `StatsGrid.tsx`, `MatchDetailModal.tsx`):**
+   - Minden lezárt meccs kártyáján, a táblázatos nézetben és a részletező ablakban is közvetlenül megjelenik a lejátszás pontos naptári napja (`kickoffDate`) és kezdési időpontja (`kickoffTime`), naptár és óra ikonokkal.
 
 ---
 

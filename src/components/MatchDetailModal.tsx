@@ -11,6 +11,8 @@ import {
   RefreshCw,
   Building2,
   Zap,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import { resolveApiSportsFixtureId, fetchFixtureOdds } from '../services/apiSportsClient';
 
@@ -123,8 +125,21 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               <div className="text-xs font-bold text-amber-400 uppercase tracking-wider">
                 {match.leagueName} &bull; {match.leagueCountry}
               </div>
-              <div className="text-xs text-slate-400">
-                {match.kickoffDate} &bull; Kezdés: <strong className="text-white">{match.kickoffTime}</strong>
+              <div className="text-xs text-slate-400 flex items-center gap-1.5 flex-wrap mt-0.5">
+                <span className="inline-flex items-center gap-1 text-slate-300 font-mono">
+                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{match.kickoffDate}</span>
+                </span>
+                <span className="text-slate-600">&bull;</span>
+                <span className="inline-flex items-center gap-1 text-slate-300 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>{isFinished ? 'Lejátszva:' : 'Kezdés:'} <strong className="text-white">{match.kickoffTime}</strong></span>
+                </span>
+                {isFinished && (
+                  <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    LEZÁRULT
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -178,8 +193,21 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             {/* VS vagy Eredmény */}
             <div className="col-span-1 text-center">
               {isFinished ? (
-                <div className="text-2xl font-black text-amber-400 font-mono">
-                  {match.homeScore} : {match.awayScore}
+                <div className="space-y-0.5">
+                  <div className="text-2xl font-black text-amber-400 font-mono">
+                    {match.homeScore} : {match.awayScore}
+                  </div>
+                  <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                    FT
+                  </div>
+                  {(match.kickoffDate || match.kickoffTime) && (
+                    <div className="text-[10px] font-mono text-slate-400">
+                      {match.kickoffDate}
+                      {match.kickoffTime && (
+                        <div className="text-slate-500">{match.kickoffTime}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-xs font-extrabold text-slate-500 bg-slate-900 py-1 px-2 rounded-md border border-slate-800 inline-block">
