@@ -6,7 +6,7 @@
 **Dátum:** 2026. október 18.  
 **Állapot:** ✅ **v1.8.0 Verzió Elkészült & Verifikálva (3D Animációk, Tartós Archívum, Új Színpaletta)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
-**Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
+**Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
 **Projekt elérési útja:** `/home/attila/projects/soccerai` (és szimbolikus linkkel: `~/soccerai`)
 
@@ -116,9 +116,9 @@ A **`v1.8.0`** kiadás a felhasználói visszajelzések alapján megvalósítja 
 
 ## 5. Elérhetőségek & Git Státusz
 
-* 🌐 **Éles Weboldal:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)
+* 🌐 **Éles Weboldal:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
-* 🏷️ **Célzott Git Tag:** `v1.6.0`
+* 🏷️ **Célzott Git Tag:** `v1.8.0`
 * 💻 **Helyi Fejlesztői Környezet:** `http://localhost:3000` (`npm run dev`)
 * 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` 751ms alatt hibátlanul fut.
 

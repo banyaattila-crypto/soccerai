@@ -2,7 +2,7 @@
 
 > Prémium sötét témájú, kompakt és adatvezérelt magyar nyelvű kvantitatív labdarúgó statisztikai és prediktív hőtérképes rendszer.
 
-- 🌐 **Élő Vercel URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)
+- 🌐 **Élő Vercel URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 - 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
 - 💻 **Helyi Fejlesztői Szerver:** `http://localhost:3000`
 
@@ -68,7 +68,7 @@ npm run preview
 
 Elérési címek:
 - **Helyi böngészőből**: `http://localhost:3000`
-- **Éles Vercel telepítés**: `https://soccerai-pink.vercel.app`
+- **Éles Vercel telepítés**: `https://soccerai-pro.vercel.app`
 
 ---
 

@@ -13,6 +13,7 @@ interface ApiResponse {
 }
 
 const ALLOWED_ORIGINS = new Set([
+  'https://soccerai-pro.vercel.app',
   'https://soccerai-pink.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
