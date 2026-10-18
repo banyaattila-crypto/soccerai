@@ -103,12 +103,12 @@ A **`v1.10.0`** kiadás bevezeti a ScoreLab stílusú professzionális mobil és
         ├── BetSlipDrawer.tsx        <-- Szelvényépítő Bankroll mentés integrációval
         ├── Header.tsx               <-- 5-fülű navigáció, élő egyenleg chip, PWA badge
         ├── HeroKpi.tsx              <-- Fő KPI sáv, 3D labda, dinamikus tegnapi mutató
-        ├── StatsGrid.tsx            <-- Táblázat és Kártyanézet, ligaszűrők
+        ├── StatsGrid.tsx            <-- Dupla Kvantitatív Mutatósáv, Kompakt ScoreLab lista, Kártyák, Táblázat & My Matches
         ├── TopPicks.tsx             <-- Napi kiemelt tippek és 3D kártyadöntés
         ├── ResultsView.tsx          <-- Eredmények, piaconkénti ROI és múltbeli archívum
         ├── MethodologyView.tsx      <-- Módszertan és matematikai modellek
         ├── MatchDetailModal.tsx     <-- Kvantitatív elemzés, Poisson és odds összevetés
-        ├── AboutModal.tsx           <-- Névjegy, v1.9.0 infók
+        ├── AboutModal.tsx           <-- Névjegy, v1.10.0 infók
         └── SettingsModal.tsx        <-- API kulcsok és liga-engedélyezés
 ```
 
@@ -118,9 +118,9 @@ A **`v1.10.0`** kiadás bevezeti a ScoreLab stílusú professzionális mobil és
 
 * 🌐 **Éles Weboldal:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
-* 🏷️ **Célzott Git Tag:** `v1.9.0`
+* 🏷️ **Célzott Git Tag:** `v1.10.0`
 * 💻 **Helyi Fejlesztői Környezet:** `http://localhost:3000` (`npm run dev`)
-* 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` 751ms alatt hibátlanul fut.
+* 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` hibátlanul fut.
 
 ---
 
