@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.8.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *3D Interaktív Élmény, Elegáns Smaragdzöld UI & Tartós Eredmény Archívum*  
+**Aktuális verzió:** 🏷️ **`v1.9.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Valódi Dixon–Coles MLE Motor & Dinamikus Csapatparaméterek*  
 **Dátum:** 2026. október 18.  
-**Állapot:** ✅ **v1.8.0 Verzió Elkészült & Verifikálva (3D Animációk, Tartós Archívum, Új Színpaletta)**  
+**Állapot:** ✅ **v1.9.0 Verzió Elkészült & Verifikálva (Valódi MLE Illesztés, Etikai Javítások, 0 Linter Hiba)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,18 +16,20 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.8.0`** kiadás a felhasználói visszajelzések alapján megvalósítja a vizuális, funkcionális és használhatósági fejlesztéseket:
+A **`v1.9.0`** kiadás az „A” útvonalnak megfelelően átfogó tudományos és etikai modernizációt valósít meg:
 
-### Fő Megvalósítások a v1.8.0-ban:
-1. **3D Interaktív Élmény & Animációk (`ThreeDBall.tsx`, `Logo.tsx`, `TopPicks.tsx`):**
-   - Valódi 3D térbeli forgó focilabda (`ThreeDBall`) orbitális gyűrűkkel és kattintható pörgés-fizikával a Hero szekcióban és a Logóban.
-   - Egérmozgásra reagáló dinamikus 3D kártya dőlés (3D Tilt effect) a Nap Top 3 kiemelt kártyáján rétegzett mélységgel (`translateZ`).
-2. **Finomított Színvilág & Túl Sok Sárga Eltávolítása:**
-   - A korábbi harsány neonsárga helyett professzionális smaragdzöld (`emerald-600`) akciógombok, zafír/smaragd navigáció és diszkrét arany kiemelések.
-3. **Tartós Múltbeli Eredmény Archívum (`historyService.ts`, `ResultsView.tsx`):**
-   - A lezárt mérkőzések a helyi tárhelyen (`localStorage`) folyamatosan felhalmozódnak és megőrződnek; új időszaki szűrőkkel (Összes archivált, Ma, Tegnap, 7 nap).
-4. **Szigorú Top Pick Robusztussági Szűrés (`TopPicks.tsx`):**
-   - Az instabil `ELVETVE` tippek kizárásra kerültek a kiemelt válogatásból; csak sziklaszilárd `ROBUSZTUS` vagy `valószínű` kimenetelek jelenhetnek meg.
+### Fő Megvalósítások a v1.9.0-ban:
+1. **Valódi Dixon–Coles (1997) MLE Paraméter-illesztés (`dixonColesFitting.ts`):**
+   - A statikus, kézzel beírt 17 csapatos `TEAM_POWER` tábla és a másodosztályok lapos konstansai véglegesen törölve lettek.
+   - A csapatok támadóerejét ($\alpha_i$) és védelmi gyengeségét ($\beta_i$), valamint a hazai pálya előnyt ($\gamma$) és a $\rho$ korrekciót mostantól a szezonban ténylegesen lejátszott mérkőzésekből, iteratív Poisson Maximum Likelihood Estimation (MLE) eljárással számítja a motor.
+2. **First-run Dishonesty Felszámolása (`bankrollService.ts`):**
+   - Az új felhasználók tétnaplója tiszta, üres lappal (`[]`) indul: nincs automatikusan generált hamis múltbeli nyereség.
+3. **Kitalált Statisztikák Törlése (`HeroKpi.tsx`, `App.tsx`):**
+   - A fix „Tegnap: 83% találat” törölve lett: kizárólag valós, befejezett meccsekből számolt dinamikus sikerrátát jelenít meg, vagy transzparens modell-státuszt ad.
+4. **Körkörös „+EV” Megszüntetése (`TopPicks.tsx`):**
+   - A szimulált szorzókból számított önbeteljesítő „Valós érték: +X%” felirat megszűnt, a felület tiszta fair szorzót mutat.
+5. **Dixon–Coles Paraméter-panel (`MatchDetailModal.tsx`):**
+   - A mérkőzés részleteiben transzparensen megjelenik mindkét klub illesztett $\alpha$ és $\beta$ paramétere, a hazai előny és az illesztéshez felhasznált meccsszám.
 5. **Tartós Fogadási Szelvény Tárolás (Draft Persistence, `App.tsx`):**
    - Az összeállított szelvénytervezet a böngésző tárában (`localStorage`) oldalfrissítés vagy PWA újraindítás után is megmarad.
 6. **Gördíthető Beállítások Modal & Dedikált Vissza Gombok (`SettingsModal.tsx`):**
@@ -118,7 +120,7 @@ A **`v1.8.0`** kiadás a felhasználói visszajelzések alapján megvalósítja 
 
 * 🌐 **Éles Weboldal:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
-* 🏷️ **Célzott Git Tag:** `v1.8.0`
+* 🏷️ **Célzott Git Tag:** `v1.9.0`
 * 💻 **Helyi Fejlesztői Környezet:** `http://localhost:3000` (`npm run dev`)
 * 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` 751ms alatt hibátlanul fut.
 

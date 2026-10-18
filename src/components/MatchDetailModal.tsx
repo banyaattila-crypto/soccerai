@@ -317,6 +317,45 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   </span>
                 </div>
               )}
+
+              {/* Valós Dixon-Coles illesztett paraméterek panel */}
+              {match.quantAnalysis.dixonColesRatings?.isEmpiricallyFitted && (
+                <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-xs space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-emerald-300">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                      Dixon–Coles MLE Paraméterek ({match.quantAnalysis.dixonColesRatings.sampleSize} meccs alapján)
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400">
+                      γ={match.quantAnalysis.dixonColesRatings.homeAdvantage} | ρ={match.quantAnalysis.dixonColesRatings.rho}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
+                      <span className="text-slate-400 font-medium block truncate">{match.homeTeam.name}</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-slate-500 text-[10px]">Támadás (α):</span>
+                        <span className="font-bold font-mono text-emerald-400">{match.quantAnalysis.dixonColesRatings.homeAttack}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 text-[10px]">Védelem (β):</span>
+                        <span className="font-bold font-mono text-slate-200">{match.quantAnalysis.dixonColesRatings.homeDefense}</span>
+                      </div>
+                    </div>
+                    <div className="p-2 rounded bg-slate-900/80 border border-slate-800">
+                      <span className="text-slate-400 font-medium block truncate">{match.awayTeam.name}</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-slate-500 text-[10px]">Támadás (α):</span>
+                        <span className="font-bold font-mono text-emerald-400">{match.quantAnalysis.dixonColesRatings.awayAttack}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 text-[10px]">Védelem (β):</span>
+                        <span className="font-bold font-mono text-slate-200">{match.quantAnalysis.dixonColesRatings.awayDefense}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.8.0';
-export const APP_RELEASE_NAME = '3D Interaktív Élmény, Elegáns Smaragdzöld UI & Tartós Eredmény Archívum';
+export const APP_VERSION = '1.9.0';
+export const APP_RELEASE_NAME = 'Valódi Dixon–Coles MLE Motor & Dinamikus Csapatparaméterek';
 export const APP_RELEASE_DATE = '2026-10-18';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';

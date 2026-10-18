@@ -4,6 +4,14 @@ import {
   buildMatchQuantAndPick,
 } from './predictionEngine';
 import { getRelativeDateStr, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
+import {
+  fitDixonColesModel,
+  computeExpectedGoalsFromModel,
+  loadLeagueModel,
+  saveLeagueModel,
+  FittedDixonColesModel,
+  FinishedMatchResult,
+} from './dixonColesFitting';
 
 interface FootballDataMatch {
   id: number;
@@ -79,31 +87,61 @@ export const COMPETITION_MAP: Record<
   BSA: { id: 'seriea_brazil', name: 'Série A Brasil', country: 'Brazília', flag: '🇧🇷', priority: 9 },
 };
 
-// Becsült csapat erősségi xG bázisok a népszerűbb klubokra
-const TEAM_POWER: Record<string, { attack: number; defense: number }> = {
-  // Premier League
-  Arsenal: { attack: 2.15, defense: 0.85 },
-  'Manchester City': { attack: 2.35, defense: 0.9 },
-  Liverpool: { attack: 2.25, defense: 0.95 },
-  Chelsea: { attack: 1.85, defense: 1.2 },
-  'Aston Villa': { attack: 1.75, defense: 1.25 },
-  Tottenham: { attack: 1.9, defense: 1.35 },
-  'Manchester United': { attack: 1.55, defense: 1.4 },
-  Newcastle: { attack: 1.7, defense: 1.25 },
-  // La Liga
-  'Real Madrid': { attack: 2.3, defense: 0.85 },
-  Barcelona: { attack: 2.4, defense: 1.0 },
-  'Atlético Madrid': { attack: 1.85, defense: 0.85 },
-  // Serie A
-  'Inter Milan': { attack: 2.15, defense: 0.85 },
-  Juventus: { attack: 1.65, defense: 0.75 },
-  'AC Milan': { attack: 1.85, defense: 1.15 },
-  Napoli: { attack: 1.9, defense: 1.0 },
-  // Bundesliga
-  'Bayern München': { attack: 2.55, defense: 1.0 },
-  'Bayer Leverkusen': { attack: 2.2, defense: 1.1 },
-  'Borussia Dortmund': { attack: 2.05, defense: 1.35 },
-};
+/**
+ * Bajnokság befejezett meccseinek lekérése és valós Dixon-Coles modell illesztése
+ */
+async function getOrFetchDixonColesLeagueModel(
+  compCode: string,
+  apiKey: string = ''
+): Promise<FittedDixonColesModel | null> {
+  const cached = loadLeagueModel(compCode);
+  if (cached) return cached;
+
+  const endpoints = [`/api/matches?competition=${compCode}&status=FINISHED`];
+  if (apiKey.trim()) {
+    endpoints.push(
+      `https://api.football-data.org/v4/competitions/${compCode}/matches?status=FINISHED`
+    );
+  }
+
+  for (const url of endpoints) {
+    try {
+      const headers: Record<string, string> = {};
+      if (apiKey.trim()) headers['X-Auth-Token'] = apiKey.trim();
+
+      const res = await fetch(url, { headers });
+      if (!res.ok) continue;
+
+      const data: FootballDataResponse = await res.json();
+      if (!data || !Array.isArray(data.matches) || data.matches.length === 0) continue;
+
+      const finishedResults: FinishedMatchResult[] = data.matches
+        .filter(
+          (m) =>
+            m.status === 'FINISHED' &&
+            m.score?.fullTime?.home !== null &&
+            m.score?.fullTime?.away !== null
+        )
+        .map((m) => ({
+          homeTeam: m.homeTeam.name,
+          awayTeam: m.awayTeam.name,
+          homeGoals: m.score.fullTime.home!,
+          awayGoals: m.score.fullTime.away!,
+          date: m.utcDate ? m.utcDate.split('T')[0] : undefined,
+        }));
+
+      if (finishedResults.length >= 5) {
+        const fitted = fitDixonColesModel(finishedResults, compCode);
+        saveLeagueModel(fitted);
+        return fitted;
+      }
+    } catch {
+      // Továbblépés következő végpontra vagy fallbackre
+    }
+  }
+
+  return null;
+}
 
 const CACHE_KEY = 'soccerai_live_matches_cache_v4';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perces gyorsítótár
@@ -168,6 +206,18 @@ export async function fetchLiveMatches(
     );
   }
 
+  // Egyedi bajnokságok összegyűjtése és valós Dixon-Coles modell illesztése / betöltése
+  const uniqueCompCodes = Array.from(
+    new Set(rawData.matches.map((m) => m.competition.code || 'PL'))
+  );
+
+  const leagueModelsMap: Record<string, FittedDixonColesModel | null> = {};
+  await Promise.all(
+    uniqueCompCodes.map(async (code) => {
+      leagueModelsMap[code] = await getOrFetchDixonColesLeagueModel(code, apiKey);
+    })
+  );
+
   // Konvertálás a belső Match formátumra
   const matches: Match[] = rawData.matches.map((m) => {
     const compCode = m.competition.code || 'PL';
@@ -190,21 +240,27 @@ export async function fetchLiveMatches(
       status = 'FINISHED';
     }
 
-    const homePower =
-      TEAM_POWER[m.homeTeam.shortName] ||
-      TEAM_POWER[m.homeTeam.name] || { attack: 1.55, defense: 1.25 };
-    const awayPower =
-      TEAM_POWER[m.awayTeam.shortName] ||
-      TEAM_POWER[m.awayTeam.name] || { attack: 1.3, defense: 1.35 };
+    const leagueModel = leagueModelsMap[compCode] || null;
+    const homeDisplayName = m.homeTeam.shortName || m.homeTeam.name;
+    const awayDisplayName = m.awayTeam.shortName || m.awayTeam.name;
 
-    // Hazai várható gólok (mérsékelt hazai pálya faktorral: +8% hazai, nincs duplázás a predictionEngine-ben)
-    const homeXg =
-      Math.round(homePower.attack * (awayPower.defense / 1.3) * 1.08 * 10) / 10;
-    const awayXg =
-      Math.round(awayPower.attack * (homePower.defense / 1.3) * 10) / 10;
+    // Valós Dixon-Coles illesztett xG értékek számítása a csapatok alpha (támadás) és beta (védelem) paramétereiből
+    const { homeXg, awayXg, isFitted, homeRating, awayRating } =
+      computeExpectedGoalsFromModel(
+        leagueModel,
+        m.homeTeam.name,
+        m.awayTeam.name,
+        1.45,
+        1.15
+      );
 
-    // Poisson/Dixon-Coles valószínűségszámítás (homeAdvantageFactor = 1.0, nincs duplázás)
-    const probabilities = calculateMarketProbabilities(homeXg, awayXg, 1.0);
+    // Poisson/Dixon-Coles valószínűségszámítás a becsült rho korrekcióval
+    const probabilities = calculateMarketProbabilities(
+      homeXg,
+      awayXg,
+      1.0,
+      leagueModel?.rho || -0.13
+    );
 
     // Szimulált piaci szorzók (fair odds + 5% bukmékeri árrés)
     const margin = 1.05;
@@ -236,14 +292,11 @@ export async function fetchLiveMatches(
     );
 
     const isTopTier = ['PL', 'PD', 'SA', 'BL1', 'CL'].includes(compCode);
-    const dataQuality: 'A' | 'B' | 'C' = isTopTier
+    const dataQuality: 'A' | 'B' | 'C' = isFitted
       ? 'A'
-      : ['ELC', 'FL1', 'DED'].includes(compCode)
+      : isTopTier
       ? 'B'
       : 'C';
-
-    const homeDisplayName = m.homeTeam.shortName || m.homeTeam.name;
-    const awayDisplayName = m.awayTeam.shortName || m.awayTeam.name;
 
     const { aiPick, quantAnalysis } = buildMatchQuantAndPick({
       homeTeamName: homeDisplayName,
@@ -260,8 +313,22 @@ export async function fetchLiveMatches(
         under25: oddsUnder25,
       },
       dataQuality,
-      leagueLabel: compInfo.name,
+      leagueLabel: isFitted
+        ? `${compInfo.name} (Valós Dixon–Coles illesztés, ${leagueModel?.sampleSize} meccs)`
+        : `${compInfo.name} (ligaátlag bázis)`,
       isSimulatedOdds: true,
+      dixonColesRatings: isFitted && homeRating && awayRating
+        ? {
+            homeAttack: homeRating.attack,
+            homeDefense: homeRating.defense,
+            awayAttack: awayRating.attack,
+            awayDefense: awayRating.defense,
+            homeAdvantage: leagueModel?.homeAdvantage || 1.2,
+            rho: leagueModel?.rho || -0.13,
+            isEmpiricallyFitted: true,
+            sampleSize: leagueModel?.sampleSize,
+          }
+        : undefined,
     });
 
     return {
@@ -279,8 +346,8 @@ export async function fetchLiveMatches(
         shortName: m.homeTeam.tla || homeDisplayName.substring(0, 3).toUpperCase(),
         logo: m.homeTeam.crest || `https://crests.football-data.org/${m.homeTeam.id}.png`,
         xgAvg: homeXg,
-        goalsScoredAvg: homePower.attack,
-        goalsConcededAvg: homePower.defense,
+        goalsScoredAvg: homeRating ? homeRating.attack : 1.0,
+        goalsConcededAvg: homeRating ? homeRating.defense : 1.0,
       },
       awayTeam: {
         id: String(m.awayTeam.id),
@@ -288,11 +355,11 @@ export async function fetchLiveMatches(
         shortName: m.awayTeam.tla || awayDisplayName.substring(0, 3).toUpperCase(),
         logo: m.awayTeam.crest || `https://crests.football-data.org/${m.awayTeam.id}.png`,
         xgAvg: awayXg,
-        goalsScoredAvg: awayPower.attack,
-        goalsConcededAvg: awayPower.defense,
+        goalsScoredAvg: awayRating ? awayRating.attack : 1.0,
+        goalsConcededAvg: awayRating ? awayRating.defense : 1.0,
       },
-      homeScore: m.score.fullTime.home ?? undefined,
-      awayScore: m.score.fullTime.away ?? undefined,
+      homeScore: m.score?.fullTime?.home ?? undefined,
+      awayScore: m.score?.fullTime?.away ?? undefined,
       probabilities,
       odds: {
         home: oddsHome,

@@ -70,6 +70,16 @@ export interface QuantAnalysis {
   };
   keyFactors: string[];
   riskLevel: 'Alacsony' | 'Közepes' | 'Magas';
+  dixonColesRatings?: {
+    homeAttack: number;
+    homeDefense: number;
+    awayAttack: number;
+    awayDefense: number;
+    homeAdvantage: number;
+    rho: number;
+    isEmpiricallyFitted: boolean;
+    sampleSize?: number;
+  };
 }
 
 export interface Match {

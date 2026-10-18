@@ -103,8 +103,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const rawDateFrom = req.query?.dateFrom;
   const rawDateTo = req.query?.dateTo;
+  const rawCompetition = req.query?.competition;
+  const rawStatus = req.query?.status;
+
   const dateFrom = Array.isArray(rawDateFrom) ? rawDateFrom[0] : rawDateFrom;
   const dateTo = Array.isArray(rawDateTo) ? rawDateTo[0] : rawDateTo;
+  const competition = Array.isArray(rawCompetition) ? rawCompetition[0] : rawCompetition;
+  const status = Array.isArray(rawStatus) ? rawStatus[0] : rawStatus;
 
   if (dateFrom && !DATE_REGEX.test(dateFrom)) {
     return res.status(400).json({
@@ -117,11 +122,25 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     });
   }
 
-  let url = 'https://api.football-data.org/v4/matches';
-  const params = new URLSearchParams();
-  if (dateFrom) params.append('dateFrom', dateFrom);
-  if (dateTo) params.append('dateTo', dateTo);
-  if (params.toString()) url += `?${params.toString()}`;
+  let url: string;
+  let cacheTtl = 's-maxage=120, stale-while-revalidate=300';
+
+  if (competition) {
+    const sanitizedComp = competition.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase();
+    url = `https://api.football-data.org/v4/competitions/${sanitizedComp}/matches`;
+    const compParams = new URLSearchParams();
+    if (status) compParams.append('status', status);
+    if (compParams.toString()) url += `?${compParams.toString()}`;
+    // Bajnokság szintű meccslista (szezon előzmények): 24 órás Edge cache
+    cacheTtl = 's-maxage=86400, stale-while-revalidate=172800';
+  } else {
+    url = 'https://api.football-data.org/v4/matches';
+    const params = new URLSearchParams();
+    if (dateFrom) params.append('dateFrom', dateFrom);
+    if (dateTo) params.append('dateTo', dateTo);
+    if (status) params.append('status', status);
+    if (params.toString()) url += `?${params.toString()}`;
+  }
 
   try {
     const apiRes = await fetch(url, {
@@ -131,7 +150,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     });
 
     const data: unknown = await apiRes.json();
-    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', cacheTtl);
     return res.status(apiRes.status).json(data);
   } catch (error: unknown) {
     const message =

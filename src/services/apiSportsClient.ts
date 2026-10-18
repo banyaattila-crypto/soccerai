@@ -9,6 +9,13 @@ import {
   buildMatchQuantAndPick,
 } from './predictionEngine';
 import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
+import {
+  computeExpectedGoalsFromModel,
+  loadLeagueModel,
+  saveLeagueModel,
+  fitDixonColesModel,
+  FinishedMatchResult,
+} from './dixonColesFitting';
 
 export const API_SPORTS_DEFAULT_KEY = '';
 const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v2';
@@ -224,6 +231,30 @@ export async function fetchApiSportsMatches(
     targetLeagueIds.has(f.league?.id)
   );
 
+  // 3.5 Befejezett meccsekből Dixon-Coles modellek illesztése/frissítése
+  for (const lid of targetLeagueIds) {
+    const finishedForLeague: FinishedMatchResult[] = rawFixtures
+      .filter(
+        (f) =>
+          f.league.id === lid &&
+          ['FT', 'AET', 'PEN'].includes(f.fixture.status?.short || '') &&
+          f.goals.home !== null &&
+          f.goals.away !== null
+      )
+      .map((f) => ({
+        homeTeam: f.teams.home.name,
+        awayTeam: f.teams.away.name,
+        homeGoals: f.goals.home!,
+        awayGoals: f.goals.away!,
+        date: f.fixture.date ? f.fixture.date.split('T')[0] : undefined,
+      }));
+
+    if (finishedForLeague.length >= 6) {
+      const fitted = fitDixonColesModel(finishedForLeague, `apisports_${lid}`);
+      saveLeagueModel(fitted);
+    }
+  }
+
   // 4. Konvertálás a belső Match formátumra & Dixon-Coles modellezés
   const matches: Match[] = rawFixtures.map((f) => {
     const lConfig = SUPPORTED_SECONDARY_LEAGUES[f.league.id];
@@ -241,12 +272,24 @@ export async function fetchApiSportsMatches(
     const homeTeamName = f.teams.home.name;
     const awayTeamName = f.teams.away.name;
 
-    // Liga-szintű valós gólátlag bázis használata (charCodeAt nélkül)
-    const homeXg = lConfig.avgHomeGoals;
-    const awayXg = lConfig.avgAwayGoals;
+    // Dixon-Coles modellből származó xG vagy liga-szintű bázis
+    const leagueModel = loadLeagueModel(`apisports_${lConfig.id}`);
+    const { homeXg, awayXg, isFitted, homeRating, awayRating } =
+      computeExpectedGoalsFromModel(
+        leagueModel,
+        homeTeamName,
+        awayTeamName,
+        lConfig.avgHomeGoals,
+        lConfig.avgAwayGoals
+      );
 
-    // Piaci valószínűségek Poisson/Dixon-Coles alapján (homeAdvantageFactor = 1.0, mivel az avgHomeGoals már tartalmazza)
-    const probabilities = calculateMarketProbabilities(homeXg, awayXg, 1.0);
+    // Piaci valószínűségek Poisson/Dixon-Coles alapján a becsült rho korrekcióval
+    const probabilities = calculateMarketProbabilities(
+      homeXg,
+      awayXg,
+      1.0,
+      leagueModel?.rho || -0.13
+    );
 
     // Szimulált piaci szorzók (fair odds + 5.5% árrés)
     const margin = 1.055;
@@ -291,9 +334,23 @@ export async function fetchApiSportsMatches(
         over25: oddsOver25,
         under25: oddsUnder25,
       },
-      dataQuality: 'B',
-      leagueLabel: `${lConfig.name} – liga-átlag xG bázis`,
+      dataQuality: isFitted ? 'B' : 'C',
+      leagueLabel: isFitted
+        ? `${lConfig.name} (Valós Dixon–Coles illesztés)`
+        : `${lConfig.name} (ligaátlag xG bázis)`,
       isSimulatedOdds: true,
+      dixonColesRatings: isFitted && homeRating && awayRating
+        ? {
+            homeAttack: homeRating.attack,
+            homeDefense: homeRating.defense,
+            awayAttack: awayRating.attack,
+            awayDefense: awayRating.defense,
+            homeAdvantage: leagueModel?.homeAdvantage || 1.2,
+            rho: leagueModel?.rho || -0.13,
+            isEmpiricallyFitted: true,
+            sampleSize: leagueModel?.sampleSize,
+          }
+        : undefined,
     });
 
     return {
@@ -313,6 +370,8 @@ export async function fetchApiSportsMatches(
         shortName: homeTeamName.substring(0, 3).toUpperCase(),
         logo: f.teams.home.logo,
         xgAvg: homeXg,
+        goalsScoredAvg: homeRating ? homeRating.attack : 1.0,
+        goalsConcededAvg: homeRating ? homeRating.defense : 1.0,
       },
       awayTeam: {
         id: String(f.teams.away.id),
@@ -320,6 +379,8 @@ export async function fetchApiSportsMatches(
         shortName: awayTeamName.substring(0, 3).toUpperCase(),
         logo: f.teams.away.logo,
         xgAvg: awayXg,
+        goalsScoredAvg: awayRating ? awayRating.attack : 1.0,
+        goalsConcededAvg: awayRating ? awayRating.defense : 1.0,
       },
       probabilities,
       odds: {

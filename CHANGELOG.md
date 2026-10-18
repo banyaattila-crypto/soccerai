@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.9.0] - 2026-10-18
+
+### Hozzáadva (Added)
+- **Valódi Dixon–Coles (1997) MLE Paraméter-illesztő Motor (`dixonColesFitting.ts`):** A korábbi kézzel beírt 17 csapatos `TEAM_POWER` tábla és a lapos másodosztályú konstansok teljes törlése. A rendszer a szezonban már lejátszott mérkőzésekből, iteratív arányos illesztéssel (Iterative Proportional Fitting Poisson MLE) és exponenciális időbeli súlyozással ($\xi = 0.0025$) számítja ki minden csapat valós támadóerejét ($\alpha_i$), védelmi gyengeségét ($\beta_i$), a hazai pálya előnyt ($\gamma$) és a $\rho$ korrekciót.
+- **Dinamikus Bajnokság-szintű Modell Gyorsítótár (`dixonColesFitting.ts`, `api/matches.ts`):** 24 órás Edge- és kliensoldali gyorsítótár a szezonális mérkőzésadatokra, ami minimális kvótafogyasztás mellett biztosít valós idejű, egzakt statisztikai modellt.
+- **Dixon–Coles Paraméter-kijelző Panel (`MatchDetailModal.tsx`):** A mérkőzés részleteiben megjelenik mindkét csapat egzakt illesztett $\alpha$ (támadás) és $\beta$ (védelem) mutatója, a $\gamma$ hazai előny, a $\rho$ érték és az illesztéshez felhasznált befejezett meccsek száma.
+
+### Javítva & Integritás (Fixed & Integrity)
+- **First-run Dishonesty Felszámolása a Tétnaplóban (`bankrollService.ts`):** Az új felhasználók többé nem kapnak automatikusan generált, nem létező nyertes szelvényeket (+5 280 Ft, +3 400 Ft). A tétnapló 100%-ig tiszta, üres kezdőállapottal indul.
+- **Kitalált Sikerráta Törlése (`HeroKpi.tsx`, `App.tsx`):** A beégetett „Tegnap: 83% találat” felirat törölve. A rendszer kizárólag akkor ír ki sikerrátát, ha ténylegesen léteznek tegnapi lezárt meccsek az archívumban, amit valós eredményekből számol. Ellenkező esetben transzparens modell-státuszt mutat.
+- **Önbeteljesítő Körkörös „+EV” Felszámolása (`TopPicks.tsx`):** Szimulált bukmékeri oddsoknál tilos piaci értéktöbbletet hazudni. A felület transzparensen a fair szorzót mutatja, és csak valós külső odds jelenlétekor számol piaci előnyt.
+
 ## [1.8.0] - 2026-10-18
 
 ### Hozzáadva (Added)

@@ -102,13 +102,14 @@ export function extractMarketsFromMatrix(m: number[][]) {
 export function calculateMarketProbabilities(
   homeXg: number,
   awayXg: number,
-  homeAdvantageFactor: number = 1.0
+  homeAdvantageFactor: number = 1.0,
+  rho: number = -0.13
 ): MarketProbabilities {
   const adjHomeXg = Math.max(0.2, homeXg * homeAdvantageFactor);
   const adjAwayXg = Math.max(0.2, awayXg);
 
-  // Dixon-Coles mátrix generálás
-  const matrix = calculateDixonColesMatrix(adjHomeXg, adjAwayXg, -0.13);
+  // Dixon-Coles mátrix generálás az illesztett vagy alapértelmezett rho korrekcióval
+  const matrix = calculateDixonColesMatrix(adjHomeXg, adjAwayXg, rho);
   const mk = extractMarketsFromMatrix(matrix);
 
   // Félidő becslés
@@ -354,6 +355,7 @@ export function buildMatchQuantAndPick(params: {
   dataQuality: 'A' | 'B' | 'C';
   leagueLabel: string;
   isSimulatedOdds: boolean;
+  dixonColesRatings?: QuantAnalysis['dixonColesRatings'];
 }): {
   aiPick: Match['aiPick'];
   quantAnalysis: QuantAnalysis;
@@ -368,6 +370,7 @@ export function buildMatchQuantAndPick(params: {
     dataQuality,
     leagueLabel,
     isSimulatedOdds,
+    dixonColesRatings,
   } = params;
 
   const shinRes = devigShin([odds.home, odds.draw, odds.away]);
@@ -655,6 +658,7 @@ export function buildMatchQuantAndPick(params: {
         : activeRob.verdict === 'valószínű'
         ? 'Közepes'
         : 'Magas',
+    dixonColesRatings,
   };
 
   return { aiPick, quantAnalysis };

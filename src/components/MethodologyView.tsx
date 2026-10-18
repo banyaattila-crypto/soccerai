@@ -112,13 +112,13 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
           <div className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 space-y-2.5">
             <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm">
               <Calculator className="w-4 h-4" />
-              <h4>2. Dixon–Coles (1997) Bivariáns Poisson Modell</h4>
+              <h4>2. Dixon–Coles (1997) Bivariáns Poisson &amp; MLE Illesztés</h4>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              A hagyományos független Poisson-eloszlás alulbecsüli a <strong>0–0, 1–0, 0–1 és 1–1</strong> eredmények gyakoriságát a modern labdarúgásban.
+              A csapatok várható góljait (xG) a szezonban már lejátszott mérkőzésekből, <strong>Maximum Likelihood Estimation (MLE)</strong> és időbeli súlyozás segítségével számoljuk ki. Minden csapat egyedi támadóerővel (α) és védelmi gyengeséggel (β) rendelkezik, korrigálva az alacsony gólszámú (0–0, 1–0, 0–1, 1–1) τ(x,y) összefüggésekkel (ρ = -0.13).
             </p>
             <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 font-mono">
-              τ(x, y) korrekció ρ = -0.13 korrelációs együtthatóval a 10×10-es gólmátrixon
+              λ_hazai = α_hazai · β_vendég · γ | μ_vendég = α_vendég · β_hazai
             </div>
           </div>
 
