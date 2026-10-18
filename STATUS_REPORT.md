@@ -76,10 +76,10 @@ A **`v1.9.0`** kiadás az „A” útvonalnak megfelelően átfogó tudományos 
 
 ```
 /home/attila/projects/soccerai/
-├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.6.0)
-├── CHANGELOG.md                     <-- Verziótörténet v1.6.0 leírással
+├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.9.0)
+├── CHANGELOG.md                     <-- Verziótörténet v1.9.0 leírással
 ├── README.md                        <-- Fő bemutató dokumentáció
-├── package.json                     <-- v1.6.0 verzió, függőségek és scriptek
+├── package.json                     <-- v1.9.0 verzió, függőségek és scriptek
 ├── vite.config.ts                   <-- Vite 8 + Tailwind v4 + Dev Proxy
 ├── tsconfig.json                    <-- TypeScript konfiguráció
 ├── index.html                       <-- Belépési pont PWA meta címkékkel
@@ -92,25 +92,29 @@ A **`v1.9.0`** kiadás az „A” útvonalnak megfelelően átfogó tudományos 
 │   └── apisports.ts                 <-- API-Sports Vercel proxy & Edge cache
 └── src/
     ├── main.tsx                     <-- React belépési pont + Service Worker
-    ├── version.ts                   <-- v1.6.0 verziókonstansok és kiadási kiemelések
+    ├── version.ts                   <-- v1.9.0 verziókonstansok és kiadási kiemelések
     ├── App.tsx                      <-- Dashboard navigáció (5 fül), Bankroll szinkron
     ├── types/
     │   └── football.ts              <-- TrackedBet, BankrollSummary, Match típusok
     ├── services/
+    │   ├── dixonColesFitting.ts     <-- Valódi Dixon-Coles MLE paraméter-illesztés
+    │   ├── historyService.ts        <-- Tartós meccseredmény archívum kezelő
     │   ├── bankrollService.ts       <-- Bankroll menedzsment, perzisztencia, auto-settle
     │   ├── predictionEngine.ts      <-- Dixon-Coles, Shin de-vig, λ-rács, Kelly
-    │   ├── footballDataApi.ts       <-- Football-Data.org API kliens
+    │   ├── footballDataApi.ts       <-- Football-Data.org API kliens & MLE integráció
     │   └── apiSportsClient.ts       <-- API-Sports kliens & élő oddsok
     └── components/
+        ├── ThreeDBall.tsx           <-- 3D interaktív forgó futball-labda komponens
         ├── BankrollView.tsx         <-- Tétnapló, KPI kártyák, szelvények, kézi rögzítés
         ├── BetSlipDrawer.tsx        <-- Szelvényépítő Bankroll mentés integrációval
         ├── Header.tsx               <-- 5-fülű navigáció, élő egyenleg chip, PWA badge
+        ├── HeroKpi.tsx              <-- Fő KPI sáv, 3D labda, dinamikus tegnapi mutató
         ├── StatsGrid.tsx            <-- Táblázat és Kártyanézet, ligaszűrők
-        ├── TopPicks.tsx             <-- Napi kiemelt tippek és szignálok
-        ├── ResultsView.tsx          <-- Eredmények, piaconkénti ROI
+        ├── TopPicks.tsx             <-- Napi kiemelt tippek és 3D kártyadöntés
+        ├── ResultsView.tsx          <-- Eredmények, piaconkénti ROI és múltbeli archívum
         ├── MethodologyView.tsx      <-- Módszertan és matematikai modellek
         ├── MatchDetailModal.tsx     <-- Kvantitatív elemzés, Poisson és odds összevetés
-        ├── AboutModal.tsx           <-- Névjegy, v1.6.0 infók
+        ├── AboutModal.tsx           <-- Névjegy, v1.9.0 infók
         └── SettingsModal.tsx        <-- API kulcsok és liga-engedélyezés
 ```
 
