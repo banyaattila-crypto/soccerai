@@ -17,7 +17,8 @@ import { MethodologyView } from './components/MethodologyView';
 import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
-import { formatLocalDate } from './utils/dateUtils';
+import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
+import { evaluatePickWon } from './components/ResultsView';
 import {
   createTrackedBet,
   getTrackedBets,
@@ -270,6 +271,32 @@ export function App() {
     return count;
   }, [todayMatches]);
 
+  const yesterdayDateStr = useMemo(() => getRelativeDateStr(-1), []);
+  const yesterdayStat = useMemo(() => {
+    const finishedYesterday = matches.filter(
+      (m) =>
+        (m.kickoffDate === yesterdayDateStr || m.status === 'FINISHED') &&
+        typeof m.homeScore === 'number' &&
+        typeof m.awayScore === 'number' &&
+        m.aiPick
+    );
+    if (finishedYesterday.length === 0) return null;
+    let won = 0;
+    finishedYesterday.forEach((m) => {
+      if (
+        m.aiPick &&
+        evaluatePickWon(m.homeScore, m.awayScore, m.aiPick.market, m.aiPick.marketLabel)
+      ) {
+        won++;
+      }
+    });
+    return {
+      won,
+      total: finishedYesterday.length,
+      winRate: Math.round((won / finishedYesterday.length) * 100),
+    };
+  }, [matches, yesterdayDateStr]);
+
   return (
     <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
       
@@ -326,6 +353,7 @@ export function App() {
         matchCount={todayMatches.length}
         leagueCount={distinctLeagueCount}
         strongSignalCount={strongSignalsCount}
+        yesterdayStat={yesterdayStat}
         onExplorePicks={() => setActiveTab('picks')}
         onOpenMethodology={() => setActiveTab('methodology')}
       />

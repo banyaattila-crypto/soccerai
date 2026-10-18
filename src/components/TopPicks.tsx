@@ -166,10 +166,12 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               />
             </div>
             <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-              <span>Szimulált odds esély: {impliedProb}%</span>
+              <span>Implikált esély: {impliedProb}%</span>
               <span className="text-emerald-400 font-semibold">
-                {edge > 0
-                  ? `Valós érték: +${edge}%`
+                {match.aiPick?.isSimulatedOdds ?? true
+                  ? `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`
+                  : edge > 0
+                  ? `Piaci előny: +${edge}%`
                   : `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`}
               </span>
             </div>

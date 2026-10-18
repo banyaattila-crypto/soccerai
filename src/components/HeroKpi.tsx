@@ -6,6 +6,7 @@ interface HeroKpiProps {
   matchCount: number;
   leagueCount: number;
   strongSignalCount: number;
+  yesterdayStat?: { won: number; total: number; winRate: number } | null;
   onExplorePicks?: () => void;
   onOpenMethodology?: () => void;
 }
@@ -14,6 +15,7 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
   matchCount,
   leagueCount,
   strongSignalCount,
+  yesterdayStat,
   onOpenMethodology,
 }) => {
   return (
@@ -53,11 +55,21 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
               <span className="text-emerald-300/90 font-medium">kiemelt jel (60%+)</span>
             </div>
 
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-xs whitespace-nowrap shrink-0">
-              <Award className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-slate-400">Tegnap:</span>
-              <strong className="text-emerald-400 font-bold">83% találat</strong>
-            </div>
+            {yesterdayStat && yesterdayStat.total > 0 ? (
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-xs whitespace-nowrap shrink-0">
+                <Award className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-slate-400">Tegnap:</span>
+                <strong className="text-emerald-400 font-bold">
+                  {yesterdayStat.won}/{yesterdayStat.total} ({yesterdayStat.winRate}%)
+                </strong>
+              </div>
+            ) : (
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-xs whitespace-nowrap shrink-0">
+                <Award className="w-3.5 h-3.5 text-sky-400" />
+                <span className="text-slate-400">Modell:</span>
+                <strong className="text-sky-300 font-semibold">Dixon–Coles</strong>
+              </div>
+            )}
           </div>
 
           {/* Jobb oldal: Egysoros Kompakt Hőtérkép Színskála */}

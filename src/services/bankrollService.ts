@@ -146,12 +146,11 @@ export function setInitialBankroll(amount: number): void {
  * Tétnaplóban tárolt szelvények betöltése
  */
 export function getTrackedBets(): TrackedBet[] {
-  if (typeof window === 'undefined') return SAMPLE_TRACKED_BETS;
+  if (typeof window === 'undefined') return [];
   const saved = localStorage.getItem(STORAGE_KEY_BETS);
   if (!saved) {
-    // Első betöltéskor mintaszériát biztosítunk, hogy azonnal élményt adjon
-    saveTrackedBets(SAMPLE_TRACKED_BETS);
-    return SAMPLE_TRACKED_BETS;
+    // Első indításkor tiszta lap: nincs automatikusan generált hamis múltbeli nyereség
+    return [];
   }
   try {
     const parsed = JSON.parse(saved);
