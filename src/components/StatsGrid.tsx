@@ -18,7 +18,120 @@ import {
   LayoutGrid,
   Calendar,
   Clock,
+  List,
+  SlidersHorizontal,
+  Check,
+  Star,
 } from 'lucide-react';
+
+export type DisplayMode = 'compact' | 'cards' | 'table';
+
+export type GridMetricId =
+  | 'OVER_15'
+  | 'OVER_25'
+  | 'UNDER_25'
+  | 'OVER_35'
+  | 'BTTS'
+  | 'HOME_WIN'
+  | 'DRAW'
+  | 'AWAY_WIN'
+  | 'FH_OVER_05'
+  | 'BTTS_AND_OVER25';
+
+export interface GridMetricOption {
+  id: GridMetricId;
+  label: string;
+  shortLabel: string;
+  marketName: (match: Match) => string;
+  getValue: (p: Match['probabilities']) => number;
+  getOdds: (match: Match) => number;
+}
+
+export const GRID_METRICS: GridMetricOption[] = [
+  {
+    id: 'OVER_15',
+    label: 'Over 1.5 %',
+    shortLabel: 'Goal >1.5',
+    marketName: () => '1.5 gól felett',
+    getValue: (p) => p.over15,
+    getOdds: (m) => Number(Math.max(1.05, +(100 / Math.max(10, m.probabilities.over15 * 0.94)).toFixed(2))),
+  },
+  {
+    id: 'OVER_25',
+    label: 'Over 2.5 %',
+    shortLabel: 'Goal >2.5',
+    marketName: () => '2.5 gól felett',
+    getValue: (p) => p.over25,
+    getOdds: (m) => m.odds.over25,
+  },
+  {
+    id: 'UNDER_25',
+    label: 'Under 2.5 %',
+    shortLabel: 'Goal <2.5',
+    marketName: () => '2.5 gól alatt',
+    getValue: (p) => Math.max(1, 100 - p.over25),
+    getOdds: (m) => Number(Math.max(1.10, +(100 / Math.max(10, (100 - m.probabilities.over25) * 0.94)).toFixed(2))),
+  },
+  {
+    id: 'OVER_35',
+    label: 'Over 3.5 %',
+    shortLabel: 'Goal >3.5',
+    marketName: () => '3.5 gól felett',
+    getValue: (p) => p.over35,
+    getOdds: (m) => Number(Math.max(1.20, +(100 / Math.max(10, m.probabilities.over35 * 0.94)).toFixed(2))),
+  },
+  {
+    id: 'BTTS',
+    label: 'BTTS %',
+    shortLabel: 'BTTS',
+    marketName: () => 'Mindkét csapat szerez gólt (BTTS)',
+    getValue: (p) => p.bttsYes,
+    getOdds: (m) => m.odds.bttsYes,
+  },
+  {
+    id: 'HOME_WIN',
+    label: '1 (Hazai) %',
+    shortLabel: '1 (Hazai)',
+    marketName: (m) => `${m.homeTeam.name} Győzelem (1)`,
+    getValue: (p) => p.homeWin,
+    getOdds: (m) => m.odds.home,
+  },
+  {
+    id: 'DRAW',
+    label: 'X (Döntetlen) %',
+    shortLabel: 'X (Dönt.)',
+    marketName: () => 'Döntetlen (X)',
+    getValue: (p) => p.draw,
+    getOdds: (m) => m.odds.draw,
+  },
+  {
+    id: 'AWAY_WIN',
+    label: '2 (Vendég) %',
+    shortLabel: '2 (Vendég)',
+    marketName: (m) => `${m.awayTeam.name} Győzelem (2)`,
+    getValue: (p) => p.awayWin,
+    getOdds: (m) => m.odds.away,
+  },
+  {
+    id: 'FH_OVER_05',
+    label: '1.F >0.5 %',
+    shortLabel: 'HT >0.5',
+    marketName: () => '1. félidő 0.5 gól felett',
+    getValue: (p) => p.fhOver05,
+    getOdds: (m) => Number(Math.max(1.15, +(100 / Math.max(10, m.probabilities.fhOver05 * 0.94)).toFixed(2))),
+  },
+  {
+    id: 'BTTS_AND_OVER25',
+    label: 'BTTS & >2.5 %',
+    shortLabel: 'BTTS & >2.5',
+    marketName: () => 'BTTS és 2.5 gól felett',
+    getValue: (p) => p.bttsAndOver25 ?? Math.round((p.bttsYes * p.over25) / 100),
+    getOdds: (m) => {
+      const pVal = m.probabilities.bttsAndOver25 ?? Math.round((m.probabilities.bttsYes * m.probabilities.over25) / 100);
+      return Number(Math.max(1.30, +(100 / Math.max(10, pVal * 0.90)).toFixed(2)));
+    },
+  },
+];
 
 interface StatsGridProps {
   matches: Match[];
@@ -51,13 +164,95 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       });
     }
   };
-  // Mobilon (<768px) alapértelmezetten a kényelmes Kártyanézet nyílik meg!
-  const [displayMode, setDisplayMode] = useState<'table' | 'cards'>(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return 'cards';
+
+  // Alapértelmezett nézet: 'compact' (ScoreLab lista), 'cards' vagy 'table'
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('soccerai_display_mode');
+      if (saved === 'compact' || saved === 'cards' || saved === 'table') {
+        return saved;
+      }
     }
-    return 'table';
+    return 'compact';
   });
+
+  const handleSetDisplayMode = (mode: DisplayMode) => {
+    setDisplayMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soccerai_display_mode', mode);
+    }
+  };
+
+  // ScoreLab Dupla Dinamikus Statisztika-választó sáv állapota
+  const [metric1, setMetric1] = useState<GridMetricId>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('soccerai_grid_metric1') as GridMetricId;
+      if (GRID_METRICS.some((g) => g.id === saved)) return saved;
+    }
+    return 'OVER_15';
+  });
+
+  const [metric2, setMetric2] = useState<GridMetricId>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('soccerai_grid_metric2') as GridMetricId;
+      if (GRID_METRICS.some((g) => g.id === saved)) return saved;
+    }
+    return 'BTTS';
+  });
+
+  const handleSetMetric1 = (id: GridMetricId) => {
+    setMetric1(id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soccerai_grid_metric1', id);
+    }
+  };
+
+  const handleSetMetric2 = (id: GridMetricId) => {
+    setMetric2(id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('soccerai_grid_metric2', id);
+    }
+  };
+
+  const [openMetricDropdown, setOpenMetricDropdown] = useState<1 | 2 | null>(null);
+
+  const metricOption1 = useMemo(
+    () => GRID_METRICS.find((g) => g.id === metric1) || GRID_METRICS[0],
+    [metric1]
+  );
+  const metricOption2 = useMemo(
+    () => GRID_METRICS.find((g) => g.id === metric2) || GRID_METRICS[4],
+    [metric2]
+  );
+
+  // Kedvenc mérkőzések (ScoreLab My Matches)
+  const [favoriteMatchIds, setFavoriteMatchIds] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('soccerai_favorite_matches');
+        if (saved) return new Set(JSON.parse(saved));
+      } catch {
+        // Fallback
+      }
+    }
+    return new Set();
+  });
+
+  const toggleFavoriteMatch = (e: React.MouseEvent, matchId: string) => {
+    e.stopPropagation();
+    setFavoriteMatchIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId);
+      else next.add(matchId);
+      try {
+        localStorage.setItem('soccerai_favorite_matches', JSON.stringify(Array.from(next)));
+      } catch {
+        // Fallback
+      }
+      return next;
+    });
+  };
+
   const [onlyStrongSignals, setOnlyStrongSignals] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focusMarket, setFocusMarket] = useState<FocusMarket>('ALL');
@@ -216,6 +411,12 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
 
     return groups;
   }, [availableLeagues, filteredMatches]);
+
+  // Kedvenc meccsek kiszűrése az adott napra
+  const favoriteMatches = useMemo(() => {
+    if (favoriteMatchIds.size === 0) return [];
+    return dayMatches.filter((m) => favoriteMatchIds.has(m.id));
+  }, [dayMatches, favoriteMatchIds]);
 
   const toggleLeagueCollapse = (leagueId: string) => {
     setCollapsedLeagues((prev) => ({
@@ -443,11 +644,33 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                 <span>{viewMode === 'league' ? 'Bajnokság szerint' : 'Időrendben'}</span>
               </button>
 
-              {/* Nézetváltó: Táblázat vs Kompakt Kártyák */}
+              {/* Nézetváltó: Kompakt vs Kártyák vs Táblázat */}
               <div className="flex items-center gap-0.5 bg-slate-900/90 p-0.5 rounded-lg border border-slate-700/60">
                 <button
                   type="button"
-                  onClick={() => setDisplayMode('table')}
+                  onClick={() => handleSetDisplayMode('compact')}
+                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    displayMode === 'compact' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="ScoreLab kompakt meccssoros nézet"
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span>Kompakt</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetDisplayMode('cards')}
+                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    displayMode === 'cards' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Kártyás nézet"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Kártyák</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetDisplayMode('table')}
                   className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
                     displayMode === 'table' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
                   }`}
@@ -455,17 +678,6 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                 >
                   <Table className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Táblázat</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDisplayMode('cards')}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                    displayMode === 'cards' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Kompakt kártyás nézet mobilon"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Kártyák</span>
                 </button>
               </div>
 
@@ -510,6 +722,130 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           </div>
         </div>
 
+        {/* ================= SCORELAB DUPLA DINAMIKUS STATISZTIKA-VÁLASZTÓ SÁV ================= */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-5 p-3.5 rounded-2xl bg-mesh-card border border-slate-800/90 shadow-md">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-cyan-400 shrink-0" />
+            <div>
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span>Dinamikus Kvantitatív Mutatósáv</span>
+                <span className="text-[10px] font-mono font-normal text-slate-400 hidden md:inline">
+                  &bull; Meccssorokon megjelenített 2 mutató
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap relative">
+            {openMetricDropdown && (
+              <div
+                className="fixed inset-0 z-20 cursor-default"
+                onClick={() => setOpenMetricDropdown(null)}
+              />
+            )}
+
+            {/* 1. Mutató választó gomb & dropdown */}
+            <div className="relative flex-1 sm:flex-initial">
+              <button
+                type="button"
+                onClick={() => setOpenMetricDropdown(openMetricDropdown === 1 ? null : 1)}
+                className={`w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border transition-all cursor-pointer z-30 relative ${
+                  openMetricDropdown === 1
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-sm shadow-cyan-500/20'
+                    : 'bg-slate-900 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
+                }`}
+                title="1. statisztikai mutató megváltoztatása"
+              >
+                <span className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] flex items-center justify-center font-black shrink-0">
+                  1.
+                </span>
+                <span className="font-mono">{metricOption1.label}</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform shrink-0 ${
+                    openMetricDropdown === 1 ? 'rotate-180 text-cyan-400' : 'text-slate-400'
+                  }`}
+                />
+              </button>
+
+              {openMetricDropdown === 1 && (
+                <div className="absolute left-0 top-full mt-1.5 w-60 p-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-30 space-y-0.5 max-h-72 overflow-y-auto">
+                  <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
+                    1. Mutató kiválasztása
+                  </div>
+                  {GRID_METRICS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        handleSetMetric1(opt.id);
+                        setOpenMetricDropdown(null);
+                      }}
+                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-colors cursor-pointer ${
+                        metric1 === opt.id
+                          ? 'bg-cyan-500/20 text-cyan-300 font-bold'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {metric1 === opt.id && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 2. Mutató választó gomb & dropdown */}
+            <div className="relative flex-1 sm:flex-initial">
+              <button
+                type="button"
+                onClick={() => setOpenMetricDropdown(openMetricDropdown === 2 ? null : 2)}
+                className={`w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border transition-all cursor-pointer z-30 relative ${
+                  openMetricDropdown === 2
+                    ? 'bg-indigo-500/20 text-indigo-300 border-indigo-400 shadow-sm shadow-indigo-500/20'
+                    : 'bg-slate-900 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
+                }`}
+                title="2. statisztikai mutató megváltoztatása"
+              >
+                <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] flex items-center justify-center font-black shrink-0">
+                  2.
+                </span>
+                <span className="font-mono">{metricOption2.label}</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform shrink-0 ${
+                    openMetricDropdown === 2 ? 'rotate-180 text-indigo-400' : 'text-slate-400'
+                  }`}
+                />
+              </button>
+
+              {openMetricDropdown === 2 && (
+                <div className="absolute right-0 top-full mt-1.5 w-60 p-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-30 space-y-0.5 max-h-72 overflow-y-auto">
+                  <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
+                    2. Mutató kiválasztása
+                  </div>
+                  {GRID_METRICS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        handleSetMetric2(opt.id);
+                        setOpenMetricDropdown(null);
+                      }}
+                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-colors cursor-pointer ${
+                        metric2 === opt.id
+                          ? 'bg-indigo-500/20 text-indigo-300 font-bold'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {metric2 === opt.id && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* ================= TÁBLÁZAT(OK) ================= */}
         {filteredMatches.length === 0 ? (
           <div className="text-center py-12 bg-mesh-card rounded-2xl border border-slate-800">
@@ -527,101 +863,182 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
               </button>
             )}
           </div>
-        ) : viewMode === 'league' ? (
-          /* Bajnokságonkénti csoportosítás (Összecsukható Accordion panelekkel!) */
-          <div className="space-y-4">
-            {groupedByLeague.map(({ league, matches: lMatches }) => {
-              const isCollapsed = !!collapsedLeagues[league.id];
-              const strongCount = lMatches.filter(
-                (m) =>
-                  m.probabilities.homeWin >= 60 ||
-                  m.probabilities.awayWin >= 60 ||
-                  m.probabilities.bttsYes >= 60 ||
-                  m.probabilities.over25 >= 60
-              ).length;
-
-              return (
-                <div
-                  key={league.id}
-                  className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg"
-                >
-                  {/* Kattintható Bajnokság Fejléc (Accordion) */}
-                  <button
-                    type="button"
-                    onClick={() => toggleLeagueCollapse(league.id)}
-                    className="w-full px-4 sm:px-5 py-3 bg-mesh-header hover:bg-[#131E38] border-b border-slate-800/80 flex items-center justify-between transition-colors cursor-pointer text-left"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="text-lg shrink-0">{league.flag}</span>
-                      <span className="font-extrabold text-sm text-white tracking-wide truncate">
-                        {league.name}
-                      </span>
-                      <span className="text-xs text-slate-400 shrink-0">
-                        ({league.country} &bull; {lMatches.length} meccs)
-                      </span>
-                      {strongCount > 0 && (
-                        <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
-                          <Sparkles className="w-2.5 h-2.5" />
-                          {strongCount} erős jel
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 shrink-0">
-                      <span className="text-[11px] hidden sm:inline">
-                        {isCollapsed ? 'Kinyitás' : 'Becsukás'}
-                      </span>
-                      {isCollapsed ? (
-                        <ChevronDown className="w-4 h-4 text-amber-400" />
-                      ) : (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Táblázat vagy Kompakt Kártyák (csak ha nincs becsukva) */}
-                  {!isCollapsed && (
-                    displayMode === 'cards' ? (
-                      <MatchCardsList
-                        matches={lMatches}
-                        onSelectMatch={onSelectMatch}
-                        onCellBet={handleCellBet}
-                        betSlipItems={betSlipItems}
-                        focusMarket={focusMarket}
-                      />
-                    ) : (
-                      <MatchTable
-                        matches={lMatches}
-                        onSelectMatch={onSelectMatch}
-                        onCellBet={handleCellBet}
-                        betSlipItems={betSlipItems}
-                        focusMarket={focusMarket}
-                      />
-                    )
-                  )}
-                </div>
-              );
-            })}
-          </div>
         ) : (
-          /* Időrendi lista */
-          <div className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg">
-            {displayMode === 'cards' ? (
-              <MatchCardsList
-                matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
-                onSelectMatch={onSelectMatch}
-                onCellBet={handleCellBet}
-                betSlipItems={betSlipItems}
-                focusMarket={focusMarket}
-              />
+          <div className="space-y-5">
+            {/* ⭐ KEDVENC MÉRKŐZÉSEK (ScoreLab My Matches blokk) */}
+            {favoriteMatches.length > 0 && (
+              <div className="rounded-2xl bg-mesh-card border border-amber-500/30 overflow-hidden shadow-lg shadow-amber-500/5">
+                <div className="w-full px-4 sm:px-5 py-3 bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-900 border-b border-amber-500/20 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    <span className="font-extrabold text-sm text-white tracking-wide">
+                      Kedvenc Mérkőzések (My Matches)
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                      {favoriteMatches.length}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 hidden sm:inline">
+                    Kitűzve a lista tetejére
+                  </span>
+                </div>
+
+                {displayMode === 'compact' ? (
+                  <MatchCompactList
+                    matches={favoriteMatches}
+                    onSelectMatch={onSelectMatch}
+                    onCellBet={handleCellBet}
+                    betSlipItems={betSlipItems}
+                    metric1={metricOption1}
+                    metric2={metricOption2}
+                    favoriteMatchIds={favoriteMatchIds}
+                    onToggleFavorite={toggleFavoriteMatch}
+                  />
+                ) : displayMode === 'cards' ? (
+                  <MatchCardsList
+                    matches={favoriteMatches}
+                    onSelectMatch={onSelectMatch}
+                    onCellBet={handleCellBet}
+                    betSlipItems={betSlipItems}
+                    focusMarket={focusMarket}
+                    favoriteMatchIds={favoriteMatchIds}
+                    onToggleFavorite={toggleFavoriteMatch}
+                  />
+                ) : (
+                  <MatchTable
+                    matches={favoriteMatches}
+                    onSelectMatch={onSelectMatch}
+                    onCellBet={handleCellBet}
+                    betSlipItems={betSlipItems}
+                    focusMarket={focusMarket}
+                  />
+                )}
+              </div>
+            )}
+
+            {viewMode === 'league' ? (
+              /* Bajnokságonkénti csoportosítás (Összecsukható Accordion panelekkel!) */
+              <div className="space-y-4">
+                {groupedByLeague.map(({ league, matches: lMatches }) => {
+                  const isCollapsed = !!collapsedLeagues[league.id];
+                  const strongCount = lMatches.filter(
+                    (m) =>
+                      m.probabilities.homeWin >= 60 ||
+                      m.probabilities.awayWin >= 60 ||
+                      m.probabilities.bttsYes >= 60 ||
+                      m.probabilities.over25 >= 60
+                  ).length;
+
+                  return (
+                    <div
+                      key={league.id}
+                      className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg"
+                    >
+                      {/* Kattintható Bajnokság Fejléc (Accordion) */}
+                      <button
+                        type="button"
+                        onClick={() => toggleLeagueCollapse(league.id)}
+                        className="w-full px-4 sm:px-5 py-3 bg-mesh-header hover:bg-[#131E38] border-b border-slate-800/80 flex items-center justify-between transition-colors cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-lg shrink-0">{league.flag}</span>
+                          <span className="font-extrabold text-sm text-white tracking-wide truncate">
+                            {league.name}
+                          </span>
+                          <span className="text-xs text-slate-400 shrink-0">
+                            ({league.country} &bull; {lMatches.length} meccs)
+                          </span>
+                          {strongCount > 0 && (
+                            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              {strongCount} erős jel
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 shrink-0">
+                          <span className="text-[11px] hidden sm:inline">
+                            {isCollapsed ? 'Kinyitás' : 'Becsukás'}
+                          </span>
+                          {isCollapsed ? (
+                            <ChevronDown className="w-4 h-4 text-amber-400" />
+                          ) : (
+                            <ChevronUp className="w-4 h-4 text-slate-400" />
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Kompakt, Kártyák vagy Táblázat (csak ha nincs becsukva) */}
+                      {!isCollapsed && (
+                        displayMode === 'compact' ? (
+                          <MatchCompactList
+                            matches={lMatches}
+                            onSelectMatch={onSelectMatch}
+                            onCellBet={handleCellBet}
+                            betSlipItems={betSlipItems}
+                            metric1={metricOption1}
+                            metric2={metricOption2}
+                            favoriteMatchIds={favoriteMatchIds}
+                            onToggleFavorite={toggleFavoriteMatch}
+                          />
+                        ) : displayMode === 'cards' ? (
+                          <MatchCardsList
+                            matches={lMatches}
+                            onSelectMatch={onSelectMatch}
+                            onCellBet={handleCellBet}
+                            betSlipItems={betSlipItems}
+                            focusMarket={focusMarket}
+                            favoriteMatchIds={favoriteMatchIds}
+                            onToggleFavorite={toggleFavoriteMatch}
+                          />
+                        ) : (
+                          <MatchTable
+                            matches={lMatches}
+                            onSelectMatch={onSelectMatch}
+                            onCellBet={handleCellBet}
+                            betSlipItems={betSlipItems}
+                            focusMarket={focusMarket}
+                          />
+                        )
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              <MatchTable
-                matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
-                onSelectMatch={onSelectMatch}
-                onCellBet={handleCellBet}
-                betSlipItems={betSlipItems}
-                focusMarket={focusMarket}
-              />
+              /* Időrendi lista */
+              <div className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg">
+                {displayMode === 'compact' ? (
+                  <MatchCompactList
+                    matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    onSelectMatch={onSelectMatch}
+                    onCellBet={handleCellBet}
+                    betSlipItems={betSlipItems}
+                    metric1={metricOption1}
+                    metric2={metricOption2}
+                    favoriteMatchIds={favoriteMatchIds}
+                    onToggleFavorite={toggleFavoriteMatch}
+                  />
+                ) : displayMode === 'cards' ? (
+                  <MatchCardsList
+                    matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    onSelectMatch={onSelectMatch}
+                    onCellBet={handleCellBet}
+                    betSlipItems={betSlipItems}
+                    focusMarket={focusMarket}
+                    favoriteMatchIds={favoriteMatchIds}
+                    onToggleFavorite={toggleFavoriteMatch}
+                  />
+                ) : (
+                  <MatchTable
+                    matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    onSelectMatch={onSelectMatch}
+                    onCellBet={handleCellBet}
+                    betSlipItems={betSlipItems}
+                    focusMarket={focusMarket}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}
@@ -868,6 +1285,8 @@ interface MatchCardsListProps {
   onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
   betSlipItems: BetSlipItem[];
   focusMarket: FocusMarket;
+  favoriteMatchIds?: Set<string>;
+  onToggleFavorite?: (e: React.MouseEvent, matchId: string) => void;
 }
 
 const MatchCardsList: React.FC<MatchCardsListProps> = ({
@@ -876,6 +1295,8 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
   onCellBet,
   betSlipItems,
   focusMarket,
+  favoriteMatchIds,
+  onToggleFavorite,
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-3">
@@ -887,6 +1308,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
         const isPickAdded = pick
           ? betSlipItems.some((item) => item.matchId === match.id && item.marketLabel === pick.marketLabel)
           : false;
+        const isFavorited = favoriteMatchIds?.has(match.id);
 
         return (
           <div
@@ -897,6 +1319,20 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
             {/* 1. Fejléc: Liga, Kezdés/Státusz, Adatminőség */}
             <div className="flex items-center justify-between text-[11px] text-slate-400">
               <span className="flex items-center gap-1 font-semibold truncate">
+                {onToggleFavorite && (
+                  <button
+                    type="button"
+                    onClick={(e) => onToggleFavorite(e, match.id)}
+                    className="p-1 rounded text-slate-600 hover:text-amber-400 transition-colors cursor-pointer mr-0.5"
+                    title={isFavorited ? 'Eltávolítás a kedvencekből' : 'Kitűzés a kedvencekhez'}
+                  >
+                    <Star
+                      className={`w-3.5 h-3.5 ${
+                        isFavorited ? 'text-amber-400 fill-amber-400' : 'text-slate-600'
+                      }`}
+                    />
+                  </button>
+                )}
                 <span>{match.leagueFlag}</span>
                 <span className="truncate">{match.leagueName}</span>
               </span>
@@ -1076,6 +1512,268 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ================= SEGÉDKOMPONENS: SCORELAB STÍLUSÚ KOMPAKT MECCSSOROK ================= */
+interface MatchCompactListProps {
+  matches: Match[];
+  onSelectMatch: (match: Match) => void;
+  onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
+  betSlipItems: BetSlipItem[];
+  metric1: GridMetricOption;
+  metric2: GridMetricOption;
+  favoriteMatchIds?: Set<string>;
+  onToggleFavorite?: (e: React.MouseEvent, matchId: string) => void;
+}
+
+const MatchCompactList: React.FC<MatchCompactListProps> = ({
+  matches,
+  onSelectMatch,
+  onCellBet,
+  betSlipItems,
+  metric1,
+  metric2,
+  favoriteMatchIds,
+  onToggleFavorite,
+}) => {
+  return (
+    <div className="divide-y divide-slate-800/60">
+      {matches.map((match) => {
+        const p = match.probabilities;
+        const isFinished = match.status === 'FINISHED';
+        const isLive = match.status === 'LIVE';
+
+        // 1. Mutató számítás
+        const val1 = metric1.getValue(p);
+        const odds1 = metric1.getOdds(match);
+        const label1 = metric1.marketName(match);
+        const isBet1Selected = betSlipItems.some(
+          (b) => b.matchId === match.id && b.marketLabel === label1
+        );
+
+        // 2. Mutató számítás
+        const val2 = metric2.getValue(p);
+        const odds2 = metric2.getOdds(match);
+        const label2 = metric2.marketName(match);
+        const isBet2Selected = betSlipItems.some(
+          (b) => b.matchId === match.id && b.marketLabel === label2
+        );
+
+        // 1X2 piacok
+        const homeLabel = `${match.homeTeam.name} Győzelem (1)`;
+        const drawLabel = 'Döntetlen (X)';
+        const awayLabel = `${match.awayTeam.name} Győzelem (2)`;
+
+        const is1Selected = betSlipItems.some(
+          (b) => b.matchId === match.id && b.marketLabel === homeLabel
+        );
+        const isXSelected = betSlipItems.some(
+          (b) => b.matchId === match.id && b.marketLabel === drawLabel
+        );
+        const is2Selected = betSlipItems.some(
+          (b) => b.matchId === match.id && b.marketLabel === awayLabel
+        );
+
+        const isFavorited = favoriteMatchIds?.has(match.id);
+
+        return (
+          <div
+            key={match.id}
+            onClick={() => onSelectMatch(match)}
+            className="p-2 sm:p-2.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-1.5 sm:gap-3 cursor-pointer group"
+          >
+            {/* Bal oldal: Csillag + Hazai - Eredmény/Idő - Vendég */}
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+              {/* Kedvenc kitűző csillag */}
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  onClick={(e) => onToggleFavorite(e, match.id)}
+                  className="p-1 rounded text-slate-600 hover:text-amber-400 transition-colors shrink-0 cursor-pointer"
+                  title={isFavorited ? 'Eltávolítás a kedvencekből' : 'Kitűzés a kedvencekhez'}
+                >
+                  <Star
+                    className={`w-3.5 h-3.5 ${
+                      isFavorited ? 'text-amber-400 fill-amber-400' : 'text-slate-600'
+                    }`}
+                  />
+                </button>
+              )}
+
+              {/* Hazai Csapat (ScoreLab stílus: Logo felül, név alatta) */}
+              <div className="flex flex-col items-center text-center w-16 sm:w-24 shrink-0">
+                <img
+                  src={match.homeTeam.logo}
+                  alt=""
+                  className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+                <span className="text-[10px] sm:text-xs font-bold text-white truncate w-full mt-0.5 group-hover:text-amber-300 transition-colors">
+                  {match.homeTeam.name}
+                </span>
+              </div>
+
+              {/* Középső Állapot / Idő / Eredmény */}
+              <div className="flex flex-col items-center justify-center min-w-[46px] sm:min-w-[58px] shrink-0 px-0.5">
+                {isFinished ? (
+                  <>
+                    <span className="font-mono font-black text-xs sm:text-sm text-amber-400 bg-slate-950/90 px-1.5 py-0.5 rounded border border-slate-800">
+                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-emerald-400 mt-0.5 flex items-center gap-0.5">
+                      <CheckCircle2 className="w-2.5 h-2.5" />
+                      FT
+                    </span>
+                    {(match.kickoffDate || match.kickoffTime) && (
+                      <span className="text-[8px] font-mono text-slate-500 hidden sm:inline">
+                        {match.kickoffDate ? match.kickoffDate.slice(5) : ''} {match.kickoffTime}
+                      </span>
+                    )}
+                  </>
+                ) : isLive ? (
+                  <>
+                    <span className="font-mono font-black text-xs sm:text-sm text-red-400 animate-pulse bg-red-950/50 px-1.5 py-0.5 rounded border border-red-500/30">
+                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-red-400 mt-0.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                      {match.minute ? `${match.minute}'` : 'ÉLŐ'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-mono font-extrabold text-xs sm:text-sm text-white">
+                      {match.kickoffTime}
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                      VS
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Vendég Csapat (ScoreLab stílus: Logo felül, név alatta) */}
+              <div className="flex flex-col items-center text-center w-16 sm:w-24 shrink-0">
+                <img
+                  src={match.awayTeam.logo}
+                  alt=""
+                  className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-200 truncate w-full mt-0.5 group-hover:text-amber-300 transition-colors">
+                  {match.awayTeam.name}
+                </span>
+              </div>
+            </div>
+
+            {/* Jobb oldal: 2 Dinamikus Pill Mutató + Mini 1X2 Oszlop */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
+              {/* Két kiválasztott mutató csík-diagrammal */}
+              <div className="flex flex-col gap-1 w-[90px] sm:w-28 shrink-0">
+                {/* 1. Mutató Pill */}
+                <button
+                  type="button"
+                  onClick={(e) => onCellBet(e, match, label1, val1, odds1)}
+                  className={`h-5 sm:h-5.5 rounded relative overflow-hidden text-left border transition-all cursor-pointer ${
+                    isBet1Selected
+                      ? 'border-cyan-400 ring-1 ring-cyan-400 shadow-sm shadow-cyan-500/20 bg-slate-900'
+                      : 'border-slate-700/80 hover:border-cyan-500/70 bg-slate-950/80'
+                  }`}
+                  title={`${metric1.label}: ${val1}% @${odds1.toFixed(2)} - Kattints a szelvényhez adáshoz`}
+                >
+                  <div
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600/50 to-blue-600/60 transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(0, val1))}%` }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-between px-1.5 z-10 text-[8px] sm:text-[9px] font-bold">
+                    <span className="text-white/90 truncate mr-0.5">{metric1.shortLabel}</span>
+                    <span className="font-mono font-black text-cyan-200 shrink-0">
+                      {val1}%
+                      <span className="text-[7px] sm:text-[8px] opacity-70 ml-0.5 hidden sm:inline">@{odds1.toFixed(2)}</span>
+                    </span>
+                  </div>
+                </button>
+
+                {/* 2. Mutató Pill */}
+                <button
+                  type="button"
+                  onClick={(e) => onCellBet(e, match, label2, val2, odds2)}
+                  className={`h-5 sm:h-5.5 rounded relative overflow-hidden text-left border transition-all cursor-pointer ${
+                    isBet2Selected
+                      ? 'border-indigo-400 ring-1 ring-indigo-400 shadow-sm shadow-indigo-500/20 bg-slate-900'
+                      : 'border-slate-700/80 hover:border-indigo-500/70 bg-slate-950/80'
+                  }`}
+                  title={`${metric2.label}: ${val2}% @${odds2.toFixed(2)} - Kattints a szelvényhez adáshoz`}
+                >
+                  <div
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-600/50 to-purple-600/60 transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(0, val2))}%` }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-between px-1.5 z-10 text-[8px] sm:text-[9px] font-bold">
+                    <span className="text-white/90 truncate mr-0.5">{metric2.shortLabel}</span>
+                    <span className="font-mono font-black text-indigo-200 shrink-0">
+                      {val2}%
+                      <span className="text-[7px] sm:text-[8px] opacity-70 ml-0.5 hidden sm:inline">@{odds2.toFixed(2)}</span>
+                    </span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Mini 1X2 Odds Stack (ScoreLab stílus) */}
+              <div className="flex flex-col gap-0.5 shrink-0 bg-slate-950/80 p-0.5 sm:p-1 rounded border border-slate-800">
+                <button
+                  type="button"
+                  onClick={(e) => onCellBet(e, match, homeLabel, p.homeWin, match.odds.home)}
+                  className={`px-1 sm:px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-semibold flex items-center justify-between gap-1 transition-all cursor-pointer ${
+                    is1Selected
+                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                  title={`Hazai (1): @${match.odds.home.toFixed(2)} (${p.homeWin}%)`}
+                >
+                  <span className="text-slate-500 font-bold text-[7px] sm:text-[8px]">1</span>
+                  <span>{match.odds.home.toFixed(2)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => onCellBet(e, match, drawLabel, p.draw, match.odds.draw)}
+                  className={`px-1 sm:px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-semibold flex items-center justify-between gap-1 transition-all cursor-pointer ${
+                    isXSelected
+                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                  title={`Döntetlen (X): @${match.odds.draw.toFixed(2)} (${p.draw}%)`}
+                >
+                  <span className="text-slate-500 font-bold text-[7px] sm:text-[8px]">X</span>
+                  <span>{match.odds.draw.toFixed(2)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => onCellBet(e, match, awayLabel, p.awayWin, match.odds.away)}
+                  className={`px-1 sm:px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-semibold flex items-center justify-between gap-1 transition-all cursor-pointer ${
+                    is2Selected
+                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                  title={`Vendég (2): @${match.odds.away.toFixed(2)} (${p.awayWin}%)`}
+                >
+                  <span className="text-slate-500 font-bold text-[7px] sm:text-[8px]">2</span>
+                  <span>{match.odds.away.toFixed(2)}</span>
+                </button>
+              </div>
+
+              {/* Részletek Chevron */}
+              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0 hidden sm:block" />
+            </div>
           </div>
         );
       })}

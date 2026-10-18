@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.9.1`** (SemVer 2.0.0)  
-**Kiadás neve:** *Szigorú Típusbiztonság, Rules of Hooks Megfelelőség & CI Titokvédelem*  
+**Aktuális verzió:** 🏷️ **`v1.10.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *ScoreLab Kvantitatív Mutatósáv, Kompakt Meccslista & My Matches*  
 **Dátum:** 2026. október 18.  
-**Állapot:** ✅ **v1.9.1 Verzió Elkészült & Verifikálva (0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.10.0 Verzió Elkészült & Verifikálva (0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,19 +16,20 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.9.1`** kiadás a magas prioritású minőségi és biztonsági felülvizsgálatok pontjait (🟠 4, 🟠 5, 🟠 6) teljeskörűen orvosolja:
+A **`v1.10.0`** kiadás bevezeti a ScoreLab stílusú professzionális mobil és asztali felhasználói élményt:
 
-### Fő Megvalósítások a v1.9.1-ben:
-1. **React Rules of Hooks Helyreállítása (`MatchDetailModal.tsx` - 🟠 4):**
-   - A korábbi feltételes korai kilépés (`if (!match) return null;`) után elhelyezett hook-hívások (`useState`, `useEffect`) feltétel nélkül a komponens legtetejére kerültek.
-   - Megszűnt a renderek közötti hook-szám inkonzisztencia (0 ↔ 4) kockázata, garantálva a determinisztikus és hibamentes modális működést.
-2. **Valódi Szigorú TypeScript Mód (`tsconfig.app.json`, `tsconfig.node.json` - 🟠 5):**
-   - Aktiválásra került a `"strict": true`, `"noImplicitAny": true` és `"strictNullChecks": true`.
-   - A teljes alkalmazás és a Vite konfiguráció mostantól valódi típusbiztonsággal fordul; a CI `npx tsc -b` ellenőrzése ténylegesen szigorú típusellenőrzést végez (0 hiba mellett).
-3. **CI Titokvédelem & SHA-256 Hash Alapú Vizsgálat (`.github/workflows/ci.yml` - 🟠 6):**
-   - A CI fájlból véglegesen eltávolításra kerültek a korábban keresési mintaként használt plaintext API kulcsok.
-   - Helyüket általános, regex alapú auth-fejléc és kulcs-érték detektálás, valamint kompromittálódott kulcsok SHA-256 ujjlenyomat-alapú vizsgálata vette át.
-   - A munkafolyamat maga tiszta, nem szivárogtat semmilyen titkot.
+### Fő Megvalósítások a v1.10.0-ban:
+1. **Dupla Dinamikus Statisztika-Választó Sáv (ScoreLab stílus):**
+   - Két független lenyíló választó a vezérlősávban (`1.` és `2.` számozott kapszulák), amivel a felhasználó szabadon kiválaszthatja, melyik 2 kvantitatív mutató (pl. Over 1.5, Over 2.5, BTTS, 1X2, HT >0.5, Under 2.5, BTTS & Over 2.5) jelenjen meg a meccssorokon.
+   - Perzisztens helyi mentés (`localStorage`), azonnali reakció és zökkenőmentes piacváltás.
+2. **ScoreLab Kompakt Meccslista Nézet:**
+   - Horizontális, ultramodern meccssoros felület: csapatlogók felül, csapatnevek alatta, középen állapot/eredmény/időpont.
+   - Jobb oldalon két elegáns horizontális progress bar-ral (folyamatjelző csíkkal) ellátott valószínűségi pill közvetlen 1-kattintásos szelvényre tevéssel.
+   - Függőlegesen rendezett mini 1X2 odds oszlop azonnali szelvénykészítéshez.
+3. **⭐ Kedvenc Mérkőzések (My Matches blokk):**
+   - Minden meccs csillaggal közvetlenül kitűzhető, és a lista legtetején egy dedikált aranyszínű `Kedvenc Mérkőzések (My Matches)` blokkban jelenik meg, helyi perzisztenciával.
+4. **Háromirányú Nézetváltó:**
+   - Kompakt (ScoreLab lista), Kártyák és 11 oszlopos Részletes Táblázat nézet bármikor szabadon választható és memorizálva marad.
 
 ---
 

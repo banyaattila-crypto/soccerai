@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.9.1';
-export const APP_RELEASE_NAME = 'Szigorú Típusbiztonság, Rules of Hooks Megfelelőség & CI Titokvédelem';
+export const APP_VERSION = '1.10.0';
+export const APP_RELEASE_NAME = 'ScoreLab Kvantitatív Mutatósáv, Kompakt Meccslista & My Matches';
 export const APP_RELEASE_DATE = '2026-10-18';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,12 +16,12 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'React Rules of Hooks Helyreállítása: A MatchDetailModal hookjai feltétel nélkül a legfelső szintre kerültek, kiküszöbölve a feltételes hook-hívás miatti összeomlásveszélyt',
+    'ScoreLab Dupla Dinamikus Statisztika-Választó Sáv: Testreszabható, valós időben váltogatható kvantitatív mutatók (Over 1.5, Over 2.5, BTTS, 1X2, HT 0.5 felett, Under 2.5, BTTS & Over 2.5) a meccssorokon',
+    'ScoreLab Stílusú Kompakt Meccslista: Letisztult, mobilbarát horizontális sorok csapatlogókkal, folyamatjelzős (progress bar) valószínűségi pill-ekkel és közvetlen 1-kattintásos szelvényre tevéssel',
+    'Mini 1X2 Odds Oszlop: Függőlegesen rendezett mikro odds-gombok minden meccssoron az azonnali fogadásépítéshez',
+    '⭐ Kedvenc Mérkőzések (My Matches): Csillaggal kitűzhető kedvenc meccsek, melyek kiemelt arany blokként mindig a lista tetején jelennek meg, perzisztens tárolással',
+    'Háromirányú Nézetváltó: Egyetlen kattintással válthatsz Kompakt (ScoreLab), Kártyák és 11-oszlopos Részletes Táblázat nézet között',
+    'React Rules of Hooks Helyreállítása: A MatchDetailModal hookjai feltétel nélkül a legfelső szintre kerültek, kiküszöbölve a feltételes hook-hívás kockázatát',
     'Valódi Szigorú TypeScript Mód: strict, noImplicitAny és strictNullChecks bekapcsolva 0 hibával és 0 figyelmeztetéssel a teljes projektben',
-    'CI Titokvédelem & SHA-256 Hash Alapú Vizsgálat: Törölve minden plaintext API kulcs a CI workflow fájlból; helyette hash ujjlenyomat és regex vizsgálat fut',
-    'Valódi Dixon–Coles (1997) MLE Paraméter-illesztő Motor: A statikus 17 csapatos TEAM_POWER tábla helyett valós meccsekből illesztett dinamikus csapatparaméterek',
-    'Lejátszási Dátum és Időpont Kijelzése Lezárt Meccseknél: A befejezett mérkőzéseken naptárral és órával megjelenik a meccs napja és kezdési ideje',
-    'Színátmenetes Hátterek & Enyhe Rácsos Háló: Minden képernyő és kártya modern sötét technológiai színátmenetet és elegáns rácsos hálót kapott',
-    '3D Interaktív Forgó Labda: Térbeli forgó szférikus focilabda részecskegyűrűkkel a Hero sávban és a logóban',
   ],
 };
