@@ -328,15 +328,24 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           m.leagueId === 'seriea' || m.leagueId === 'sa' ? 3 :
           m.leagueId === 'bundesliga' || m.leagueId === 'bl1' ? 4 :
           m.leagueId === 'ucl' || m.leagueId === 'cl' ? 5 :
-          m.leagueId === 'championship' || m.leagueId === 'elc' ? 6 :
-          m.leagueId === 'ligue1' || m.leagueId === 'fl1' ? 7 :
+          m.leagueId === 'primeira_liga' || m.leagueId === 'ppl' ? 6 :
+          m.leagueId === 'nbi' ? 7 :
           m.leagueId === 'eredivisie' || m.leagueId === 'ded' ? 8 :
-          m.leagueId === 'laliga2' ? 9 :
-          m.leagueId === 'serieb' ? 10 :
-          m.leagueId === 'bundesliga2' ? 11 :
-          m.leagueId === 'ligue2' ? 12 :
-          m.leagueId === 'nbi' ? 13 :
-          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 14 : 20;
+          m.leagueId === 'ligue1' || m.leagueId === 'fl1' ? 9 :
+          m.leagueId === 'championship' || m.leagueId === 'elc' ? 10 :
+          m.leagueId === 'jupiler' ? 11 :
+          m.leagueId === 'superlig' ? 12 :
+          m.leagueId === 'austria_bundesliga' ? 13 :
+          m.leagueId === 'swiss_superleague' ? 14 :
+          m.leagueId === 'scot_prem' ? 15 :
+          m.leagueId === 'ekstraklasa' ? 16 :
+          m.leagueId === 'superleague_greece' ? 17 :
+          m.leagueId === 'mls' ? 18 :
+          m.leagueId === 'laliga2' ? 19 :
+          m.leagueId === 'serieb' ? 20 :
+          m.leagueId === 'bundesliga2' ? 21 :
+          m.leagueId === 'ligue2' ? 22 :
+          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 23 : 30;
 
         map.set(m.leagueId, {
           id: m.leagueId,
@@ -372,6 +381,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           (effectiveLeague === 'championship' && match.leagueId === 'elc') ||
           (effectiveLeague === 'ligue1' && match.leagueId === 'fl1') ||
           (effectiveLeague === 'eredivisie' && match.leagueId === 'ded') ||
+          (effectiveLeague === 'primeira_liga' && match.leagueId === 'ppl') ||
           (effectiveLeague === 'seriea_brazil' && match.leagueId === 'bsa');
         if (!matchesExact && !matchesAlias) return false;
       }

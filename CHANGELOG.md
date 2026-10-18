@@ -3,6 +3,24 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.12.0] - 2026-10-19
+
+### Hozzáadva (Added)
+- **Nemzetközi Bajnokságok Bővítése (Football-Data & API-Sports):**
+  - Portugál Primeira Liga (`PPL` / `94`)
+  - Belga Jupiler Pro League (`144`)
+  - Török Süper Lig (`203`)
+  - Osztrák Tipico Bundesliga (`218`)
+  - Svájci Credit Suisse Super League (`207`)
+  - Skót Premiership (`179`)
+  - Lengyel PKO BP Ekstraklasa (`106`)
+  - Görög Super League 1 (`197`)
+  - Amerikai Major League Soccer / MLS (`253`)
+- **Intelligens Kereszt-API Mérkőzés Deduplikáció (`src/App.tsx`):** Normalizált csapatnév- és dátum-összevetés révén kiszűri a duplikált mérkőzéseket, ha mindkét API szolgáltatná ugyanazt a találkozót (pl. Primeira Liga).
+- **Valós Történelmi Gólátlagok & Dixon-Coles Bajnokság-modellek (`src/services/apiSportsClient.ts`):** Minden új ligához dedikált hazai és vendég gólátlagok, biztosítva a pontos Poisson eloszlásokat és Kelly-méretezést.
+- **Dinamikus Ligarendezés és Alias Támogatás (`src/components/StatsGrid.tsx`):** Az új ligák azonnal szűrhetők, saját prioritással és országzászlókkal jelennek meg a ligasávban.
+- **Frissített Beállítások Szövegezés (`src/components/SettingsModal.tsx`):** Egyértelműen tájékoztat a bővített európai élvonalbeli bajnokságokról és másodosztályokról.
+
 ## [1.11.0] - 2026-10-18
 
 ### Hozzáadva (Added)

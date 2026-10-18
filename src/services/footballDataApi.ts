@@ -85,6 +85,7 @@ export const COMPETITION_MAP: Record<
   FL1: { id: 'ligue1', name: 'Ligue 1', country: 'Franciaország', flag: '🇫🇷', priority: 7 },
   DED: { id: 'eredivisie', name: 'Eredivisie', country: 'Hollandia', flag: '🇳🇱', priority: 8 },
   BSA: { id: 'seriea_brazil', name: 'Série A Brasil', country: 'Brazília', flag: '🇧🇷', priority: 9 },
+  PPL: { id: 'primeira_liga', name: 'Primeira Liga', country: 'Portugália', flag: '🇵🇹', priority: 10 },
 };
 
 /**

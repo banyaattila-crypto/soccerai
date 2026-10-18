@@ -120,14 +120,24 @@ export function App() {
 
         const [liveMain, liveSecondary] = await Promise.all([liveMainPromise, liveSecondaryPromise]);
 
-        const combined = [...liveMain, ...liveSecondary];
+        const combinedRaw = [...liveMain, ...liveSecondary];
+        // Deduplikáció (ha mindkét API szolgáltatná ugyanazt a meccset pl. Primeira Liga esetén)
+        const seen = new Set<string>();
+        const combined = combinedRaw.filter((m) => {
+          const normHome = m.homeTeam.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
+          const normAway = m.awayTeam.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
+          const key = `${m.kickoffDate}_${normHome}_${normAway}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
 
         if (combined.length > 0) {
           setMatches(combined);
           setIsDemoMode(false);
           persistFinishedMatchesToHistory(combined);
           const secText = liveSecondary.length > 0
-            ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} másodosztályú: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga, NB I)`
+            ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} egyéb európai & másodosztályú liga)`
             : '';
           setApiSuccessNotice(
             `Sikeres szinkronizáció! ${combined.length} valós mérkőzés elérhető${secText}.`

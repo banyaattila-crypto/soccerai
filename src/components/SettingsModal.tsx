@@ -181,9 +181,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
               <div className="space-y-0.5">
-                <div className="text-xs font-bold text-white">Másodosztályok és NB I bekapcsolása</div>
+                <div className="text-xs font-bold text-white">További európai ligák &amp; NB I bekapcsolása</div>
                 <div className="text-[10px] text-slate-400">
-                  LaLiga 2, Ligue 2, Serie B, 2. Bundesliga és NB I meccsek hozzáadása.
+                  NB I, Primeira Liga, Süper Lig, Jupiler Pro, Tipico Bundesliga, Ekstraklasa, MLS és másodosztályok.
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">

@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.11.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Egzakt Szelvénykiértékelés, Vitest Tesztmotor, Code-Splitting & Architektúra-Higiénia*  
-**Dátum:** 2026. október 18.  
-**Állapot:** ✅ **v1.11.0 Verzió Elkészült & Verifikálva (38/38 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Aktuális verzió:** 🏷️ **`v1.12.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Nemzetközi Bajnokságok Bővítése (Primeira Liga, Süper Lig, Jupiler Pro, MLS & Top Európa) & Kereszt-API Deduplikáció*  
+**Dátum:** 2026. október 19.  
+**Állapot:** ✅ **v1.12.0 Verzió Elkészült & Verifikálva (38/38 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,9 +16,23 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.11.0`** kiadás a legmagasabb szintű megbízhatóságot hozza el: javítja a korábbi string-matching alapú kiértékelési hibákat a pénzkövetésben, bevezeti az automatizált Vitest tesztcsomagot (38 egységteszt), megszünteti a halott fájlokat és beállításokat, korrelációs védelmet nyújt a szelvényépítőben, valamint modern kódfelosztással (Code-Splitting / Lazy Loading) és LocalStorage kvótavédelemmel vértezi fel az alkalmazást.
+A **`v1.12.0`** kiadás jelentősen kibővíti az elérhető nemzetközi bajnokságok körét: a korábbi 5 nagy liga, a BL és az NB I mellett mostantól a portugál **Primeira Liga**, a belga **Jupiler Pro League**, a török **Süper Lig**, az osztrák **Tipico Bundesliga**, a svájci **Super League**, a skót **Premiership**, a lengyel **Ekstraklasa**, a görög **Super League 1** és az amerikai **MLS** is teljes mértékben elérhető valós adatokkal és Dixon-Coles Poisson modellezéssel, mindezt megbízható kereszt-API deduplikációval.
 
-### Fő Megvalósítások a v1.11.0-ban:
+### Fő Megvalósítások a v1.12.0-ban:
+
+1. **Nemzetközi Bajnokságok Bővítése (Football-Data & API-Sports):**
+   - Aktiválva a Portugál Primeira Liga (`PPL` kód a Football-Data-ban és `94`-es ID az API-Sports-ban).
+   - Bekötve a Belga Jupiler Pro (`144`), Török Süper Lig (`203`), Osztrák Bundesliga (`218`), Svájci Super League (`207`), Skót Premiership (`179`), Lengyel Ekstraklasa (`106`), Görög Szuperliga (`197`) és Amerikai MLS (`253`).
+   - Minden új ligához rögzítve lettek a valós történelmi gólátlagok az `apiSportsClient.ts`-ben a precíz Poisson eloszlásokhoz.
+
+2. **Intelligens Kereszt-API Mérkőzés Deduplikáció (`src/App.tsx`):**
+   - Normalizált csapatnév és dátum vizsgálatával kiszűri a párhuzamosan futó lekérések közötti átfedéseket (pl. ha a Primeira Liga meccseket mindkét forrás visszaadja).
+
+3. **Dinamikus Ligaszűrő & Prioritás-Rendezés (`src/components/StatsGrid.tsx`):**
+   - Az új ligák azonnal szűrhetővé válnak a ligasávban logikus prioritási sorrendben és országzászlókkal.
+
+4. **Frissített Beállítások Szövegezés (`src/components/SettingsModal.tsx`):**
+   - Egyértelmű, transzparens tájékoztatás az API-Sports kapcsoló alatt az elérhető új bajnokságokról.
 
 1. **Egzakt Matematikai Szelvény- és Fogadáskiértékelés (`src/services/betEvaluation.ts`):**
    - Megszűnt a hibás szövegminta-illesztés és az ismeretlen piacok katasztrofális `totalGoals > 2.5` alapértelmezett kiértékelése.
