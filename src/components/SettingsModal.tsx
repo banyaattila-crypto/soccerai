@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Server, Key, Check } from 'lucide-react';
+import { X, Server, Key, Check, ArrowLeft } from 'lucide-react';
 import { APP_VERSION } from '../version';
 
 interface SettingsModalProps {
@@ -49,25 +49,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg bg-[#0D1527] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#0D1527] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
         
         {/* Fejléc */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1A30] to-[#0A101F] border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1A30] to-[#0A101F] border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <Server className="w-5 h-5 text-amber-400" />
-            <h3 className="font-extrabold text-white text-base">Rendszer & API Beállítások</h3>
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors mr-1 cursor-pointer"
+              title="Vissza a főoldalra"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Vissza</span>
+            </button>
+            <Server className="w-4 h-4 text-emerald-400" />
+            <h3 className="font-extrabold text-white text-sm sm:text-base">Rendszer &amp; API Beállítások</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Bezárás"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Test tartalom */}
-        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto">
+        {/* Test tartalom - Garantáltan gördíthető */}
+        <div className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1 overscroll-contain">
           
           {/* Adatforrás választó */}
           <div className="space-y-3">
@@ -259,22 +268,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
         </div>
 
-        {/* Lábléc gombok */}
-        <div className="p-4 bg-[#0A101F] border-t border-slate-800 flex items-center justify-between">
+        {/* Lábléc gombok - Mindig rögzítve az ablak alján */}
+        <div className="p-4 bg-[#0A101F] border-t border-slate-800 flex items-center justify-between shrink-0 gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
           >
-            Mégse
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Vissza</span>
           </button>
 
           <button
             onClick={handleSave}
-            className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all"
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
           >
             {saved ? (
               <>
-                <Check className="w-4 h-4 text-slate-950" />
+                <Check className="w-4 h-4 text-white" />
                 Mentve és Alkalmazva!
               </>
             ) : (

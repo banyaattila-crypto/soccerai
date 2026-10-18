@@ -11,8 +11,11 @@ import {
   Flame,
   BarChart3,
   Check,
+  Archive,
 } from 'lucide-react';
 import { MOCK_MATCHES } from '../data/mockMatches';
+import { getArchivedFinishedMatches } from '../services/historyService';
+import { getRelativeDateStr } from '../utils/dateUtils';
 
 interface ResultsViewProps {
   matches: Match[];
@@ -99,18 +102,39 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const [activeMarket, setActiveMarket] = useState<MarketCategory>('ALL');
   const [activeStatus, setActiveStatus] = useState<StatusFilter>('ALL');
   const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
+  const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'YESTERDAY' | 'WEEK'>('ALL');
+
+  const todayStr = useMemo(() => getRelativeDateStr(0), []);
+  const yesterdayStr = useMemo(() => getRelativeDateStr(-1), []);
 
   // Alaptét a virtuális ROI és nyereségszámításhoz (10 000 Ft egységtét)
   const BASE_STAKE = 10000;
 
-  // 1. Befejezett meccsek kinyerése (ha a live szettben nincs lezárt, a mock archívum biztosítja az adatokat)
+  // 1. Befejezett meccsek kinyerése és összefésülése a tartós helyi archívummal (sosem vesznek el)
   const isMockFallback = useMemo(() => {
-    return matches.filter((m) => m.status === 'FINISHED').length === 0;
+    const liveFinished = matches.filter((m) => m.status === 'FINISHED');
+    const archived = getArchivedFinishedMatches();
+    return liveFinished.length === 0 && archived.length === 0;
   }, [matches]);
 
   const finishedMatches = useMemo(() => {
     const fromProps = matches.filter((m) => m.status === 'FINISHED');
-    if (fromProps.length > 0) return fromProps;
+    const archived = getArchivedFinishedMatches();
+    const map = new Map<string, Match>();
+
+    // Korábbi lementett meccsek
+    archived.forEach((m) => map.set(m.id, m));
+    // Aktuális friss lezárt meccsek
+    fromProps.forEach((m) => map.set(m.id, m));
+
+    if (map.size > 0) {
+      return Array.from(map.values()).sort((a, b) => {
+        const dateA = `${a.kickoffDate}T${a.kickoffTime || '00:00'}`;
+        const dateB = `${b.kickoffDate}T${b.kickoffTime || '00:00'}`;
+        return dateB.localeCompare(dateA); // legfrissebb felül
+      });
+    }
+
     return MOCK_MATCHES.filter((m) => m.status === 'FINISHED');
   }, [matches]);
 
@@ -215,6 +239,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   // 6. Szűrt meccsek listája
   const filteredList = useMemo(() => {
     return evaluatedAll.filter((item) => {
+      // Időszak szűrő (Múltbeli eredmények tartós megőrzése és szűrése)
+      if (periodFilter === 'TODAY' && item.match.kickoffDate !== todayStr) return false;
+      if (periodFilter === 'YESTERDAY' && item.match.kickoffDate !== yesterdayStr) return false;
+      if (periodFilter === 'WEEK') {
+        const d = new Date(item.match.kickoffDate).getTime();
+        const now = Date.now();
+        if (Number.isNaN(d) || now - d > 7 * 24 * 60 * 60 * 1000) return false;
+      }
       // Piac szűrő
       if (activeMarket !== 'ALL' && item.category !== activeMarket) {
         return false;
@@ -228,7 +260,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
       }
       return true;
     });
-  }, [evaluatedAll, activeMarket, activeStatus, selectedLeague]);
+  }, [evaluatedAll, activeMarket, activeStatus, selectedLeague, periodFilter, todayStr, yesterdayStr]);
 
   return (
     <div className="py-8 bg-[#070B14]">
@@ -257,13 +289,60 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
               <p className="text-xs sm:text-sm text-slate-300">
                 A Dixon–Coles modell által adott előrejelzések végeredményei és szimulált szorzókkal (5% árrés) becsült megtérülése.
               </p>
+              <div className="flex items-center gap-2 pt-1 text-xs text-slate-400">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
+                  <Archive className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Tartós helyi archívum: <strong className="text-white">{finishedMatches.length} lezárt mérkőzés</strong></span>
+                </span>
+                <span className="text-[11px] text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-1.5 font-mono">
+                  <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                  Egységtét: 10 000 Ft / tipp
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 self-start md:self-auto">
-              <span className="text-[11px] text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-1.5 font-mono">
-                <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
-                Szimulált egységtét: 10 000 Ft / tipp
-              </span>
+            {/* Időszak Szűrő Tabok */}
+            <div className="flex items-center gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800 self-start md:self-auto text-xs">
+              <button
+                onClick={() => setPeriodFilter('ALL')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  periodFilter === 'ALL'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Összes ({finishedMatches.length})
+              </button>
+              <button
+                onClick={() => setPeriodFilter('TODAY')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  periodFilter === 'TODAY'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Ma
+              </button>
+              <button
+                onClick={() => setPeriodFilter('YESTERDAY')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  periodFilter === 'YESTERDAY'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Tegnap
+              </button>
+              <button
+                onClick={() => setPeriodFilter('WEEK')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  periodFilter === 'WEEK'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                7 nap
+              </button>
             </div>
           </div>
 

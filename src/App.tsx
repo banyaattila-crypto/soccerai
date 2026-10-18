@@ -27,6 +27,8 @@ import {
 
 const DEFAULT_API_KEY = '';
 
+import { persistFinishedMatchesToHistory } from './services/historyService';
+
 export function App() {
   const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
   // Alapértelmezett fül: Napi Top Tippek ('picks')
@@ -36,7 +38,24 @@ export function App() {
   const [betSlipOpen, setBetSlipOpen] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [aboutOpen, setAboutOpen] = useState<boolean>(false);
-  const [betSlipItems, setBetSlipItems] = useState<BetSlipItem[]>([]);
+
+  // A Fogadási Szelvény (vázlat) tartós megőrzése a böngésző tárolójában
+  const [betSlipItems, setBetSlipItems] = useState<BetSlipItem[]>(() => {
+    try {
+      const raw = localStorage.getItem('soccerai_betslip_draft');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('soccerai_betslip_draft', JSON.stringify(betSlipItems));
+    } catch {
+      // ignore
+    }
+  }, [betSlipItems]);
 
   // API állapotok
   const [dataSource, setDataSource] = useState<'builtin' | 'api'>(() => {
@@ -92,6 +111,7 @@ export function App() {
         if (combined.length > 0) {
           setMatches(combined);
           setIsDemoMode(false);
+          persistFinishedMatchesToHistory(combined);
           const secText = liveSecondary.length > 0
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} másodosztályú: LaLiga 2, Ligue 2, Serie B, 2. Bundesliga, NB I)`
             : '';

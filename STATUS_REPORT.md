@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.7.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Biztonsági Audit, Egzakt Matematikai Mag & CI Védőháló*  
+**Aktuális verzió:** 🏷️ **`v1.8.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *3D Interaktív Élmény, Elegáns Smaragdzöld UI & Tartós Eredmény Archívum*  
 **Dátum:** 2026. október 18.  
-**Állapot:** ✅ **v1.7.0 Audit 1–2. Szakasz (Lépések 1–8 + 14) Elkészült & Verifikálva (Oxlint 0 hiba, Build OK, 0 kulcsszivárgás)**  
+**Állapot:** ✅ **v1.8.0 Verzió Elkészült & Verifikálva (3D Animációk, Tartós Archívum, Új Színpaletta)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pink.vercel.app](https://soccerai-pink.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,18 +16,24 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.7.0`** kiadás a technikai és biztonsági audit **1. szakaszát (azonnali, kötelező biztonsági és transzparencia lépések: 1–4.)** és **2. szakaszát (ismert matematikai, dátum- és Service Worker hibák: 5–8., valamint a 14. lépés szerinti duplikált pick-logika összevonását)** valósítja meg.
+A **`v1.8.0`** kiadás a felhasználói visszajelzések alapján megvalósítja a vizuális, funkcionális és használhatósági fejlesztéseket:
 
-### Fő Megvalósítások a v1.7.0-ban:
-1. **Titokmentes Kód & Lezárt Vercel Proxyk (`api/matches.ts`, `api/apisports.ts`, `.env.local`):**
-   - Minden beégetett API-kulcs törölve a forrásfájlokból és a kliens bundle-ből (`dist/`).
-   - A serverless proxyk szigorú origin-ellenőrzést (`403`), bemeneti paraméter-validációt (`400`), tartalékkulcs-mentes működést (`503`) és IP-alapú rate limitet (`429`) kaptak.
-2. **Őszinte Feliratok & Demó Adat Sáv (`App.tsx`, `ResultsView.tsx`, `TopPicks.tsx`, `MatchDetailModal.tsx`):**
-   - A szimulált oddsok és archív ROI értékek egyértelmű *„Szimulált / Becsült”* jelölést kaptak, tartalék adatoknál pedig látható **„Demó adat”** figyelmeztető sáv jelenik meg.
-3. **Piacfüggő Robusztussági Teszt & Egzakt Mátrix (`predictionEngine.ts`):**
-   - A `robustnessGridTest` a kiválasztott piacot (`1`, `X`, `2`, `OVER_25`, `UNDER_25`, `BTTS_YES`, `BTTS_AND_OVER_25`) teszteli a $\lambda$-rácson; a közös `BTTS és Over 2.5` valószínűség egzaktul a Dixon–Coles mátrixból számolódik, a duplán számolt $\times 1.15$ hazai előny és a `charCodeAt(0)` heurisztika eltávolításával.
-4. **Helyi Időzóna, Network-First Service Worker & GitHub Actions CI (`dateUtils.ts`, `sw.js`, `.github/workflows/ci.yml`):**
-   - 3 napos (`dateFrom`–`dateTo`) API lekérés, pontos napi szűrés, Network-First `index.html` navigáció frissítési sávval, verziózott `package-lock.json` és automatizált GitHub Actions CI.
+### Fő Megvalósítások a v1.8.0-ban:
+1. **3D Interaktív Élmény & Animációk (`ThreeDBall.tsx`, `Logo.tsx`, `TopPicks.tsx`):**
+   - Valódi 3D térbeli forgó focilabda (`ThreeDBall`) orbitális gyűrűkkel és kattintható pörgés-fizikával a Hero szekcióban és a Logóban.
+   - Egérmozgásra reagáló dinamikus 3D kártya dőlés (3D Tilt effect) a Nap Top 3 kiemelt kártyáján rétegzett mélységgel (`translateZ`).
+2. **Finomított Színvilág & Túl Sok Sárga Eltávolítása:**
+   - A korábbi harsány neonsárga helyett professzionális smaragdzöld (`emerald-600`) akciógombok, zafír/smaragd navigáció és diszkrét arany kiemelések.
+3. **Tartós Múltbeli Eredmény Archívum (`historyService.ts`, `ResultsView.tsx`):**
+   - A lezárt mérkőzések a helyi tárhelyen (`localStorage`) folyamatosan felhalmozódnak és megőrződnek; új időszaki szűrőkkel (Összes archivált, Ma, Tegnap, 7 nap).
+4. **Szigorú Top Pick Robusztussági Szűrés (`TopPicks.tsx`):**
+   - Az instabil `ELVETVE` tippek kizárásra kerültek a kiemelt válogatásból; csak sziklaszilárd `ROBUSZTUS` vagy `valószínű` kimenetelek jelenhetnek meg.
+5. **Tartós Fogadási Szelvény Tárolás (Draft Persistence, `App.tsx`):**
+   - Az összeállított szelvénytervezet a böngésző tárában (`localStorage`) oldalfrissítés vagy PWA újraindítás után is megmarad.
+6. **Gördíthető Beállítások Modal & Dedikált Vissza Gombok (`SettingsModal.tsx`):**
+   - `max-h-[90vh]` méretezés görgethető tartalommal, és jól látható „← Vissza” navigációs gombok a fejlécben és a láblécben.
+7. **Teljes Szélességű Bajnokság Választó & Görgető Nyilak (`StatsGrid.tsx`):**
+   - A LaLiga után lévő ligák sem vágódnak le többé; dedikált sáv bal/jobb görgetőgombokkal és „Összes liga kibontása” több soros nézettel.
 
 ---
 

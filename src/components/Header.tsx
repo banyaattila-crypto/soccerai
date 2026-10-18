@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('picks')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'picks'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
@@ -119,7 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('grid')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'grid'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('results')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'results'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('bankroll')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'bankroll'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
@@ -155,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('methodology')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'methodology'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
@@ -172,12 +172,12 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => setActiveTab('bankroll')}
                 className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'bankroll'
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                     : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
                 }`}
                 title="Saját Bankroll & Tétnapló megnyitása"
               >
-                <Wallet className="w-3.5 h-3.5 text-amber-400" />
+                <Wallet className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{currentBankroll.toLocaleString('hu-HU')} Ft</span>
               </button>
             )}
@@ -186,7 +186,7 @@ export const Header: React.FC<HeaderProps> = ({
             {installPrompt && (
               <button
                 onClick={handleInstallClick}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-[11px] shadow-md shadow-amber-500/20 transition-all cursor-pointer animate-pulse"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] shadow-md shadow-emerald-600/25 transition-all cursor-pointer animate-pulse"
                 title="SoccerAI telepítése natív alkalmazásként"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -209,7 +209,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="Mérkőzések frissítése most"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 text-amber-400 ${isLoading ? 'animate-spin' : ''}`}
+                className={`w-3.5 h-3.5 text-emerald-400 ${isLoading ? 'animate-spin' : ''}`}
               />
               <span className="hidden xl:inline">{isLoading ? 'Frissül...' : 'Frissítés'}</span>
             </button>
@@ -217,13 +217,17 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Szelvény számláló gomb */}
             <button
               onClick={onOpenBetSlip}
-              className="relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-colors cursor-pointer"
+              className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                betSlipCount > 0
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-600/20'
+                  : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
+              }`}
               title="Szelvényépítő megnyitása"
             >
-              <Ticket className="w-4 h-4 text-amber-400" />
+              <Ticket className="w-4 h-4 text-emerald-300" />
               <span className="hidden sm:inline">Szelvény</span>
               {betSlipCount > 0 && (
-                <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] sm:text-xs font-black">
+                <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white text-slate-950 text-[10px] sm:text-xs font-black">
                   {betSlipCount}
                 </span>
               )}
@@ -232,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Névjegy & Rendszerinfó */}
             <button
               onClick={onOpenAbout}
-              className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-300 border border-slate-800 transition-colors cursor-pointer"
+              className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-300 border border-slate-800 transition-colors cursor-pointer"
               title={`Névjegy & Rendszerinfó (v${APP_VERSION})`}
             >
               <Info className="w-4 h-4" />
@@ -256,7 +260,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('picks')}
               className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'picks'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -268,7 +272,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('grid')}
               className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'grid'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -280,7 +284,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('results')}
               className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'results'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -292,7 +296,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('bankroll')}
               className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'bankroll'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -304,7 +308,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setActiveTab('methodology')}
               className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
                 activeTab === 'methodology'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >

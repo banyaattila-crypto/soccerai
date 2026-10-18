@@ -243,14 +243,14 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 text-amber-400 border border-amber-500/30 shadow-inner">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 shadow-inner">
               <Wallet className="w-6 h-6" />
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               Saját Bankroll &amp; Tétnapló
             </h1>
             <span className="text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              v1.6 PRO
+              v1.7 PRO
             </span>
           </div>
           <p className="text-slate-400 text-xs sm:text-sm max-w-2xl leading-relaxed">
@@ -262,14 +262,14 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenBetSlip}
-            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
           >
             <Ticket className="w-4 h-4" />
             <span>Szelvényépítő</span>
           </button>
           <button
             onClick={onGoToGrid}
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer"
           >
             <span>Mérkőzés Kínálat</span>
           </button>
@@ -430,7 +430,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
               onClick={() => setStatusFilter(tab.key)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
                 statusFilter === tab.key
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-extrabold'
                   : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
               }`}
             >
@@ -438,7 +438,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
                   statusFilter === tab.key
-                    ? 'bg-slate-950/30 text-slate-950'
+                    ? 'bg-white/20 text-white'
                     : 'bg-slate-800 text-slate-300'
                 }`}
               >

@@ -3,6 +3,20 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.8.0] - 2026-10-18
+
+### Hozzáadva (Added)
+- **3D Interaktív Forgó Labda (`ThreeDBall.tsx`):** Valódi 3D szférikus focilabda komponens orbitális tech részecskegyűrűkkel (`preserve-3d`), kattintás- és hover-érzékeny gyorspörgés-effektussal a fejlécben és a Hero sávban.
+- **3D Kártya Döntési Hatás (3D Tilt Effect, `TopPicks.tsx`):** A Nap Top 3 kiemelt kártyája dinamikus, egérmozgásra lágyan billenő 3D perspektívát és rétegzett mélységet (`translateZ`) kapott.
+- **Tartós Múltbeli Eredmény Archívum (`historyService.ts`, `ResultsView.tsx`):** A lezárt mérkőzések a helyi tárhelyen (`localStorage`) folyamatosan felhalmozódnak és megőrződnek; új időszaki szűrőkkel (Összes archivált, Ma, Tegnap, 7 nap) és archívum-statisztikával.
+- **Tartós Fogadási Szelvény Tárolás (Draft Persistence, `App.tsx`):** Az összeállított szelvénytervezet a böngésző tárhelyén korlátlan ideig megmarad oldalfrissítés vagy PWA újraindítás után is.
+
+### Javítva & Módosítva (Fixed & Changed)
+- **Színvilág Finomítása (Túl Sok Sárga Eltávolítása):** A korábbi harsány neonsárga gombok, keretek és aktív tabok helyett modern, professzionális smaragdzöld (`emerald-600`) akciógombok, elegáns sötét pala és zafír navigáció került bevezetésre.
+- **Szigorú Top Pick Szűrés (`TopPicks.tsx`):** A λ-rácson instabilnak minősülő `ELVETVE` ítéletű tippek kizárásra kerültek a kiemelt ajánlások közül; a Top 3-ba kizárólag sziklaszilárd `ROBUSZTUS` vagy `valószínű` kimenetelek kerülhetnek.
+- **Gördíthető Beállítások Modal & Dedikált Vissza Gombok (`SettingsModal.tsx`):** A beállítások ablak `max-h-[90vh]` korlátozást és görgethető tartalmat kapott, valamint jól látható „← Vissza” navigációs gombok kerültek a fejlécbe és a láblécbe.
+- **Teljes Szélességű Bajnokság Választó & Görgető Nyilak (`StatsGrid.tsx`):** A liga választó sáv teljes szélességű lett, bal/jobb görgetőgombokkal és „Összes liga kibontása” több soros váltóval, így a LaLiga után lévő ligák sem vágódnak le többé.
+
 ## [1.7.0] - 2026-10-18
 
 ### Biztonság (Security - 1. szakasz)

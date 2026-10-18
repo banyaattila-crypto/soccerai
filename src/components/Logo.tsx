@@ -78,25 +78,27 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 42 }) => {
           strokeWidth="2.5"
         />
 
-        {/* 2. AI Dinamikus forgási ívek (Orbit) */}
-        <path
-          d="M 12 50 A 38 38 0 0 1 88 50"
-          fill="none"
-          stroke="url(#aiEnergy)"
-          strokeWidth="1.8"
-          strokeDasharray="14 6"
-          strokeLinecap="round"
-          opacity="0.85"
-        />
-        <path
-          d="M 88 50 A 38 38 0 0 1 12 50"
-          fill="none"
-          stroke="url(#goldRim)"
-          strokeWidth="1.2"
-          strokeDasharray="8 8"
-          strokeLinecap="round"
-          opacity="0.6"
-        />
+        {/* 2. AI Dinamikus forgási ívek (3D Orbitális animáció) */}
+        <g className="animate-[spin_10s_linear_infinite] origin-center" style={{ transformOrigin: '50px 50px' }}>
+          <path
+            d="M 12 50 A 38 38 0 0 1 88 50"
+            fill="none"
+            stroke="url(#aiEnergy)"
+            strokeWidth="1.8"
+            strokeDasharray="14 6"
+            strokeLinecap="round"
+            opacity="0.85"
+          />
+          <path
+            d="M 88 50 A 38 38 0 0 1 12 50"
+            fill="none"
+            stroke="url(#goldRim)"
+            strokeWidth="1.2"
+            strokeDasharray="8 8"
+            strokeLinecap="round"
+            opacity="0.6"
+          />
+        </g>
 
         {/* 3. A 3D Focilabda Alaptest */}
         <circle cx="50" cy="50" r="34" fill="url(#ball3D)" />

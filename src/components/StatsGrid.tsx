@@ -7,6 +7,7 @@ import {
   Filter,
   Sparkles,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   ChevronUp,
@@ -37,6 +38,17 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   // Alapértelmezett liga: Premier League ('pl') a kompakt kezdőnézethez
   const [selectedLeague, setSelectedLeague] = useState<string>('pl');
   const [viewMode, setViewMode] = useState<ViewMode>('league');
+  const [isLeaguesExpanded, setIsLeaguesExpanded] = useState<boolean>(false);
+  const leaguesScrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollLeagues = (direction: 'left' | 'right') => {
+    if (leaguesScrollRef.current) {
+      leaguesScrollRef.current.scrollBy({
+        left: direction === 'left' ? -240 : 240,
+        behavior: 'smooth',
+      });
+    }
+  };
   // Mobilon (<768px) alapértelmezetten a kényelmes Kártyanézet nyílik meg!
   const [displayMode, setDisplayMode] = useState<'table' | 'cards'>(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -299,10 +311,75 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         </div>
 
         {/* Szűrők és Keresősáv */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0D1527]/90 border border-slate-800/80 mb-5 space-y-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Liga fülek (Alapértelmezett: Premier League!) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none touch-pan-x">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0D1527]/90 border border-slate-800/80 mb-5 space-y-3.5">
+          {/* Felső sor: Kereső és gyors infó */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-emerald-400" />
+                <span>Bajnokságok ({availableLeagues.length})</span>
+              </span>
+              <button
+                onClick={() => setIsLeaguesExpanded(!isLeaguesExpanded)}
+                className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                title={isLeaguesExpanded ? 'Egy soros görgethető nézet' : 'Összes liga kibontása több sorba'}
+              >
+                {isLeaguesExpanded ? (
+                  <>
+                    <ChevronUp className="w-3 h-3 text-emerald-400" />
+                    <span>Összecsukás (1 sor)</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3 h-3 text-emerald-400" />
+                    <span>Összes liga kibontása ({availableLeagues.length})</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Kereső */}
+            <div className="relative w-full sm:w-64 shrink-0">
+              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Csapat vagy liga keresése..."
+                className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Második sor: Teljes szélességű Liga választó görgetőgombokkal */}
+          <div className="relative w-full">
+            {!isLeaguesExpanded && (
+              <>
+                <button
+                  onClick={() => scrollLeagues('left')}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-lg bg-slate-900/95 text-slate-300 hover:text-white border border-slate-700 shadow-lg cursor-pointer hidden md:flex items-center justify-center"
+                  title="Görgetés balra"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => scrollLeagues('right')}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-lg bg-slate-900/95 text-slate-300 hover:text-white border border-slate-700 shadow-lg cursor-pointer hidden md:flex items-center justify-center"
+                  title="Görgetés jobbra"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+
+            <div
+              ref={leaguesScrollRef}
+              className={`w-full py-1 ${
+                isLeaguesExpanded
+                  ? 'flex flex-wrap gap-1.5'
+                  : 'flex items-center gap-1.5 overflow-x-auto scroll-smooth md:px-8 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent touch-pan-x'
+              }`}
+            >
               {availableLeagues.map((l) => (
                 <button
                   key={l.id}
@@ -310,39 +387,34 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                     setSelectedLeague(l.id);
                     setCollapsedLeagues((prev) => ({ ...prev, [l.id]: false }));
                   }}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer ${
                     effectiveLeague === l.id
-                      ? 'bg-amber-500 text-slate-950 font-extrabold shadow-sm'
+                      ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-500/50'
                       : 'bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800'
                   }`}
                 >
                   <span>{l.flag}</span>
                   <span>{l.name}</span>
-                  <span className="text-[10px] opacity-80 font-mono">({l.count})</span>
+                  <span
+                    className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                      effectiveLeague === l.id ? 'bg-black/30 text-emerald-200' : 'bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {l.count}
+                  </span>
                 </button>
               ))}
+
               <button
                 onClick={() => setSelectedLeague('all')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   effectiveLeague === 'all'
-                    ? 'bg-amber-500 text-slate-950 font-extrabold shadow-sm'
+                    ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-500/50'
                     : 'bg-slate-900/90 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
                 }`}
               >
                 Minden Bajnokság ({dayMatches.length})
               </button>
-            </div>
-
-            {/* Kereső */}
-            <div className="relative w-full sm:w-60 shrink-0">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Csapat vagy liga keresése..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-              />
             </div>
           </div>
 

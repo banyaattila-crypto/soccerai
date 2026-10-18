@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Award, Calendar, Layers, HelpCircle } from 'lucide-react';
+import { ThreeDBall } from './ThreeDBall';
 
 interface HeroKpiProps {
   matchCount: number;
@@ -20,10 +21,22 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
           
-          {/* Bal oldal: Kompakt KPI Mutatók */}
+          {/* Bal oldal: 3D Animált Labda & Kompakt KPI Mutatók */}
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-none touch-pan-x pb-0.5 lg:pb-0">
+            {/* 3D Interaktív Forgó Labda Widget */}
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#0D1527] border border-slate-800 text-xs shrink-0 shadow-sm">
+              <ThreeDBall size={28} showRings={true} interactive={true} />
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase font-black tracking-wider text-emerald-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  3D Motor
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">Interaktív</span>
+              </div>
+            </div>
+
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0D1527] border border-slate-800 text-xs whitespace-nowrap shrink-0">
-              <Calendar className="w-3.5 h-3.5 text-amber-400" />
+              <Calendar className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-slate-400">Ma:</span>
               <strong className="text-white font-extrabold">{matchCount} meccs</strong>
             </div>
@@ -70,10 +83,10 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
             {onOpenMethodology && (
               <button
                 onClick={onOpenMethodology}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 title="Kvantitatív módszertan és jelmagyarázat"
               >
-                <HelpCircle className="w-3 h-3" />
+                <HelpCircle className="w-3 h-3 text-emerald-400" />
                 <span>Segédlet</span>
               </button>
             )}

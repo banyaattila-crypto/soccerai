@@ -260,7 +260,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                     onClick={() => setStake(amt)}
                     className={`py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                       stake === amt
-                        ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                        ? 'bg-emerald-600 text-white font-bold shadow-sm'
                         : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
@@ -303,7 +303,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                 placeholder="Opcionális jegyzet a tétnaplóhoz (pl. Hétvégi top kombi)..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                className="w-full px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
