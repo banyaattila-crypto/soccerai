@@ -85,9 +85,9 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-[#0D1527] border-l border-slate-800 h-full flex flex-col shadow-2xl">
+      <div className="w-full max-w-md bg-mesh-modal border-l border-slate-800 h-full flex flex-col shadow-2xl">
         {/* Fejléc */}
-        <div className="p-4 bg-[#0A101F] border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 bg-mesh-header border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-amber-400" />
             <h3 className="font-extrabold text-white text-base">Fogadási Szelvény</h3>
@@ -200,7 +200,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
 
         {/* Összesítő és kalkulátor */}
         {items.length > 0 && (
-          <div className="p-4 bg-[#0A101F] border-t border-slate-800 space-y-3">
+          <div className="p-4 bg-mesh-header border-t border-slate-800 space-y-3">
             {/* Sikeres rögzítés banner */}
             {savedSuccess && (
               <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 text-xs text-emerald-300 animate-fade-in">

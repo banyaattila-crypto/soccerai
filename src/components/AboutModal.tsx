@@ -13,10 +13,10 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg bg-[#0D1527] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-lg bg-mesh-modal border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         
         {/* Fejléc */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1A30] to-[#0A101F] border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-mesh-header border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Info className="w-5 h-5 text-amber-400" />
             <h3 className="font-extrabold text-white text-base">Alkalmazás Névjegy &amp; Rendszerinfó</h3>
@@ -118,7 +118,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Lábléc gombok & Külső linkek */}
-        <div className="p-4 bg-[#0A101F] border-t border-slate-800 flex items-center justify-between gap-2">
+        <div className="p-4 bg-mesh-header border-t border-slate-800 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <a
               href={APP_GITHUB_RELEASES}

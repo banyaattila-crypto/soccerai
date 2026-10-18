@@ -115,10 +115,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-[#0D1527] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-mesh-modal border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         
         {/* Modál Fejléc */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1A30] to-[#0A101F] border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-mesh-header border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">{match.leagueFlag}</span>
             <div>
@@ -156,7 +156,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
           
           {/* Csapatok összecsapása */}
-          <div className="grid grid-cols-7 items-center bg-[#070B14]/80 p-4 rounded-xl border border-slate-800">
+          <div className="grid grid-cols-7 items-center bg-mesh-dark p-4 rounded-xl border border-slate-800">
             {/* Hazai */}
             <div className="col-span-3 text-center space-y-1.5">
               <img
@@ -703,7 +703,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
         </div>
 
         {/* Modál lábléc / Akció gomb */}
-        <div className="p-4 bg-[#0A101F] border-t border-slate-800 flex items-center justify-between gap-3">
+        <div className="p-4 bg-mesh-header border-t border-slate-800 flex items-center justify-between gap-3">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"

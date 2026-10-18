@@ -260,7 +260,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   };
 
   return (
-    <section className="py-6 bg-[#070B14] w-full max-w-full overflow-hidden" id="stats-grid">
+    <section className="py-6 bg-transparent w-full max-w-full overflow-hidden" id="stats-grid">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Rács Fejléc és Vezérlők */}
@@ -278,7 +278,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           </div>
 
           {/* Dátumválasztó Tabok (Tegnap / Ma / Holnap) */}
-          <div className="flex items-center gap-1 bg-[#0D1527] p-1 rounded-xl border border-slate-800 self-start md:self-auto">
+          <div className="flex items-center gap-1 bg-mesh-dark p-1 rounded-xl border border-slate-800 self-start md:self-auto">
             <button
               onClick={() => setDayFilter('yesterday')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -313,7 +313,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         </div>
 
         {/* Szűrők és Keresősáv */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0D1527]/90 border border-slate-800/80 mb-5 space-y-3.5">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-mesh-card border border-slate-800/80 mb-5 space-y-3.5">
           {/* Felső sor: Kereső és gyors infó */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -512,7 +512,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
 
         {/* ================= TÁBLÁZAT(OK) ================= */}
         {filteredMatches.length === 0 ? (
-          <div className="text-center py-12 bg-[#0D1527]/40 rounded-2xl border border-slate-800">
+          <div className="text-center py-12 bg-mesh-card rounded-2xl border border-slate-800">
             <Filter className="w-8 h-8 text-slate-600 mx-auto mb-2" />
             <h3 className="text-base font-bold text-white">Nincs a szűrőknek megfelelő mérkőzés</h3>
             <p className="text-xs text-slate-400 mt-1">
@@ -543,13 +543,13 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
               return (
                 <div
                   key={league.id}
-                  className="rounded-2xl bg-[#0D1527] border border-slate-800/90 overflow-hidden shadow-lg"
+                  className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg"
                 >
                   {/* Kattintható Bajnokság Fejléc (Accordion) */}
                   <button
                     type="button"
                     onClick={() => toggleLeagueCollapse(league.id)}
-                    className="w-full px-4 sm:px-5 py-3 bg-[#0F182E] hover:bg-[#131E38] border-b border-slate-800/80 flex items-center justify-between transition-colors cursor-pointer text-left"
+                    className="w-full px-4 sm:px-5 py-3 bg-mesh-header hover:bg-[#131E38] border-b border-slate-800/80 flex items-center justify-between transition-colors cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="text-lg shrink-0">{league.flag}</span>
@@ -605,7 +605,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           </div>
         ) : (
           /* Időrendi lista */
-          <div className="rounded-2xl bg-[#0D1527] border border-slate-800/90 overflow-hidden shadow-lg">
+          <div className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg">
             {displayMode === 'cards' ? (
               <MatchCardsList
                 matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
@@ -655,7 +655,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
       <table className="w-full text-left text-xs whitespace-nowrap min-w-[760px]">
         {/* Fejléc oszlopok */}
         <thead>
-          <tr className="border-b border-slate-800 bg-[#0B1222] text-slate-400 uppercase text-[10px] font-bold tracking-wider">
+          <tr className="border-b border-slate-800 bg-mesh-dark text-slate-400 uppercase text-[10px] font-bold tracking-wider">
             <th className="py-3 px-3 w-16 text-center">KO / Állapot</th>
             <th className="py-3 px-4 min-w-[200px]">Mérkőzés</th>
             <th className={`py-3 px-2 text-center w-14 ${focusMarket === '1X2' ? 'text-amber-300 bg-amber-500/10 font-black' : ''}`}>1 (Hazai)</th>
@@ -892,7 +892,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
           <div
             key={match.id}
             onClick={() => onSelectMatch(match)}
-            className="p-3.5 rounded-xl bg-[#0B1222] border border-slate-800 hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-md group"
+            className="p-3.5 rounded-xl bg-mesh-card border border-slate-800 hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-md group"
           >
             {/* 1. Fejléc: Liga, Kezdés/Státusz, Adatminőség */}
             <div className="flex items-center justify-between text-[11px] text-slate-400">

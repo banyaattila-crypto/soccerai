@@ -38,6 +38,8 @@ A **`v1.9.0`** kiadás az „A” útvonalnak megfelelően átfogó tudományos 
    - A LaLiga után lévő ligák sem vágódnak le többé; dedikált sáv bal/jobb görgetőgombokkal és „Összes liga kibontása” több soros nézettel.
 9. **Lezárult Mérkőzések Dátuma és Időpontja (`ResultsView.tsx`, `StatsGrid.tsx`, `MatchDetailModal.tsx`):**
    - Minden lezárt meccs kártyáján, a táblázatos nézetben és a részletező ablakban is közvetlenül megjelenik a lejátszás pontos naptári napja (`kickoffDate`) és kezdési időpontja (`kickoffTime`), naptár és óra ikonokkal.
+10. **Színátmenetes Hátterek & Enyhe Rácsos Háló (Subtle Cyber Grid Mesh, `index.css` & komponensek):**
+   - Minden felület (főoldal, sávok, kártyák, táblázatok, modális panelek, fiókok) sötét technológiai színátmenetet kapott enyhe, professzionális 24–32px-es rácsos hálóval és környezeti fényekkel (`bg-mesh-*`).
 
 ---
 

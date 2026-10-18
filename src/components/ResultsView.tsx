@@ -265,7 +265,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   }, [evaluatedAll, activeMarket, activeStatus, selectedLeague, periodFilter, todayStr, yesterdayStr]);
 
   return (
-    <div className="py-8 bg-[#070B14]">
+    <div className="py-8 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Demó adat figyelmeztető sáv, ha nincs élő lezárt meccs */}
@@ -278,7 +278,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
         )}
 
         {/* 1. Fejléc & Fő KPI Vezérlőpult */}
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-[#0F1D33] via-[#0D1527] to-[#0A101F] border border-slate-800 shadow-xl space-y-6">
+        <div className="p-6 rounded-2xl bg-mesh-card border border-slate-800 shadow-xl space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
@@ -351,7 +351,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
           {/* Fő statisztikai kártyák sora */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Nyerési arány */}
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
                 Találati Arány (Win Rate)
               </span>
@@ -369,7 +369,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
             </div>
 
             {/* Virtuális ROI */}
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
                 Szimulált ROI (Becsült)
               </span>
@@ -388,7 +388,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
             </div>
 
             {/* Nettó Profit */}
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
                 Szimulált Egyenleg Hatás
               </span>
@@ -409,7 +409,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
             </div>
 
             {/* Átlagos nyertes szorzó */}
-            <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
+            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
               <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
                 Átlagos Becsült Odds
               </span>
@@ -448,7 +448,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
                       ? 'bg-gradient-to-br from-blue-900/40 via-slate-900 to-slate-950 border-amber-400 shadow-md shadow-amber-500/10 scale-[1.02]'
-                      : 'bg-slate-900/70 hover:bg-slate-900 border-slate-800 text-slate-300'
+                      : 'bg-mesh-dark hover:border-slate-700 border-slate-800 text-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full mb-1.5">
@@ -487,7 +487,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
         </div>
 
         {/* 3. Szűrősáv (Piac, Eredmény státusz, Bajnokság) */}
-        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
           {/* Bal: Piac chipek */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
             <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 mr-1">
@@ -572,7 +572,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
 
         {/* 4. Eredmény kártyák listája */}
         {filteredList.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-[#0D1527] border border-slate-800 space-y-3">
+          <div className="p-12 text-center rounded-2xl bg-mesh-card border border-slate-800 space-y-3">
             <Filter className="w-8 h-8 text-slate-600 mx-auto" />
             <h3 className="text-base font-bold text-white">Nincs a szűrésnek megfelelő lezárt mérkőzés</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -598,7 +598,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 <div
                   key={match.id}
                   onClick={() => onSelectMatch(match)}
-                  className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 hover:border-slate-700 cursor-pointer transition-all space-y-3.5 shadow-lg group hover:shadow-amber-500/5"
+                  className="p-5 rounded-2xl bg-mesh-card border border-slate-800 hover:border-slate-700 cursor-pointer transition-all space-y-3.5 shadow-lg group hover:shadow-amber-500/5"
                 >
                   {/* Fejléc: Liga, Dátum+Időpont és Piaci kategória címke */}
                   <div className="space-y-1.5">

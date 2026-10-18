@@ -50,7 +50,7 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
       style={{ perspective: '1000px' }}
     >
       <div
-        className="group relative flex flex-col justify-between rounded-2xl bg-gradient-to-b from-[#0F172A] to-[#0A101F] border border-slate-800 hover:border-emerald-500/50 shadow-xl overflow-hidden h-full"
+        className="group relative flex flex-col justify-between rounded-2xl bg-mesh-card border border-slate-800 hover:border-emerald-500/50 shadow-xl overflow-hidden h-full"
         style={{
           transformStyle: 'preserve-3d',
           transform: tilt.active
@@ -204,7 +204,7 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
           )}
 
           {/* AI Szöveges Indoklás */}
-          <p className="mt-2.5 text-[11px] text-slate-300 leading-relaxed bg-[#070B14]/60 p-2.5 rounded-lg border border-slate-800/80 line-clamp-2">
+          <p className="mt-2.5 text-[11px] text-slate-300 leading-relaxed bg-mesh-dark p-2.5 rounded-lg border border-slate-800/80 line-clamp-2">
             &ldquo;{pick.reasoning}&rdquo;
           </p>
         </div>
@@ -279,7 +279,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
   if (mainTop3.length === 0) return null;
 
   return (
-    <section className="py-6 sm:py-8 bg-[#070B14] w-full max-w-full overflow-hidden">
+    <section className="py-6 sm:py-8 bg-transparent w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Szekció fejléc */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
@@ -294,7 +294,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 bg-[#0D1527] px-3 py-1.5 rounded-xl border border-slate-800">
+            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 bg-mesh-card px-3 py-1.5 rounded-xl border border-slate-800">
               <Zap className="w-3.5 h-3.5 text-emerald-400" />
               <span>Dixon–Coles &amp; Shin De-vig Modell</span>
             </div>
@@ -341,7 +341,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
 
         {/* További Erős Napi Szignálok */}
         {secondaryPicks.length > 0 && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#0D1527]/90 border border-slate-800/90 space-y-3">
+          <div className="p-4 sm:p-5 rounded-2xl bg-mesh-card border border-slate-800/90 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-emerald-400" />
@@ -371,7 +371,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                   <div
                     key={m.id}
                     onClick={() => onSelectMatch(m)}
-                    className="p-3 rounded-xl bg-slate-900/90 hover:bg-slate-800/80 border border-slate-800/90 flex items-center justify-between gap-2 cursor-pointer transition-all group"
+                    className="p-3 rounded-xl bg-mesh-dark hover:border-slate-700/80 border border-slate-800/90 flex items-center justify-between gap-2 cursor-pointer transition-all group"
                   >
                     <div className="min-w-0">
                       <div className="text-[10px] text-slate-400 flex items-center gap-1">

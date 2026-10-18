@@ -50,10 +50,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-[#0D1527] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
+      <div className="relative w-full max-w-lg bg-mesh-modal border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
         
         {/* Fejléc */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0F1A30] to-[#0A101F] border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-5 bg-mesh-header border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
@@ -269,7 +269,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
         </div>
 
         {/* Lábléc gombok - Mindig rögzítve az ablak alján */}
-        <div className="p-4 bg-[#0A101F] border-t border-slate-800 flex items-center justify-between shrink-0 gap-3">
+        <div className="p-4 bg-mesh-header border-t border-slate-800 flex items-center justify-between shrink-0 gap-3">
           <button
             onClick={onClose}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"

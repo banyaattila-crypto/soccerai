@@ -18,11 +18,11 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
   onGoToPicks,
 }) => {
   return (
-    <section className="py-6 sm:py-8 bg-[#070B14] w-full max-w-full overflow-hidden">
+    <section className="py-6 sm:py-8 bg-transparent w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Fejléc */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0D1527] via-[#0F1A30] to-[#0D1527] border border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-mesh-card border border-slate-800">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold mb-2">
               <Sparkles className="w-3.5 h-3.5" />
@@ -53,7 +53,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
         </div>
 
         {/* 1. Valószínűségi Hőtérkép Színskála */}
-        <div className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 space-y-4">
+        <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-4">
           <div className="flex items-center gap-2 text-white font-extrabold text-sm sm:text-base">
             <Layers className="w-4 h-4 text-emerald-400" />
             <h3>1. Valószínűségi Hőtérkép Színkódok</h3>
@@ -109,7 +109,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           
           {/* Dixon-Coles */}
-          <div className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 space-y-2.5">
+          <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-2.5">
             <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm">
               <Calculator className="w-4 h-4" />
               <h4>2. Dixon–Coles (1997) Bivariáns Poisson &amp; MLE Illesztés</h4>
@@ -123,7 +123,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
           </div>
 
           {/* Shin De-vigging */}
-          <div className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 space-y-2.5">
+          <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-2.5">
             <div className="flex items-center gap-2 text-sky-400 font-extrabold text-sm">
               <Scale className="w-4 h-4" />
               <h4>3. Shin (1992) De-vigging &amp; Bukmékeri Árrés</h4>
@@ -137,7 +137,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
           </div>
 
           {/* Robusztussági szűrő */}
-          <div className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 space-y-2.5">
+          <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-2.5">
             <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
               <Activity className="w-4 h-4" />
               <h4>4. λ-rács Robusztussági Teszt &amp; λ-inverzió</h4>
@@ -159,7 +159,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
           </div>
 
           {/* Negyed-Kelly & Adatminőség */}
-          <div className="p-5 rounded-2xl bg-[#0D1527] border border-slate-800 space-y-2.5">
+          <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-2.5">
             <div className="flex items-center gap-2 text-purple-400 font-extrabold text-sm">
               <ShieldCheck className="w-4 h-4" />
               <h4>5. Negyed-Kelly Tétméretezés &amp; Adatminőség</h4>

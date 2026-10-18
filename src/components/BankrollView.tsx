@@ -279,7 +279,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
       {/* 3. Összesítő KPI Kártyarács (5 kártya) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         {/* Kártya 1: Aktuális Bankroll */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0D1527] to-slate-900 border border-slate-800/80 shadow-xl relative group">
+        <div className="p-4 rounded-2xl bg-mesh-card border border-slate-800/80 shadow-xl relative group">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
             <span className="font-bold text-[11px] uppercase tracking-wider text-slate-400">
               Aktuális Bankroll
@@ -332,7 +332,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
         </div>
 
         {/* Kártya 2: Nettó Profit */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0D1527] to-slate-900 border border-slate-800/80 shadow-xl">
+        <div className="p-4 rounded-2xl bg-mesh-card border border-slate-800/80 shadow-xl">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
             <span className="font-bold text-[11px] uppercase tracking-wider text-slate-400">
               Nettó Profit
@@ -357,7 +357,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
         </div>
 
         {/* Kártya 3: Saját ROI */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0D1527] to-slate-900 border border-slate-800/80 shadow-xl">
+        <div className="p-4 rounded-2xl bg-mesh-card border border-slate-800/80 shadow-xl">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
             <span className="font-bold text-[11px] uppercase tracking-wider text-slate-400">
               Saját ROI %
@@ -378,7 +378,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
         </div>
 
         {/* Kártya 4: Találati Arány */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0D1527] to-slate-900 border border-slate-800/80 shadow-xl">
+        <div className="p-4 rounded-2xl bg-mesh-card border border-slate-800/80 shadow-xl">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
             <span className="font-bold text-[11px] uppercase tracking-wider text-slate-400">
               Találati Arány
@@ -394,7 +394,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
         </div>
 
         {/* Kártya 5: Függőben / Játékban */}
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0D1527] to-slate-900 border border-slate-800/80 shadow-xl col-span-2 sm:col-span-1">
+        <div className="p-4 rounded-2xl bg-mesh-card border border-slate-800/80 shadow-xl col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
             <span className="font-bold text-[11px] uppercase tracking-wider text-slate-400">
               Lekötött Tét (Függőben)
@@ -414,7 +414,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
       </div>
 
       {/* 4. Műveleti és Szűrősáv */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#0A101F] border border-slate-800">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3.5 rounded-2xl bg-mesh-card border border-slate-800">
         {/* Bal oldal: Státusz szűrőfülek */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
           {(
@@ -517,7 +517,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
       {/* 5. Szelvény Kártyák Listája */}
       <div className="space-y-4">
         {filteredBets.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-[#0D1527]/50 border border-slate-800/60 space-y-3">
+          <div className="p-12 text-center rounded-2xl bg-mesh-card border border-slate-800/60 space-y-3">
             <Ticket className="w-12 h-12 mx-auto text-slate-600" />
             <h3 className="text-base font-bold text-white">Nincs megjeleníthető szelvény</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -548,14 +548,14 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
             return (
               <div
                 key={bet.id}
-                className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 ${
+                className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 bg-mesh-card ${
                   isWon
-                    ? 'bg-gradient-to-r from-emerald-950/20 via-[#0D1527] to-slate-900 border-emerald-500/40 shadow-lg shadow-emerald-950/20'
+                    ? 'border-emerald-500/40 shadow-lg shadow-emerald-950/20'
                     : isLost
-                    ? 'bg-gradient-to-r from-red-950/20 via-[#0D1527] to-slate-900 border-red-500/30'
+                    ? 'border-red-500/30'
                     : isPending
-                    ? 'bg-gradient-to-r from-amber-950/20 via-[#0D1527] to-slate-900 border-amber-500/30'
-                    : 'bg-[#0D1527] border-slate-800'
+                    ? 'border-amber-500/30'
+                    : 'border-slate-800'
                 }`}
               >
                 {/* Szelvény Kártya Fejléc */}
@@ -750,7 +750,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
       {/* 6. Kézi Tét Rögzítése Modal */}
       {isManualModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#0D1527] border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+          <div className="bg-mesh-modal border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <Plus className="w-5 h-5 text-amber-400" />

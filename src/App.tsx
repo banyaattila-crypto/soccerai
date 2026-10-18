@@ -298,7 +298,7 @@ export function App() {
   }, [matches, yesterdayDateStr]);
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-transparent text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
       
       {/* 1. Felső Navigációs Sáv */}
       <Header
@@ -436,7 +436,7 @@ export function App() {
       />
 
       {/* 5. Prémium Dark Lábléc */}
-      <footer className="border-t border-slate-800/80 bg-[#060911] py-12 text-slate-400 text-xs">
+      <footer className="border-t border-slate-800/80 bg-mesh-dark py-12 text-slate-400 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3 md:col-span-2">

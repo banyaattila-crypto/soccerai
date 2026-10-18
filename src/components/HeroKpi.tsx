@@ -19,14 +19,14 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
   onOpenMethodology,
 }) => {
   return (
-    <section className="border-b border-slate-800/80 bg-[#0A101F]/95 py-2.5 w-full overflow-hidden">
+    <section className="border-b border-slate-800/80 bg-mesh-dark py-2.5 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
           
           {/* Bal oldal: 3D Animált Labda & Kompakt KPI Mutatók */}
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-none touch-pan-x pb-0.5 lg:pb-0">
             {/* 3D Interaktív Forgó Labda Widget */}
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#0D1527] border border-slate-800 text-xs shrink-0 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-mesh-card border border-slate-800 text-xs shrink-0 shadow-sm">
               <ThreeDBall size={28} showRings={true} interactive={true} />
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-black tracking-wider text-emerald-400 flex items-center gap-1">
@@ -37,13 +37,13 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0D1527] border border-slate-800 text-xs whitespace-nowrap shrink-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mesh-card border border-slate-800 text-xs whitespace-nowrap shrink-0">
               <Calendar className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-slate-400">Ma:</span>
               <strong className="text-white font-extrabold">{matchCount} meccs</strong>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0D1527] border border-slate-800 text-xs whitespace-nowrap shrink-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mesh-card border border-slate-800 text-xs whitespace-nowrap shrink-0">
               <Layers className="w-3.5 h-3.5 text-sky-400" />
               <strong className="text-white font-extrabold">{leagueCount}</strong>
               <span className="text-slate-400">bajnokság</span>
@@ -56,7 +56,7 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
             </div>
 
             {yesterdayStat && yesterdayStat.total > 0 ? (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-xs whitespace-nowrap shrink-0">
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mesh-dark border border-slate-800 text-xs whitespace-nowrap shrink-0">
                 <Award className="w-3.5 h-3.5 text-emerald-400" />
                 <span className="text-slate-400">Tegnap:</span>
                 <strong className="text-emerald-400 font-bold">
@@ -64,7 +64,7 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
                 </strong>
               </div>
             ) : (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-xs whitespace-nowrap shrink-0">
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mesh-dark border border-slate-800 text-xs whitespace-nowrap shrink-0">
                 <Award className="w-3.5 h-3.5 text-sky-400" />
                 <span className="text-slate-400">Modell:</span>
                 <strong className="text-sky-300 font-semibold">Dixon–Coles</strong>
