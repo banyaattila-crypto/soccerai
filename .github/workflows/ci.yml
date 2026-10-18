@@ -33,10 +33,28 @@ jobs:
       - name: Production Vite build
         run: npm run build
 
-      - name: Verify client bundle has no leaked API keys
+      - name: Verify client bundle and source have no leaked API keys
         run: |
-          if grep -rnE "0a2ff5ef40ed4113a0ca28d6b9b122d8|b088263aae59a54a7f9a597f1ce83644" dist/ src/ api/ vite.config.ts; then
-            echo "ERROR: Hardcoded API key detected in source or build output!"
+          # 1. Általános API kulcs minta ellenőrzése (auth fejlécek és kulcsnevek 32 karakteres hex értékkel)
+          if grep -rnEi "(x-apisports-key|x-auth-token|api[_-]?key|secret)[\"'\s]*[:=][\"'\s]*[a-f0-9]{32}" src/ dist/ api/ vite.config.ts 2>/dev/null; then
+            echo "ERROR: Hardcoded API key assignment detected in source or build output!"
             exit 1
           fi
-          echo "Secret scan passed: 0 leaked keys in source or dist/."
+
+          # 2. SHA-256 hash alapú ellenőrzés az ismert szivárgott kulcsok kiszűrésére (nincs plaintext kulcs a workflow-ban)
+          BLOCKED_HASHES="3c7312788d6c2a128c89d6dbc7c2437acd6e36a515a87c50050638b16fe9eea4 a47bb250f4ee0003fdc8befa8d629530ffc735443ab5e98f960dfc62e0c636f1"
+          FOUND_LEAK=0
+          for token in $(grep -oE "\b[a-f0-9]{32}\b" src/ dist/ api/ vite.config.ts 2>/dev/null || true); do
+            token_hash=$(echo -n "$token" | sha256sum | cut -d" " -f1)
+            for blocked in $BLOCKED_HASHES; do
+              if [ "$token_hash" = "$blocked" ]; then
+                echo "ERROR: Compromised API key detected by SHA-256 hash fingerprint ($token_hash)!"
+                FOUND_LEAK=1
+              fi
+            done
+          done
+
+          if [ "$FOUND_LEAK" -eq 1 ]; then
+            exit 1
+          fi
+          echo "Secret scan passed: zero leaked keys or compromised hashes in source and dist/."

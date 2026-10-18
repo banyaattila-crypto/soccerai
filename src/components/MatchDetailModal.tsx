@@ -29,22 +29,20 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   onAddToBetSlip,
   betSlipItems,
 }) => {
-  if (!match) return null;
-
-  const p = match.probabilities;
-  const isFinished = match.status === 'FINISHED';
-
-  // Valós bukmékeri oddsok kezelése (Pinnacle & Bet365)
-  const fixtureId = resolveApiSportsFixtureId(match);
-  const [realOdds, setRealOdds] = useState<FixtureRealOdds | null>(match.realOdds || null);
+  // 1. Hookok feltétel nélkül, mindig legfelül (React Rules of Hooks garancia)
+  const [realOdds, setRealOdds] = useState<FixtureRealOdds | null>(match ? match.realOdds || null : null);
   const [loadingOdds, setLoadingOdds] = useState<boolean>(false);
   const [activeBookieTab, setActiveBookieTab] = useState<'pinnacle' | 'bet365' | 'best'>('pinnacle');
 
   useEffect(() => {
-    if (!match) return;
+    if (!match) {
+      setRealOdds(null);
+      return;
+    }
+    setRealOdds(match.realOdds || null);
+
     const fId = resolveApiSportsFixtureId(match);
     if (!fId) {
-      setRealOdds(null);
       return;
     }
 
@@ -81,6 +79,15 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
       isCancelled = true;
     };
   }, [match?.id]);
+
+  // 2. Korai visszatérés (Guard) KIZÁRÓLAG a hookok lefutása után!
+  if (!match) return null;
+
+  const p = match.probabilities;
+  const isFinished = match.status === 'FINISHED';
+
+  // Valós bukmékeri oddsok kezelése (Pinnacle & Bet365)
+  const fixtureId = resolveApiSportsFixtureId(match);
 
   const handleRefreshOdds = async () => {
     if (!fixtureId || loadingOdds) return;

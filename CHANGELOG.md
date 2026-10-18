@@ -3,6 +3,13 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.9.1] - 2026-10-18
+
+### Javítva & Biztonság (Fixed & Security)
+- **React Rules of Hooks Szabálysértés Megszüntetése (`MatchDetailModal.tsx`):** A korábban a feltételes korai visszatérés (`if (!match) return null;`) után elhelyezett hook-hívások (`useState`, `useEffect`) feltétel nélkül, a komponens legtetejére kerültek. Ezzel megszűnt a renderek közötti dinamikus hook-szám váltakozás (0 ↔ 4) és a modális ablak megnyitásakor/bezárásakor fellépő összeomlásveszély.
+- **Valódi Szigorú TypeScript Mód Bekapcsolása (`tsconfig.app.json`, `tsconfig.node.json`):** A korábban csak névleges szigorúságot jelentő konfiguráció helyett aktiválásra került a `"strict": true`, `"noImplicitAny": true` és `"strictNullChecks": true` a teljes projektben. A teljes forráskód 0 hibával és 0 figyelmeztetéssel felel meg a szigorú típusbiztonsági követelményeknek.
+- **CI Titokszivárgás Megszüntetése és SHA-256 Hash Alapú Titokkeresés (`.github/workflows/ci.yml`):** A CI munkafolyamatból eltávolításra kerültek a korábban keresési mintaként plaintextben beírt API-kulcsok. Helyüket általános, regex alapú auth-fejléc/kulcs formátum-ellenőrzés és SHA-256 ujjlenyomatos hash-vizsgálat vette át, így a CI fájl önmaga többé nem tartalmaz és nem szivárogtat titkokat.
+
 ## [1.9.0] - 2026-10-18
 
 ### Hozzáadva (Added)

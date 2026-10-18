@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.9.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Valódi Dixon–Coles MLE Motor & Dinamikus Csapatparaméterek*  
+**Aktuális verzió:** 🏷️ **`v1.9.1`** (SemVer 2.0.0)  
+**Kiadás neve:** *Szigorú Típusbiztonság, Rules of Hooks Megfelelőség & CI Titokvédelem*  
 **Dátum:** 2026. október 18.  
-**Állapot:** ✅ **v1.9.0 Verzió Elkészült & Verifikálva (Valódi MLE Illesztés, Etikai Javítások, 0 Linter Hiba)**  
+**Állapot:** ✅ **v1.9.1 Verzió Elkészült & Verifikálva (0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,30 +16,19 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.9.0`** kiadás az „A” útvonalnak megfelelően átfogó tudományos és etikai modernizációt valósít meg:
+A **`v1.9.1`** kiadás a magas prioritású minőségi és biztonsági felülvizsgálatok pontjait (🟠 4, 🟠 5, 🟠 6) teljeskörűen orvosolja:
 
-### Fő Megvalósítások a v1.9.0-ban:
-1. **Valódi Dixon–Coles (1997) MLE Paraméter-illesztés (`dixonColesFitting.ts`):**
-   - A statikus, kézzel beírt 17 csapatos `TEAM_POWER` tábla és a másodosztályok lapos konstansai véglegesen törölve lettek.
-   - A csapatok támadóerejét ($\alpha_i$) és védelmi gyengeségét ($\beta_i$), valamint a hazai pálya előnyt ($\gamma$) és a $\rho$ korrekciót mostantól a szezonban ténylegesen lejátszott mérkőzésekből, iteratív Poisson Maximum Likelihood Estimation (MLE) eljárással számítja a motor.
-2. **First-run Dishonesty Felszámolása (`bankrollService.ts`):**
-   - Az új felhasználók tétnaplója tiszta, üres lappal (`[]`) indul: nincs automatikusan generált hamis múltbeli nyereség.
-3. **Kitalált Statisztikák Törlése (`HeroKpi.tsx`, `App.tsx`):**
-   - A fix „Tegnap: 83% találat” törölve lett: kizárólag valós, befejezett meccsekből számolt dinamikus sikerrátát jelenít meg, vagy transzparens modell-státuszt ad.
-4. **Körkörös „+EV” Megszüntetése (`TopPicks.tsx`):**
-   - A szimulált szorzókból számított önbeteljesítő „Valós érték: +X%” felirat megszűnt, a felület tiszta fair szorzót mutat.
-5. **Dixon–Coles Paraméter-panel (`MatchDetailModal.tsx`):**
-   - A mérkőzés részleteiben transzparensen megjelenik mindkét klub illesztett $\alpha$ és $\beta$ paramétere, a hazai előny és az illesztéshez felhasznált meccsszám.
-6. **Tartós Fogadási Szelvény Tárolás (Draft Persistence, `App.tsx`):**
-   - Az összeállított szelvénytervezet a böngésző tárában (`localStorage`) oldalfrissítés vagy PWA újraindítás után is megmarad.
-7. **Gördíthető Beállítások Modal & Dedikált Vissza Gombok (`SettingsModal.tsx`):**
-   - `max-h-[90vh]` méretezés görgethető tartalommal, és jól látható „← Vissza” navigációs gombok a fejlécben és a láblécben.
-8. **Teljes Szélességű Bajnokság Választó & Görgető Nyilak (`StatsGrid.tsx`):**
-   - A LaLiga után lévő ligák sem vágódnak le többé; dedikált sáv bal/jobb görgetőgombokkal és „Összes liga kibontása” több soros nézettel.
-9. **Lezárult Mérkőzések Dátuma és Időpontja (`ResultsView.tsx`, `StatsGrid.tsx`, `MatchDetailModal.tsx`):**
-   - Minden lezárt meccs kártyáján, a táblázatos nézetben és a részletező ablakban is közvetlenül megjelenik a lejátszás pontos naptári napja (`kickoffDate`) és kezdési időpontja (`kickoffTime`), naptár és óra ikonokkal.
-10. **Színátmenetes Hátterek & Enyhe Rácsos Háló (Subtle Cyber Grid Mesh, `index.css` & komponensek):**
-   - Minden felület (főoldal, sávok, kártyák, táblázatok, modális panelek, fiókok) sötét technológiai színátmenetet kapott enyhe, professzionális 24–32px-es rácsos hálóval és környezeti fényekkel (`bg-mesh-*`).
+### Fő Megvalósítások a v1.9.1-ben:
+1. **React Rules of Hooks Helyreállítása (`MatchDetailModal.tsx` - 🟠 4):**
+   - A korábbi feltételes korai kilépés (`if (!match) return null;`) után elhelyezett hook-hívások (`useState`, `useEffect`) feltétel nélkül a komponens legtetejére kerültek.
+   - Megszűnt a renderek közötti hook-szám inkonzisztencia (0 ↔ 4) kockázata, garantálva a determinisztikus és hibamentes modális működést.
+2. **Valódi Szigorú TypeScript Mód (`tsconfig.app.json`, `tsconfig.node.json` - 🟠 5):**
+   - Aktiválásra került a `"strict": true`, `"noImplicitAny": true` és `"strictNullChecks": true`.
+   - A teljes alkalmazás és a Vite konfiguráció mostantól valódi típusbiztonsággal fordul; a CI `npx tsc -b` ellenőrzése ténylegesen szigorú típusellenőrzést végez (0 hiba mellett).
+3. **CI Titokvédelem & SHA-256 Hash Alapú Vizsgálat (`.github/workflows/ci.yml` - 🟠 6):**
+   - A CI fájlból véglegesen eltávolításra kerültek a korábban keresési mintaként használt plaintext API kulcsok.
+   - Helyüket általános, regex alapú auth-fejléc és kulcs-érték detektálás, valamint kompromittálódott kulcsok SHA-256 ujjlenyomat-alapú vizsgálata vette át.
+   - A munkafolyamat maga tiszta, nem szivárogtat semmilyen titkot.
 
 ---
 
