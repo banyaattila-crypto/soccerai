@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.9.0';
-export const APP_RELEASE_NAME = 'Valódi Dixon–Coles MLE Motor & Dinamikus Csapatparaméterek';
+export const APP_VERSION = '1.9.1';
+export const APP_RELEASE_NAME = 'Szigorú Típusbiztonság, Rules of Hooks Megfelelőség & CI Titokvédelem';
 export const APP_RELEASE_DATE = '2026-10-18';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,12 +16,12 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    '3D Interaktív Forgó Labda & 3D Kártya Döntés: Valódi 3D térbeli forgó focilabda widget (ThreeDBall) orbitális részecskegyűrűkkel a Hero szekcióban és a Logóban, valamint interaktív egérmozgásra reagáló 3D perspektíva dőlés a Top 3 kártyákon',
-    'Finomított Színvilág & Túl Sok Sárga Eltávolítása: Harsány neonsárga helyett professzionális smaragdzöld (emerald-600) akciógombok, elegáns sötét pala és zafír navigáció, az arany akcentusok diszkrét célzott használata',
-    'Tartós Múltbeli Eredmény Archívum (historyService.ts): A lezárt mérkőzések többé nem vesznek el az idő múlásával; a böngésző helyi tárhelye automatikusan megőrzi és felhalmozza őket, időszaki szűrőkkel (Összes, Ma, Tegnap, 7 nap)',
-    'Szigorú Top Pick Szűrés (Nincs több ELVETVE a Top 3-ban): A λ-rácson instabilnak minősülő ELVETVE tippek kizárásra kerültek a kiemelt ajánlások közül; csak sziklaszilárd ROBUSZTUS vagy valószínű tippek jelenhetnek meg',
-    'Állandó Fogadási Szelvény Tárolás (Draft Persistence): Az összeállított szelvénytervezet a böngésző tárában (localStorage) korlátlan ideig megmarad oldalfrissítés vagy PWA újraindítás után is',
-    'Gördíthető Beállítások Modal & Dedikált Vissza Gombok: Max. 90vh képernyőméretezés overscroll-contain gördítéssel, világos „← Vissza” navigációval a fejlécben és a láblécben',
-    'Teljes Szélességű Bajnokság Választó & Görgető Nyilak: A ligachipek többé nem vágódnak le a LaLiga után; dedikált sáv bal/jobb görgetőgombokkal és „Összes liga kibontása” több soros váltóval',
+    'React Rules of Hooks Helyreállítása: A MatchDetailModal hookjai feltétel nélkül a legfelső szintre kerültek, kiküszöbölve a feltételes hook-hívás miatti összeomlásveszélyt',
+    'Valódi Szigorú TypeScript Mód: strict, noImplicitAny és strictNullChecks bekapcsolva 0 hibával és 0 figyelmeztetéssel a teljes projektben',
+    'CI Titokvédelem & SHA-256 Hash Alapú Vizsgálat: Törölve minden plaintext API kulcs a CI workflow fájlból; helyette hash ujjlenyomat és regex vizsgálat fut',
+    'Valódi Dixon–Coles (1997) MLE Paraméter-illesztő Motor: A statikus 17 csapatos TEAM_POWER tábla helyett valós meccsekből illesztett dinamikus csapatparaméterek',
+    'Lejátszási Dátum és Időpont Kijelzése Lezárt Meccseknél: A befejezett mérkőzéseken naptárral és órával megjelenik a meccs napja és kezdési ideje',
+    'Színátmenetes Hátterek & Enyhe Rácsos Háló: Minden képernyő és kártya modern sötét technológiai színátmenetet és elegáns rácsos hálót kapott',
+    '3D Interaktív Forgó Labda: Térbeli forgó szférikus focilabda részecskegyűrűkkel a Hero sávban és a logóban',
   ],
 };
