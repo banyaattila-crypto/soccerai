@@ -24,81 +24,16 @@ interface ResultsViewProps {
   onSelectMatch: (match: Match) => void;
 }
 
-export type MarketCategory = 'ALL' | 'COMBINED' | 'BTTS' | 'OVER_25' | '1X2' | 'UNDER_25';
+import {
+  evaluatePickWon,
+  getMarketCategory,
+  type MarketCategory,
+} from '../services/betEvaluation';
+
+export { evaluatePickWon, getMarketCategory, type MarketCategory };
+
 export type StatusFilter = 'ALL' | 'WON' | 'LOST';
 
-/**
- * Piac besorolása kategóriába a szűréshez és a statisztikai elemzéshez
- */
-export function getMarketCategory(market?: string, marketLabel?: string): MarketCategory {
-  const m = (market || '').toUpperCase();
-  const l = (marketLabel || '').toLowerCase();
-
-  if (m === 'BTTS_AND_OVER25' || (l.includes('btts') && (l.includes('2.5') || l.includes('over')))) {
-    return 'COMBINED';
-  }
-  if (m === 'BTTS_YES' || l.includes('btts') || l.includes('mindkét')) {
-    return 'BTTS';
-  }
-  if (m === 'OVER_25' || l.includes('2.5 gól felett') || l.includes('2.5 felett')) {
-    return 'OVER_25';
-  }
-  if (m === 'UNDER_25' || l.includes('2.5 gól alatt') || l.includes('2.5 alatt')) {
-    return 'UNDER_25';
-  }
-  if (['1', 'X', '2'].includes(m) || l.includes('győzelem') || l.includes('döntetlen')) {
-    return '1X2';
-  }
-  return 'ALL';
-}
-
-/**
- * Valós matematikai eredmény-kiértékelő függvény a tényleges gólok és a piac alapján
- */
-export function evaluatePickWon(
-  homeScore?: number,
-  awayScore?: number,
-  market?: string,
-  marketLabel?: string
-): boolean | null {
-  if (homeScore === undefined || awayScore === undefined || isNaN(homeScore) || isNaN(awayScore)) {
-    return null;
-  }
-  const totalGoals = homeScore + awayScore;
-  const label = (marketLabel || '').toLowerCase();
-  const m = (market || '').toUpperCase();
-
-  if (m === 'BTTS_AND_OVER25' || (label.includes('btts') && label.includes('2.5'))) {
-    return homeScore > 0 && awayScore > 0 && totalGoals > 2.5;
-  }
-  if (m === 'OVER_25' || label.includes('2.5 gól felett') || label.includes('2.5 felett')) {
-    return totalGoals > 2.5;
-  }
-  if (m === 'UNDER_25' || label.includes('2.5 gól alatt') || label.includes('2.5 alatt')) {
-    return totalGoals < 2.5;
-  }
-  if (m === 'OVER_15' || label.includes('1.5 gól felett') || label.includes('1.5 felett')) {
-    return totalGoals > 1.5;
-  }
-  if (m === 'BTTS_YES' || label.includes('mindkét csapat szerez gólt') || label.includes('btts')) {
-    return homeScore > 0 && awayScore > 0;
-  }
-  if (m === '1' || label.includes('győzelem (1)')) {
-    return homeScore > awayScore;
-  }
-  if (m === 'X' || label.includes('döntetlen (x)') || label.includes('döntetlen')) {
-    return homeScore === awayScore;
-  }
-  if (m === '2' || label.includes('győzelem (2)')) {
-    return awayScore > homeScore;
-  }
-  if (m === 'FH_OVER_05' || label.includes('félidő')) {
-    return totalGoals >= 1;
-  }
-
-  // Alapértelmezett gólhatár ellenőrzés
-  return totalGoals > 2.5;
-}
 
 export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch }) => {
   const [activeMarket, setActiveMarket] = useState<MarketCategory>('ALL');
@@ -145,7 +80,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
     return finishedMatches.map((match) => {
       const pick = match.aiPick;
       const isWon = pick
-        ? evaluatePickWon(match.homeScore, match.awayScore, pick.market, pick.marketLabel)
+        ? evaluatePickWon(
+            match.homeScore,
+            match.awayScore,
+            pick.market,
+            pick.marketLabel,
+            match.homeHalfTimeScore,
+            match.awayHalfTimeScore
+          )
         : null;
       const category = getMarketCategory(pick?.market, pick?.marketLabel);
       const odds = pick?.odds || 1.5;

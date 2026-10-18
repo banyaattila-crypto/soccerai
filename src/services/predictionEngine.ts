@@ -205,28 +205,42 @@ function getMarketProbFromExtracted(
   market: PickMarket,
   lh: number,
   la: number
-): number {
+) {
   switch (market) {
     case '1':
+    case 'HOME_WIN':
       return mk.home;
     case 'X':
+    case 'DRAW':
       return mk.draw;
     case '2':
+    case 'AWAY_WIN':
       return mk.away;
+    case 'BTTS':
     case 'BTTS_YES':
       return mk.btts;
+    case 'BTTS_NO':
+      return 1.0 - mk.btts;
+    case 'OVER_35':
+      return mk.over35;
+    case 'UNDER_35':
+      return 1.0 - mk.over35;
     case 'OVER_25':
       return mk.over25;
     case 'UNDER_25':
       return 1.0 - mk.over25;
     case 'OVER_15':
       return mk.over15;
+    case 'UNDER_15':
+      return 1.0 - mk.over15;
     case 'BTTS_AND_OVER25':
       return mk.bttsAndOver25;
     case 'FH_OVER_05': {
       const fhNoGoal = poisson(0, lh * 0.45) * poisson(0, la * 0.45);
       return 1.0 - fhNoGoal;
     }
+    default:
+      return mk.home;
   }
 }
 

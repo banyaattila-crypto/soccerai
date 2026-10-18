@@ -360,6 +360,8 @@ export async function fetchLiveMatches(
       },
       homeScore: m.score?.fullTime?.home ?? undefined,
       awayScore: m.score?.fullTime?.away ?? undefined,
+      homeHalfTimeScore: m.score?.halfTime?.home ?? undefined,
+      awayHalfTimeScore: m.score?.halfTime?.away ?? undefined,
       probabilities,
       odds: {
         home: oddsHome,

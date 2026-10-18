@@ -1,5 +1,5 @@
 import { BetSlipItem, Match, TrackedBet, TrackedBetStatus, BankrollSummary } from '../types/football';
-import { evaluatePickWon } from '../components/ResultsView';
+import { evaluatePickWon } from './betEvaluation';
 
 export const STORAGE_KEY_BANKROLL = 'soccerai_bankroll_config';
 export const STORAGE_KEY_BETS = 'soccerai_tracked_bets';
@@ -267,19 +267,18 @@ export function resetToSampleBets(): TrackedBet[] {
 
 /**
  * Automatikus szelvény-kiértékelés a meccsadatbázisban található befejezett mérkőzések alapján
+/**
+ * Tiszta kiértékelő függvény: adott szelvény-listát értékel ki mérkőzések alapján (mellékhatásmentes).
  */
-export function autoEvaluateBetsWithMatches(
+export function autoEvaluateBetsList(
+  bets: TrackedBet[],
   matches: Match[]
-): { updatedCount: number; bets: TrackedBet[] } {
-  const bets = getTrackedBets();
+): { updatedCount: number; updatedBets: TrackedBet[] } {
   let updatedCount = 0;
-
-  // Létrehozunk egy gyorstárat a meccsekből id szerint
   const matchMap = new Map<string, Match>();
   matches.forEach((m) => matchMap.set(m.id, m));
 
   const updatedBets = bets.map((bet) => {
-    // Csak a függőben lévő szelvényeket értékeljük ki automatikusan
     if (bet.status !== 'PENDING') return bet;
 
     let allItemsFinished = true;
@@ -287,7 +286,6 @@ export function autoEvaluateBetsWithMatches(
     const updatedItems = bet.items.map((item) => {
       const match = matchMap.get(item.matchId);
 
-      // Ha meccs létezik és befejeződött (FINISHED), és vannak gólok
       if (
         match &&
         match.status === 'FINISHED' &&
@@ -297,19 +295,26 @@ export function autoEvaluateBetsWithMatches(
         const isWon = evaluatePickWon(
           match.homeScore,
           match.awayScore,
-          undefined,
-          item.marketLabel
+          item.market,
+          item.marketLabel,
+          match.homeHalfTimeScore,
+          match.awayHalfTimeScore
         );
+
+        if (isWon === null) {
+          allItemsFinished = false;
+        }
 
         return {
           ...item,
           homeScore: match.homeScore,
           awayScore: match.awayScore,
+          homeHalfTimeScore: match.homeHalfTimeScore,
+          awayHalfTimeScore: match.awayHalfTimeScore,
           isWon: isWon === null ? undefined : isWon,
         };
       }
 
-      // Ha még nincs lezárva vagy nem található a meccs
       allItemsFinished = false;
       return item;
     });
@@ -340,12 +345,26 @@ export function autoEvaluateBetsWithMatches(
       };
     }
 
-    // Ha még nem zárult le minden meccs, de frissültek részeredmények
     return {
       ...bet,
       items: updatedItems,
     };
   });
+
+  return { updatedCount, updatedBets };
+}
+
+export { autoEvaluateBetsList as autoEvaluateTrackedBets };
+
+/**
+ * Automatikusan kiértékeli a függőben lévő szelvényeket a frissen betöltött mérkőzések eredményei alapján,
+ * és frissíti a helyi adatbázist (localStorage).
+ */
+export function autoEvaluateBetsWithMatches(
+  matches: Match[]
+): { updatedCount: number; bets: TrackedBet[] } {
+  const bets = getTrackedBets();
+  const { updatedCount, updatedBets } = autoEvaluateBetsList(bets, matches);
 
   if (updatedCount > 0) {
     saveTrackedBets(updatedBets);

@@ -37,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   betSlipCount,
   activeTab,
   setActiveTab,
+  isLiveApi,
   isLoading,
   onRefresh,
   currentBankroll,
@@ -94,6 +95,21 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   v{APP_VERSION}
                 </button>
+                {isLiveApi ? (
+                  <span
+                    className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0 hidden sm:inline"
+                    title="Élő API adatforrás (Football-Data / API-Sports)"
+                  >
+                    ÉLŐ API
+                  </span>
+                ) : (
+                  <span
+                    className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0 hidden sm:inline"
+                    title="Szimulált vagy gyorsítótárazott minta adatok"
+                  >
+                    SZIMULÁLT
+                  </span>
+                )}
               </div>
               <p className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
                 Kvantitatív Futball Predikciók &amp; Valószínűségi Hőtérkép

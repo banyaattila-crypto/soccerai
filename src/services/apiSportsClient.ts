@@ -121,6 +121,10 @@ interface ApiSportsFixtureItem {
     home: number | null;
     away: number | null;
   };
+  score?: {
+    halftime?: { home: number | null; away: number | null };
+    fulltime?: { home: number | null; away: number | null };
+  };
 }
 
 interface ApiSportsFixturesResponse {
@@ -149,6 +153,48 @@ interface ApiSportsOddsResponse {
 }
 
 /**
+ * Tisztítja a korábbi napokról megmaradt API-Sports gyorsítótárakat és elavult odds-cache bejegyzéseket,
+ * megelőzve a böngésző 5 MB-os localStorage kvótájának kimerülését.
+ */
+export function pruneOldApiSportsCache(keepDateStr: string): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    const keysToRemove: string[] = [];
+    const keepKey = `${CACHE_KEY}_${keepDateStr}`;
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      // Korábbi napok meccscache-ének törlése
+      if (key.startsWith(CACHE_KEY) && key !== keepKey) {
+        keysToRemove.push(key);
+      }
+
+      // 24 óránál régebbi odds cache-ek törlése
+      if (key.startsWith('api_sports_odds_')) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (typeof parsed.timestamp === 'number' && parsed.timestamp < oneDayAgo) {
+              keysToRemove.push(key);
+            }
+          }
+        } catch {
+          keysToRemove.push(key);
+        }
+      }
+    }
+
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (err) {
+    console.warn('Nem sikerült törölni az elavult API-Sports cache-t:', err);
+  }
+}
+
+/**
  * Lekéri a másodosztályú (LaLiga 2, Ligue 2, Serie B, 2. Bundesliga, NB I) meccseket
  * az API-Sports v3 API-ról szigorú napi kvóta-védelemmel (100 req/day limit).
  */
@@ -159,6 +205,9 @@ export async function fetchApiSportsMatches(
 ): Promise<Match[]> {
   const dateStr = targetDate || formatLocalDate();
   const cacheKeyWithDate = `${CACHE_KEY}_${dateStr}`;
+
+  // Elavult régebbi napok gyorsítótárának automatikus ürítése a kvótaszakadás megelőzésére
+  pruneOldApiSportsCache(dateStr);
 
   // 1. Gyorsítótár ellenőrzése (0 API hívás!)
   if (!forceRefresh) {
@@ -364,6 +413,8 @@ export async function fetchApiSportsMatches(
       status,
       homeScore: f.goals.home ?? undefined,
       awayScore: f.goals.away ?? undefined,
+      homeHalfTimeScore: f.score?.halftime?.home ?? undefined,
+      awayHalfTimeScore: f.score?.halftime?.away ?? undefined,
       homeTeam: {
         id: String(f.teams.home.id),
         name: homeTeamName,

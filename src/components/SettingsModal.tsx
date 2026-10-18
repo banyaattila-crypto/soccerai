@@ -42,6 +42,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     localStorage.setItem('focitipp_apisports_key', apiSportsKey);
     localStorage.setItem('focitipp_enable_secondary', enableSecondaryLeagues ? 'true' : 'false');
     localStorage.setItem('focitipp_threshold', threshold.toString());
+    window.dispatchEvent(new Event('focitipp_settings_updated'));
     setSaved(true);
     if (onSaveConfig) {
       onSaveConfig(dataSource, apiKey, apiSportsKey, enableSecondaryLeagues);

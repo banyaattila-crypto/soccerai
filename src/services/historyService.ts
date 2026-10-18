@@ -1,6 +1,7 @@
 import { Match } from '../types/football';
 
 const HISTORY_STORAGE_KEY = 'soccerai_match_history_archive_v1';
+export const MAX_ARCHIVED_MATCHES = 150;
 
 /**
  * Megőrzi és összefésüli a lezárt mérkőzéseket a böngésző tartós tárolójában (localStorage).
@@ -30,16 +31,24 @@ export function persistFinishedMatchesToHistory(newMatches: Match[]): Match[] {
     matchMap.set(m.id, m);
   });
 
-  const merged = Array.from(matchMap.values()).sort((a, b) => {
-    const dateA = `${a.kickoffDate}T${a.kickoffTime || '00:00'}`;
-    const dateB = `${b.kickoffDate}T${b.kickoffTime || '00:00'}`;
-    return dateB.localeCompare(dateA); // legfrissebb elöl
-  });
+  const merged = Array.from(matchMap.values())
+    .sort((a, b) => {
+      const dateA = `${a.kickoffDate}T${a.kickoffTime || '00:00'}`;
+      const dateB = `${b.kickoffDate}T${b.kickoffTime || '00:00'}`;
+      return dateB.localeCompare(dateA); // legfrissebb elöl
+    })
+    .slice(0, MAX_ARCHIVED_MATCHES);
 
   try {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(merged));
   } catch (err) {
-    console.warn('Nem sikerült elmenteni az archív meccseket a localStorage-ba:', err);
+    console.warn('Nem sikerült elmenteni az archív meccseket a localStorage-ba (kvóta túllépés), csökkentett mentés:', err);
+    try {
+      const smaller = merged.slice(0, 50);
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(smaller));
+    } catch {
+      // Ignorálás ha a böngésző tárhelye teljesen megtelt
+    }
   }
 
   return merged;

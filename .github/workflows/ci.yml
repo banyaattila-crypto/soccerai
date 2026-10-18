@@ -30,6 +30,9 @@ jobs:
       - name: Oxlint strict check (0 warnings, 0 errors)
         run: npx oxlint --deny-warnings
 
+      - name: Run unit test suite (Vitest)
+        run: npm test
+
       - name: Production Vite build
         run: npm run build
 

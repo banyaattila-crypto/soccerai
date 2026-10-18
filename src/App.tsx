@@ -7,18 +7,31 @@ import { Header, AppTab } from './components/Header';
 import { HeroKpi } from './components/HeroKpi';
 import { TopPicks } from './components/TopPicks';
 import { StatsGrid } from './components/StatsGrid';
-import { MatchDetailModal } from './components/MatchDetailModal';
 import { BetSlipDrawer } from './components/BetSlipDrawer';
-import { SettingsModal } from './components/SettingsModal';
-import { AboutModal } from './components/AboutModal';
-import { ResultsView } from './components/ResultsView';
-import { BankrollView } from './components/BankrollView';
-import { MethodologyView } from './components/MethodologyView';
 import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
-import { evaluatePickWon } from './components/ResultsView';
+import { evaluatePickWon } from './services/betEvaluation';
+
+const MatchDetailModal = React.lazy(() =>
+  import('./components/MatchDetailModal').then((m) => ({ default: m.MatchDetailModal }))
+);
+const SettingsModal = React.lazy(() =>
+  import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal }))
+);
+const AboutModal = React.lazy(() =>
+  import('./components/AboutModal').then((m) => ({ default: m.AboutModal }))
+);
+const ResultsView = React.lazy(() =>
+  import('./components/ResultsView').then((m) => ({ default: m.ResultsView }))
+);
+const BankrollView = React.lazy(() =>
+  import('./components/BankrollView').then((m) => ({ default: m.BankrollView }))
+);
+const MethodologyView = React.lazy(() =>
+  import('./components/MethodologyView').then((m) => ({ default: m.MethodologyView }))
+);
 import {
   createTrackedBet,
   getTrackedBets,
@@ -285,7 +298,14 @@ export function App() {
     finishedYesterday.forEach((m) => {
       if (
         m.aiPick &&
-        evaluatePickWon(m.homeScore, m.awayScore, m.aiPick.market, m.aiPick.marketLabel)
+        evaluatePickWon(
+          m.homeScore,
+          m.awayScore,
+          m.aiPick.market,
+          m.aiPick.marketLabel,
+          m.homeHalfTimeScore,
+          m.awayHalfTimeScore
+        ) === true
       ) {
         won++;
       }
@@ -381,33 +401,62 @@ export function App() {
           />
         )}
 
-        {activeTab === 'results' && (
-          <ResultsView matches={matches} onSelectMatch={setSelectedMatch} />
-        )}
+        <React.Suspense
+          fallback={
+            <div className="py-20 text-center text-slate-500 font-mono text-xs flex flex-col items-center justify-center gap-3">
+              <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
+              <span>Modul betöltése...</span>
+            </div>
+          }
+        >
+          {activeTab === 'results' && (
+            <ResultsView matches={matches} onSelectMatch={setSelectedMatch} />
+          )}
 
-        {activeTab === 'bankroll' && (
-          <BankrollView
-            matches={matches}
-            onOpenBetSlip={() => setBetSlipOpen(true)}
-            onGoToGrid={() => setActiveTab('grid')}
-          />
-        )}
+          {activeTab === 'bankroll' && (
+            <BankrollView
+              matches={matches}
+              onOpenBetSlip={() => setBetSlipOpen(true)}
+              onGoToGrid={() => setActiveTab('grid')}
+            />
+          )}
 
-        {activeTab === 'methodology' && (
-          <MethodologyView
-            onGoToGrid={() => setActiveTab('grid')}
-            onGoToPicks={() => setActiveTab('picks')}
-          />
-        )}
+          {activeTab === 'methodology' && (
+            <MethodologyView
+              onGoToGrid={() => setActiveTab('grid')}
+              onGoToPicks={() => setActiveTab('picks')}
+            />
+          )}
+        </React.Suspense>
       </main>
 
       {/* 4. Modális komponensek */}
-      <MatchDetailModal
-        match={selectedMatch}
-        onClose={() => setSelectedMatch(null)}
-        onAddToBetSlip={handleAddToBetSlip}
-        betSlipItems={betSlipItems}
-      />
+      <React.Suspense fallback={null}>
+        {selectedMatch && (
+          <MatchDetailModal
+            match={selectedMatch}
+            onClose={() => setSelectedMatch(null)}
+            onAddToBetSlip={handleAddToBetSlip}
+            betSlipItems={betSlipItems}
+          />
+        )}
+
+        {settingsOpen && (
+          <SettingsModal
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            onOpenAbout={() => setAboutOpen(true)}
+            onSaveConfig={handleSaveConfig}
+          />
+        )}
+
+        {aboutOpen && (
+          <AboutModal
+            isOpen={aboutOpen}
+            onClose={() => setAboutOpen(false)}
+          />
+        )}
+      </React.Suspense>
 
       <BetSlipDrawer
         isOpen={betSlipOpen}
@@ -421,18 +470,6 @@ export function App() {
           setActiveTab('bankroll');
         }}
         currentBankroll={currentBankroll}
-      />
-
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        onOpenAbout={() => setAboutOpen(true)}
-        onSaveConfig={handleSaveConfig}
-      />
-
-      <AboutModal
-        isOpen={aboutOpen}
-        onClose={() => setAboutOpen(false)}
       />
 
       {/* 5. Prémium Dark Lábléc */}

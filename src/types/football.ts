@@ -16,10 +16,18 @@ export type PickMarket =
   | '1'
   | 'X'
   | '2'
+  | 'HOME_WIN'
+  | 'DRAW'
+  | 'AWAY_WIN'
+  | 'BTTS'
   | 'BTTS_YES'
+  | 'BTTS_NO'
+  | 'OVER_15'
+  | 'UNDER_15'
   | 'OVER_25'
   | 'UNDER_25'
-  | 'OVER_15'
+  | 'OVER_35'
+  | 'UNDER_35'
   | 'FH_OVER_05'
   | 'BTTS_AND_OVER25';
 
@@ -96,6 +104,8 @@ export interface Match {
   awayTeam: Team;
   homeScore?: number;
   awayScore?: number;
+  homeHalfTimeScore?: number;
+  awayHalfTimeScore?: number;
   probabilities: MarketProbabilities;
   odds: MatchOdds;
   aiPick?: {
@@ -164,6 +174,7 @@ export interface BetSlipItem {
   matchId: string;
   matchTitle: string;
   marketLabel: string;
+  market?: PickMarket;
   odds: number;
   probability: number;
   quarterKellyPct?: number;
@@ -175,11 +186,14 @@ export interface TrackedBetItem {
   matchId: string;
   matchTitle: string;
   marketLabel: string;
+  market?: PickMarket;
   odds: number;
   probability: number;
   quarterKellyPct?: number;
   homeScore?: number;
   awayScore?: number;
+  homeHalfTimeScore?: number;
+  awayHalfTimeScore?: number;
   isWon?: boolean;
 }
 

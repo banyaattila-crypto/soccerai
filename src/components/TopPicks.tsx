@@ -329,6 +329,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     matchId: match.id,
                     matchTitle: `${match.homeTeam.name} - ${match.awayTeam.name}`,
                     marketLabel: pick.marketLabel,
+                    market: pick.market,
                     odds: pick.odds,
                     probability: pick.probability,
                   })
@@ -395,6 +396,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                           matchId: m.id,
                           matchTitle: `${m.homeTeam.name} - ${m.awayTeam.name}`,
                           marketLabel: p.marketLabel,
+                          market: p.market,
                           odds: p.odds,
                           probability: p.probability,
                         });

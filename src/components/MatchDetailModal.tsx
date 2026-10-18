@@ -112,6 +112,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   // Szelvény állapota a fő tippre
   const defaultPick = match.aiPick || {
     marketLabel: `${match.homeTeam.name} Győzelem (1)`,
+    market: '1' as const,
     odds: match.odds.home,
     probability: p.homeWin,
   };
@@ -724,6 +725,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 matchId: match.id,
                 matchTitle: `${match.homeTeam.name} - ${match.awayTeam.name}`,
                 marketLabel: defaultPick.marketLabel,
+                market: defaultPick.market,
                 odds: defaultPick.odds,
                 probability: defaultPick.probability,
               });

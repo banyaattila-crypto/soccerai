@@ -3,6 +3,30 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.11.0] - 2026-10-18
+
+### Hozzáadva (Added)
+- **Automatizált Vitest Egységteszt Csomag (`src/services/__tests__/`):** 38 db egységteszt lefedettség a matematikai és elszámolási motorra (`betEvaluation.test.ts`: 19 teszt, `predictionEngine.test.ts`: 14 teszt, `bankrollService.test.ts`: 5 teszt). A tesztfuttatás beépítésre került a GitHub Actions CI munkafolyamatba (`npm test`).
+- **Dedikált Matematikai Szelvénykiértékelő Modul (`src/services/betEvaluation.ts`):** Új, tiszta függvényekből álló motor a fogadási piacok szigorú kiértékelésére, félidős és végeredmény támogatással.
+- **Kódfelosztás és Lazy Loading (`src/App.tsx`):** A másodlagos nézetek (`BankrollView`, `ResultsView`, `MethodologyView`) és a nehéz modális ablakok (`MatchDetailModal`, `SettingsModal`, `AboutModal`) dinamikus `React.lazy` és `Suspense` betöltést kaptak, csökkentve a fő JS csomag méretét 384 KB-ra (109 KB gzip).
+- **Szelvényépítő Korreláció-figyelmeztetés (`src/components/BetSlipDrawer.tsx`):** Azonos mérkőzésből származó piacok (pl. BTTS + Over 2.5) észlelése esetén automatikus figyelmeztetés jelenik meg, jelezve a szorzott esély torzítását.
+- **LocalStorage Kvótavédelem és Cache Purgálás (`historyService.ts`, `apiSportsClient.ts`):** 150 meccses plafon az archívumnak és `QuotaExceededError` elkapás, valamint naponta lefutó elavult API-Sports cache takarítás az 5 MB böngészőkvóta megvédésére.
+
+### Javítva (Fixed)
+- **Szelvénykiértékelés String-Matching Hibájának Megszüntetése:** A `evaluatePickWon` korábban magyar csapatneveket tartalmazó címkéknél (pl. `Arsenal (1)`) hibásan az alapértelmezett `totalGoals > 2.5`-re esett vissza. Az új motor egzakt piac-kódok (`PickMarket`) és végződések (`(1)`, `(2)`, `(x)`) alapján értékel, ismeretlen piacnál pedig sosem könyvel tévesen, hanem `null`-t ad.
+- **Félidős Piac (`FH_OVER_05`) Helyes Kiértékelése:** A félidős piacok a korábbi teljes meccs helyett mostantól kizárólag a félidős gólok (`homeHalfTimeScore`, `awayHalfTimeScore`) alapján záródnak le; hiányzó félidős adatnál nem történik téves kiértékelés a 2. félidős gólokból.
+- **Erős Szignál Küszöb Bekötése (`SettingsModal.tsx`, `StatsGrid.tsx`):** A beállításokban megadott `focitipp_threshold` (alapértelmezett: 65%) mostantól közvetlenül érvényesül a mérkőzésrács „Csak Kiemelt Jelek” szűrőjében és dinamikus gombfeliratában.
+- **Felesleges / Halott Fájlok Eltávolítása:** `src/App.css`, `src/assets/react.svg`, `vite.svg` és `src/assets/hero.png` törölve a repóból.
+- **Prop-higiénia:** `Header.tsx` mostantól megjeleníti az `isLiveApi` státuszt, a `StatsGrid.tsx` táblázat pedig felhasználja a szelvényelemeket az aktív tétek vizuális kiemelésére.
+
+## [1.10.0] - 2026-10-18
+
+### Hozzáadva (Added)
+- **Dupla Dinamikus Statisztika-Választó Sáv (ScoreLab stílus):** Két független lenyíló választó a vezérlősávban (`1.` és `2.` számozott kapszulák), amivel a felhasználó szabadon kiválaszthatja, melyik 2 kvantitatív mutató jelenjen meg a meccssorokon.
+- **ScoreLab Kompakt Meccslista Nézet:** Horizontális meccssoros felület két folyamatjelző pill-lel és közvetlen szelvényre tevéssel.
+- **Kedvenc Mérkőzések (My Matches):** Mérkőzések csillagozása és kiemelése a lista tetejére aranyszínű blokkban.
+- **Háromirányú Nézetváltó:** Kompakt lista, Kártyák és 11 oszlopos Részletes Táblázat nézet szabadon választható és perzisztens módon mentve.
+
 ## [1.9.1] - 2026-10-18
 
 ### Javítva & Biztonság (Fixed & Security)

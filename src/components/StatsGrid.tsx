@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket } from '../types/football';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket, PickMarket } from '../types/football';
 import { getProbabilityColorClass } from '../services/predictionEngine';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import {
@@ -43,6 +43,7 @@ export interface GridMetricOption {
   label: string;
   shortLabel: string;
   marketName: (match: Match) => string;
+  market: PickMarket;
   getValue: (p: Match['probabilities']) => number;
   getOdds: (match: Match) => number;
 }
@@ -53,6 +54,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'Over 1.5 %',
     shortLabel: 'Goal >1.5',
     marketName: () => '1.5 gól felett',
+    market: 'OVER_15',
     getValue: (p) => p.over15,
     getOdds: (m) => Number(Math.max(1.05, +(100 / Math.max(10, m.probabilities.over15 * 0.94)).toFixed(2))),
   },
@@ -61,6 +63,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'Over 2.5 %',
     shortLabel: 'Goal >2.5',
     marketName: () => '2.5 gól felett',
+    market: 'OVER_25',
     getValue: (p) => p.over25,
     getOdds: (m) => m.odds.over25,
   },
@@ -69,6 +72,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'Under 2.5 %',
     shortLabel: 'Goal <2.5',
     marketName: () => '2.5 gól alatt',
+    market: 'UNDER_25',
     getValue: (p) => Math.max(1, 100 - p.over25),
     getOdds: (m) => Number(Math.max(1.10, +(100 / Math.max(10, (100 - m.probabilities.over25) * 0.94)).toFixed(2))),
   },
@@ -77,6 +81,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'Over 3.5 %',
     shortLabel: 'Goal >3.5',
     marketName: () => '3.5 gól felett',
+    market: 'OVER_35',
     getValue: (p) => p.over35,
     getOdds: (m) => Number(Math.max(1.20, +(100 / Math.max(10, m.probabilities.over35 * 0.94)).toFixed(2))),
   },
@@ -85,6 +90,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'BTTS %',
     shortLabel: 'BTTS',
     marketName: () => 'Mindkét csapat szerez gólt (BTTS)',
+    market: 'BTTS_YES',
     getValue: (p) => p.bttsYes,
     getOdds: (m) => m.odds.bttsYes,
   },
@@ -93,6 +99,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: '1 (Hazai) %',
     shortLabel: '1 (Hazai)',
     marketName: (m) => `${m.homeTeam.name} Győzelem (1)`,
+    market: '1',
     getValue: (p) => p.homeWin,
     getOdds: (m) => m.odds.home,
   },
@@ -101,6 +108,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'X (Döntetlen) %',
     shortLabel: 'X (Dönt.)',
     marketName: () => 'Döntetlen (X)',
+    market: 'X',
     getValue: (p) => p.draw,
     getOdds: (m) => m.odds.draw,
   },
@@ -109,6 +117,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: '2 (Vendég) %',
     shortLabel: '2 (Vendég)',
     marketName: (m) => `${m.awayTeam.name} Győzelem (2)`,
+    market: '2',
     getValue: (p) => p.awayWin,
     getOdds: (m) => m.odds.away,
   },
@@ -117,6 +126,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: '1.F >0.5 %',
     shortLabel: 'HT >0.5',
     marketName: () => '1. félidő 0.5 gól felett',
+    market: 'FH_OVER_05',
     getValue: (p) => p.fhOver05,
     getOdds: (m) => Number(Math.max(1.15, +(100 / Math.max(10, m.probabilities.fhOver05 * 0.94)).toFixed(2))),
   },
@@ -125,6 +135,7 @@ export const GRID_METRICS: GridMetricOption[] = [
     label: 'BTTS & >2.5 %',
     shortLabel: 'BTTS & >2.5',
     marketName: () => 'BTTS és 2.5 gól felett',
+    market: 'BTTS_AND_OVER25',
     getValue: (p) => p.bttsAndOver25 ?? Math.round((p.bttsYes * p.over25) / 100),
     getOdds: (m) => {
       const pVal = m.probabilities.bttsAndOver25 ?? Math.round((m.probabilities.bttsYes * m.probabilities.over25) / 100);
@@ -254,6 +265,24 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   };
 
   const [onlyStrongSignals, setOnlyStrongSignals] = useState<boolean>(false);
+  const [signalThreshold, setSignalThreshold] = useState<number>(() => {
+    if (typeof window === 'undefined') return 60;
+    return parseInt(localStorage.getItem('focitipp_threshold') || '60', 10);
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      const val = parseInt(localStorage.getItem('focitipp_threshold') || '60', 10);
+      setSignalThreshold(isNaN(val) ? 60 : val);
+    };
+    window.addEventListener('focitipp_settings_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('focitipp_settings_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [focusMarket, setFocusMarket] = useState<FocusMarket>('ALL');
   const [collapsedLeagues, setCollapsedLeagues] = useState<Record<string, boolean>>({});
@@ -356,21 +385,21 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         if (!matchesHome && !matchesAway && !matchesLeague) return false;
       }
 
-      // Csak erős jelek (van benne 60% feletti piac)
+      // Csak erős jelek (a felhasználó által beállított küszöb feletti piac)
       if (onlyStrongSignals) {
         const p = match.probabilities;
         const hasStrong =
-          p.homeWin >= 60 ||
-          p.awayWin >= 60 ||
-          p.bttsYes >= 60 ||
-          p.over25 >= 60 ||
-          p.over15 >= 75;
+          p.homeWin >= signalThreshold ||
+          p.awayWin >= signalThreshold ||
+          p.bttsYes >= signalThreshold ||
+          p.over25 >= signalThreshold ||
+          p.over15 >= Math.min(95, signalThreshold + 15);
         if (!hasStrong) return false;
       }
 
       return true;
     });
-  }, [dayMatches, effectiveLeague, searchQuery, onlyStrongSignals]);
+  }, [dayMatches, effectiveLeague, searchQuery, onlyStrongSignals, signalThreshold]);
 
   // Csoportosítás bajnokság szerint ha viewMode === 'league'
   const groupedByLeague = useMemo(() => {
@@ -448,13 +477,15 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
     match: Match,
     marketLabel: string,
     prob: number,
-    odds: number
+    odds: number,
+    market?: PickMarket
   ) => {
     e.stopPropagation();
     onAddToBetSlip({
       matchId: match.id,
       matchTitle: `${match.homeTeam.name} - ${match.awayTeam.name}`,
       marketLabel,
+      market,
       odds,
       probability: prob,
     });
@@ -633,7 +664,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Csak Kiemelt Jelek (60%+)</span>
+                <span>Csak Kiemelt Jelek ({signalThreshold}%+)</span>
               </button>
 
               <button
@@ -923,10 +954,10 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   const isCollapsed = !!collapsedLeagues[league.id];
                   const strongCount = lMatches.filter(
                     (m) =>
-                      m.probabilities.homeWin >= 60 ||
-                      m.probabilities.awayWin >= 60 ||
-                      m.probabilities.bttsYes >= 60 ||
-                      m.probabilities.over25 >= 60
+                      m.probabilities.homeWin >= signalThreshold ||
+                      m.probabilities.awayWin >= signalThreshold ||
+                      m.probabilities.bttsYes >= signalThreshold ||
+                      m.probabilities.over25 >= signalThreshold
                   ).length;
 
                   return (
@@ -1052,7 +1083,14 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
 interface MatchTableProps {
   matches: Match[];
   onSelectMatch: (match: Match) => void;
-  onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
+  onCellBet: (
+    e: React.MouseEvent,
+    match: Match,
+    marketLabel: string,
+    prob: number,
+    odds: number,
+    market?: PickMarket
+  ) => void;
   betSlipItems: BetSlipItem[];
   focusMarket: FocusMarket;
 }
@@ -1061,7 +1099,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
   matches,
   onSelectMatch,
   onCellBet,
-  betSlipItems: _betSlipItems,
+  betSlipItems,
   focusMarket,
 }) => {
   return (
@@ -1099,6 +1137,21 @@ const MatchTable: React.FC<MatchTableProps> = ({
             const cFh = getProbabilityColorClass(p.fhOver05);
 
             const isFinished = match.status === 'FINISHED';
+            const is1Selected = betSlipItems.some(
+              (it) => it.matchId === match.id && (it.market === '1' || it.marketLabel.includes('(1)'))
+            );
+            const isXSelected = betSlipItems.some(
+              (it) => it.matchId === match.id && (it.market === 'X' || it.marketLabel.includes('(X)'))
+            );
+            const is2Selected = betSlipItems.some(
+              (it) => it.matchId === match.id && (it.market === '2' || it.marketLabel.includes('(2)'))
+            );
+            const isBttsSelected = betSlipItems.some(
+              (it) => it.matchId === match.id && (it.market === 'BTTS' || it.market === 'BTTS_YES' || it.marketLabel.includes('BTTS'))
+            );
+            const isO25Selected = betSlipItems.some(
+              (it) => it.matchId === match.id && (it.market === 'OVER_25' || it.marketLabel.includes('2.5'))
+            );
 
             return (
               <tr
@@ -1182,9 +1235,11 @@ const MatchTable: React.FC<MatchTableProps> = ({
                 {/* 3. 1 (Hazai Győzelem) */}
                 <td
                   onClick={(e) =>
-                    onCellBet(e, match, `${match.homeTeam.name} (1)`, p.homeWin, match.odds.home)
+                    onCellBet(e, match, `${match.homeTeam.name} (1)`, p.homeWin, match.odds.home, '1')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 ${cHome.bg}`}
+                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cHome.bg} ${
+                    is1Selected ? 'ring-2 ring-amber-400 font-bold' : ''
+                  }`}
                   title={`Hazai siker: ${p.homeWin}% | Odds: ${match.odds.home}`}
                 >
                   <div className="font-bold">{p.homeWin}%</div>
@@ -1194,9 +1249,11 @@ const MatchTable: React.FC<MatchTableProps> = ({
                 {/* 4. X (Döntetlen) */}
                 <td
                   onClick={(e) =>
-                    onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw)
+                    onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw, 'X')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 ${cDraw.bg}`}
+                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cDraw.bg} ${
+                    isXSelected ? 'ring-2 ring-amber-400 font-bold' : ''
+                  }`}
                   title={`Döntetlen: ${p.draw}% | Odds: ${match.odds.draw}`}
                 >
                   <div className="font-bold">{p.draw}%</div>
@@ -1206,9 +1263,11 @@ const MatchTable: React.FC<MatchTableProps> = ({
                 {/* 5. 2 (Vendég Győzelem) */}
                 <td
                   onClick={(e) =>
-                    onCellBet(e, match, `${match.awayTeam.name} (2)`, p.awayWin, match.odds.away)
+                    onCellBet(e, match, `${match.awayTeam.name} (2)`, p.awayWin, match.odds.away, '2')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 ${cAway.bg}`}
+                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cAway.bg} ${
+                    is2Selected ? 'ring-2 ring-amber-400 font-bold' : ''
+                  }`}
                   title={`Vendég siker: ${p.awayWin}% | Odds: ${match.odds.away}`}
                 >
                   <div className="font-bold">{p.awayWin}%</div>
@@ -1218,9 +1277,11 @@ const MatchTable: React.FC<MatchTableProps> = ({
                 {/* 6. BTTS (Mindkét csapat gól) */}
                 <td
                   onClick={(e) =>
-                    onCellBet(e, match, 'Mindkét csapat szerez gólt', p.bttsYes, match.odds.bttsYes)
+                    onCellBet(e, match, 'Mindkét csapat szerez gólt (BTTS)', p.bttsYes, match.odds.bttsYes, 'BTTS_YES')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 ${cBtts.bg}`}
+                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cBtts.bg} ${
+                    isBttsSelected ? 'ring-2 ring-amber-400 font-bold' : ''
+                  }`}
                   title={`BTTS Igen: ${p.bttsYes}% | Odds: ${match.odds.bttsYes}`}
                 >
                   <div className="font-bold">{p.bttsYes}%</div>
@@ -1238,9 +1299,11 @@ const MatchTable: React.FC<MatchTableProps> = ({
                 {/* 8. >2.5 Gól */}
                 <td
                   onClick={(e) =>
-                    onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25)
+                    onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25, 'OVER_25')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 ${cO25.bg}`}
+                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cO25.bg} ${
+                    isO25Selected ? 'ring-2 ring-amber-400 font-bold' : ''
+                  }`}
                   title={`2.5 gól felett: ${p.over25}% | Odds: ${match.odds.over25}`}
                 >
                   <div className="font-bold">{p.over25}%</div>
@@ -1282,7 +1345,14 @@ const MatchTable: React.FC<MatchTableProps> = ({
 interface MatchCardsListProps {
   matches: Match[];
   onSelectMatch: (match: Match) => void;
-  onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
+  onCellBet: (
+    e: React.MouseEvent,
+    match: Match,
+    marketLabel: string,
+    prob: number,
+    odds: number,
+    market?: PickMarket
+  ) => void;
   betSlipItems: BetSlipItem[];
   focusMarket: FocusMarket;
   favoriteMatchIds?: Set<string>;
@@ -1431,7 +1501,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
             <div className="grid grid-cols-5 gap-1 text-center">
               <button
                 type="button"
-                onClick={(e) => onCellBet(e, match, `${match.homeTeam.name} Győzelem (1)`, p.homeWin, match.odds.home)}
+                onClick={(e) => onCellBet(e, match, `${match.homeTeam.name} Győzelem (1)`, p.homeWin, match.odds.home, '1')}
                 className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.homeWin).bg} ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`Hazai: ${p.homeWin}% @${match.odds.home.toFixed(2)}`}
               >
@@ -1441,7 +1511,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
 
               <button
                 type="button"
-                onClick={(e) => onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw)}
+                onClick={(e) => onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw, 'X')}
                 className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.draw).bg} ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`Döntetlen: ${p.draw}% @${match.odds.draw.toFixed(2)}`}
               >
@@ -1451,7 +1521,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
 
               <button
                 type="button"
-                onClick={(e) => onCellBet(e, match, `${match.awayTeam.name} Győzelem (2)`, p.awayWin, match.odds.away)}
+                onClick={(e) => onCellBet(e, match, `${match.awayTeam.name} Győzelem (2)`, p.awayWin, match.odds.away, '2')}
                 className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.awayWin).bg} ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`Vendég: ${p.awayWin}% @${match.odds.away.toFixed(2)}`}
               >
@@ -1461,7 +1531,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
 
               <button
                 type="button"
-                onClick={(e) => onCellBet(e, match, 'Mindkét csapat szerez gólt (BTTS)', p.bttsYes, match.odds.bttsYes)}
+                onClick={(e) => onCellBet(e, match, 'Mindkét csapat szerez gólt (BTTS)', p.bttsYes, match.odds.bttsYes, 'BTTS_YES')}
                 className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.bttsYes).bg} ${focusMarket === 'BTTS' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`BTTS: ${p.bttsYes}% @${match.odds.bttsYes.toFixed(2)}`}
               >
@@ -1471,7 +1541,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
 
               <button
                 type="button"
-                onClick={(e) => onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25)}
+                onClick={(e) => onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25, 'OVER_25')}
                 className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${getProbabilityColorClass(p.over25).bg} ${focusMarket === 'OVER_25' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`2.5 felett: ${p.over25}% @${match.odds.over25.toFixed(2)}`}
               >
@@ -1497,7 +1567,7 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onCellBet(e, match, pick.marketLabel, pick.probability, pick.odds);
+                      onCellBet(e, match, pick.marketLabel, pick.probability, pick.odds, pick.market);
                     }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all ${
                       isPickAdded
@@ -1523,7 +1593,14 @@ const MatchCardsList: React.FC<MatchCardsListProps> = ({
 interface MatchCompactListProps {
   matches: Match[];
   onSelectMatch: (match: Match) => void;
-  onCellBet: (e: React.MouseEvent, match: Match, marketLabel: string, prob: number, odds: number) => void;
+  onCellBet: (
+    e: React.MouseEvent,
+    match: Match,
+    marketLabel: string,
+    prob: number,
+    odds: number,
+    market?: PickMarket
+  ) => void;
   betSlipItems: BetSlipItem[];
   metric1: GridMetricOption;
   metric2: GridMetricOption;
@@ -1682,7 +1759,7 @@ const MatchCompactList: React.FC<MatchCompactListProps> = ({
                 {/* 1. Mutató Pill */}
                 <button
                   type="button"
-                  onClick={(e) => onCellBet(e, match, label1, val1, odds1)}
+                  onClick={(e) => onCellBet(e, match, label1, val1, odds1, metric1.market)}
                   className={`h-5 sm:h-5.5 rounded relative overflow-hidden text-left border transition-all cursor-pointer ${
                     isBet1Selected
                       ? 'border-cyan-400 ring-1 ring-cyan-400 shadow-sm shadow-cyan-500/20 bg-slate-900'
@@ -1706,7 +1783,7 @@ const MatchCompactList: React.FC<MatchCompactListProps> = ({
                 {/* 2. Mutató Pill */}
                 <button
                   type="button"
-                  onClick={(e) => onCellBet(e, match, label2, val2, odds2)}
+                  onClick={(e) => onCellBet(e, match, label2, val2, odds2, metric2.market)}
                   className={`h-5 sm:h-5.5 rounded relative overflow-hidden text-left border transition-all cursor-pointer ${
                     isBet2Selected
                       ? 'border-indigo-400 ring-1 ring-indigo-400 shadow-sm shadow-indigo-500/20 bg-slate-900'
@@ -1732,7 +1809,7 @@ const MatchCompactList: React.FC<MatchCompactListProps> = ({
               <div className="flex flex-col gap-0.5 shrink-0 bg-slate-950/80 p-0.5 sm:p-1 rounded border border-slate-800">
                 <button
                   type="button"
-                  onClick={(e) => onCellBet(e, match, homeLabel, p.homeWin, match.odds.home)}
+                  onClick={(e) => onCellBet(e, match, homeLabel, p.homeWin, match.odds.home, '1')}
                   className={`px-1 sm:px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-semibold flex items-center justify-between gap-1 transition-all cursor-pointer ${
                     is1Selected
                       ? 'bg-amber-500 text-slate-950 font-bold'
@@ -1745,7 +1822,7 @@ const MatchCompactList: React.FC<MatchCompactListProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => onCellBet(e, match, drawLabel, p.draw, match.odds.draw)}
+                  onClick={(e) => onCellBet(e, match, drawLabel, p.draw, match.odds.draw, 'X')}
                   className={`px-1 sm:px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-semibold flex items-center justify-between gap-1 transition-all cursor-pointer ${
                     isXSelected
                       ? 'bg-amber-500 text-slate-950 font-bold'
@@ -1758,7 +1835,7 @@ const MatchCompactList: React.FC<MatchCompactListProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => onCellBet(e, match, awayLabel, p.awayWin, match.odds.away)}
+                  onClick={(e) => onCellBet(e, match, awayLabel, p.awayWin, match.odds.away, '2')}
                   className={`px-1 sm:px-1.5 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-semibold flex items-center justify-between gap-1 transition-all cursor-pointer ${
                     is2Selected
                       ? 'bg-amber-500 text-slate-950 font-bold'

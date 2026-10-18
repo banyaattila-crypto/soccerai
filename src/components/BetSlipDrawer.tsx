@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BetSlipItem } from '../types/football';
 import {
   X,
@@ -38,6 +38,12 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+
+  // Azonos mérkőzésből származó kimenetelek (korrelált piacok) detektálása
+  const hasSameMatchCorrelation = useMemo(() => {
+    const matchIds = items.map((it) => it.matchId);
+    return new Set(matchIds).size < matchIds.length;
+  }, [items]);
 
   if (!isOpen) return null;
 
@@ -231,12 +237,28 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                 <span className="text-lg font-black text-amber-400">{totalOdds.toFixed(2)}</span>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                <span className="text-slate-400 text-[10px] uppercase font-bold block">
-                  Együttes AI Esély
+                <span className="text-slate-400 text-[10px] uppercase font-bold flex items-center justify-between">
+                  <span>Együttes AI Esély</span>
+                  {hasSameMatchCorrelation && (
+                    <span className="text-[9px] text-amber-400 font-semibold">Korrelált*</span>
+                  )}
                 </span>
-                <span className="text-lg font-black text-emerald-400">{combinedProbPct}%</span>
+                <span className="text-lg font-black text-emerald-400">
+                  {combinedProbPct}%
+                  {hasSameMatchCorrelation && <span className="text-xs text-amber-400 ml-0.5">*</span>}
+                </span>
               </div>
             </div>
+
+            {/* Korrelációs figyelmeztetés ha egyazon meccsből több tipp van */}
+            {hasSameMatchCorrelation && (
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 flex items-start gap-2 leading-relaxed">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Korrelált események:</strong> Egyazon mérkőzésből több kimenetel került a szelvényre. Az események nem függetlenek, így az elméleti szorzás és együttes esély tájékoztató becslés.
+                </span>
+              </div>
+            )}
 
             {/* Tét beállító */}
             <div className="space-y-1.5">
