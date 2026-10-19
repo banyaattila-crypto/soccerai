@@ -81,11 +81,13 @@ export const COMPETITION_MAP: Record<
   SA: { id: 'seriea', name: 'Serie A', country: 'Olaszország', flag: '🇮🇹', priority: 3 },
   BL1: { id: 'bundesliga', name: 'Bundesliga', country: 'Németország', flag: '🇩🇪', priority: 4 },
   CL: { id: 'ucl', name: 'Bajnokok Ligája', country: 'Európa', flag: '⭐', priority: 5 },
-  ELC: { id: 'championship', name: 'Championship', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 6 },
-  FL1: { id: 'ligue1', name: 'Ligue 1', country: 'Franciaország', flag: '🇫🇷', priority: 7 },
-  DED: { id: 'eredivisie', name: 'Eredivisie', country: 'Hollandia', flag: '🇳🇱', priority: 8 },
-  BSA: { id: 'seriea_brazil', name: 'Série A Brasil', country: 'Brazília', flag: '🇧🇷', priority: 9 },
-  PPL: { id: 'primeira_liga', name: 'Primeira Liga', country: 'Portugália', flag: '🇵🇹', priority: 10 },
+  EL: { id: 'uel', name: 'Európa Liga', country: 'Európa', flag: '🏆', priority: 6 },
+  EC: { id: 'uecl', name: 'Konferencia Liga', country: 'Európa', flag: '🟢', priority: 7 },
+  ELC: { id: 'championship', name: 'Championship', country: 'Anglia', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', priority: 8 },
+  FL1: { id: 'ligue1', name: 'Ligue 1', country: 'Franciaország', flag: '🇫🇷', priority: 9 },
+  DED: { id: 'eredivisie', name: 'Eredivisie', country: 'Hollandia', flag: '🇳🇱', priority: 10 },
+  BSA: { id: 'seriea_brazil', name: 'Série A Brasil', country: 'Brazília', flag: '🇧🇷', priority: 11 },
+  PPL: { id: 'primeira_liga', name: 'Primeira Liga', country: 'Portugália', flag: '🇵🇹', priority: 12 },
 };
 
 /**
@@ -292,7 +294,7 @@ export async function fetchLiveMatches(
       ) / 100
     );
 
-    const isTopTier = ['PL', 'PD', 'SA', 'BL1', 'CL'].includes(compCode);
+    const isTopTier = ['PL', 'PD', 'SA', 'BL1', 'CL', 'EL', 'EC'].includes(compCode);
     const dataQuality: 'A' | 'B' | 'C' = isFitted
       ? 'A'
       : isTopTier

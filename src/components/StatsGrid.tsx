@@ -344,24 +344,26 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           m.leagueId === 'seriea' || m.leagueId === 'sa' ? 3 :
           m.leagueId === 'bundesliga' || m.leagueId === 'bl1' ? 4 :
           m.leagueId === 'ucl' || m.leagueId === 'cl' ? 5 :
-          m.leagueId === 'primeira_liga' || m.leagueId === 'ppl' ? 6 :
-          m.leagueId === 'nbi' ? 7 :
-          m.leagueId === 'eredivisie' || m.leagueId === 'ded' ? 8 :
-          m.leagueId === 'ligue1' || m.leagueId === 'fl1' ? 9 :
-          m.leagueId === 'championship' || m.leagueId === 'elc' ? 10 :
-          m.leagueId === 'jupiler' ? 11 :
-          m.leagueId === 'superlig' ? 12 :
-          m.leagueId === 'austria_bundesliga' ? 13 :
-          m.leagueId === 'swiss_superleague' ? 14 :
-          m.leagueId === 'scot_prem' ? 15 :
-          m.leagueId === 'ekstraklasa' ? 16 :
-          m.leagueId === 'superleague_greece' ? 17 :
-          m.leagueId === 'mls' ? 18 :
-          m.leagueId === 'laliga2' ? 19 :
-          m.leagueId === 'serieb' ? 20 :
-          m.leagueId === 'bundesliga2' ? 21 :
-          m.leagueId === 'ligue2' ? 22 :
-          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 23 : 30;
+          m.leagueId === 'uel' || m.leagueId === 'el' ? 6 :
+          m.leagueId === 'uecl' || m.leagueId === 'ec' ? 7 :
+          m.leagueId === 'primeira_liga' || m.leagueId === 'ppl' ? 8 :
+          m.leagueId === 'nbi' ? 9 :
+          m.leagueId === 'eredivisie' || m.leagueId === 'ded' ? 10 :
+          m.leagueId === 'ligue1' || m.leagueId === 'fl1' ? 11 :
+          m.leagueId === 'championship' || m.leagueId === 'elc' ? 12 :
+          m.leagueId === 'jupiler' ? 13 :
+          m.leagueId === 'superlig' ? 14 :
+          m.leagueId === 'austria_bundesliga' ? 15 :
+          m.leagueId === 'swiss_superleague' ? 16 :
+          m.leagueId === 'scot_prem' ? 17 :
+          m.leagueId === 'ekstraklasa' ? 18 :
+          m.leagueId === 'superleague_greece' ? 19 :
+          m.leagueId === 'mls' ? 20 :
+          m.leagueId === 'laliga2' ? 21 :
+          m.leagueId === 'serieb' ? 22 :
+          m.leagueId === 'bundesliga2' ? 23 :
+          m.leagueId === 'ligue2' ? 24 :
+          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 25 : 30;
 
         map.set(m.leagueId, {
           id: m.leagueId,
@@ -394,6 +396,9 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           (effectiveLeague === 'laliga' && match.leagueId === 'pd') ||
           (effectiveLeague === 'seriea' && match.leagueId === 'sa') ||
           (effectiveLeague === 'bundesliga' && match.leagueId === 'bl1') ||
+          (effectiveLeague === 'ucl' && match.leagueId === 'cl') ||
+          (effectiveLeague === 'uel' && match.leagueId === 'el') ||
+          (effectiveLeague === 'uecl' && match.leagueId === 'ec') ||
           (effectiveLeague === 'championship' && match.leagueId === 'elc') ||
           (effectiveLeague === 'ligue1' && match.leagueId === 'fl1') ||
           (effectiveLeague === 'eredivisie' && match.leagueId === 'ded') ||

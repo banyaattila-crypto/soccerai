@@ -3,6 +3,23 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.16.0] - 2026-10-19
+
+### Hozzáadva (Added)
+- **Nemzetközi Kupák Integrációja (API-Sports & Football-Data.org):**
+  - **Bajnokok Ligája (UEFA Champions League, ⭐):** Bekötve az API-Sports (`id: 2`, `ucl`) és Football-Data (`CL`) végpontokon, empirikus kupa gólátlagokkal (hazai: 1.74, vendég: 1.34).
+  - **Európa Liga (UEFA Europa League, 🏆):** Bekötve az API-Sports (`id: 3`, `uel`) és Football-Data (`EL`) forrásokon, sajátos gólátlagokkal (hazai: 1.66, vendég: 1.30).
+  - **Konferencia Liga (UEFA Conference League, 🟢):** Bekötve az API-Sports (`id: 848`, `uecl`) és Football-Data (`EC`) forrásokon (hazai: 1.62, vendég: 1.26).
+- **Kupameccs Statisztika & Dixon-Coles Modellezés:**
+  - A nemzetközi kupák magasabb tempójához és intenzívebb gólvárakozásához optimalizált paraméterek, amelyek automatikusan illeszkednek a bivariáns Dixon-Coles és Poisson mátrix kalkulációkba.
+- **Kupaszűrés & Prioritás a Meccslistában (`src/components/StatsGrid.tsx`):**
+  - Kiemelt prioritás a ligasávban (Bajnokok Ligája: 5, Európa Liga: 6, Konferencia Liga: 7).
+  - Kettős alias feloldás (`ucl`/`cl`, `uel`/`el`, `uecl`/`ec`), így bármely forrásból származik a kupameccs, a ligagomb egységesen szűri.
+- **Frissített Beállítások Dialógus (`src/components/SettingsModal.tsx`):**
+  - Kiemelt kupajelvények (⭐ Bajnokok Ligája, 🏆 Európa Liga, 🟢 Konferencia Liga) és egyértelmű tájékoztató szöveg.
+- **7 Új Automatizált Vitest Egységteszt (`cupCompetitions.test.ts`):**
+  - A teljes tesztcsomag **55/55 sikeres tesztre** bővült, 0 hiba és 0 figyelmeztetés az Oxlint ellenőrzésen.
+
 ## [1.15.0] - 2026-10-19
 
 ### Hozzáadva (Added)

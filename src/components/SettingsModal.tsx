@@ -172,7 +172,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-white flex items-center gap-1.5">
                 <Key className="w-3.5 h-3.5 text-emerald-400" />
-                <span>API-Sports &amp; Másodosztályok</span>
+                <span>API-Sports, Nemzetközi Kupák &amp; Bajnokságok</span>
               </label>
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold font-mono">
                 {apiSportsKey ? '✓ Egyéni kulcs' : '✓ Proxy védett (100 req/nap)'}
@@ -181,9 +181,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
               <div className="space-y-0.5">
-                <div className="text-xs font-bold text-white">További európai ligák &amp; NB I bekapcsolása</div>
+                <div className="text-xs font-bold text-white">Nemzetközi kupák &amp; további ligák bekapcsolása</div>
                 <div className="text-[10px] text-slate-400">
-                  NB I, Primeira Liga, Süper Lig, Jupiler Pro, Tipico Bundesliga, Ekstraklasa, MLS és másodosztályok.
+                  Bajnokok Ligája (UCL), Európa Liga (UEL), Konferencia Liga (UECL), NB I, Primeira Liga, Süper Lig, Jupiler Pro, MLS és másodosztályok.
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -214,11 +214,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
 
             <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇪🇸 LaLiga 2</span>
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇫🇷 Ligue 2</span>
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇮🇹 Serie B</span>
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇩🇪 2. Bundesliga</span>
+              <span className="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">⭐ Bajnokok Ligája</span>
+              <span className="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">🏆 Európa Liga</span>
+              <span className="text-[10px] bg-slate-800 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">🟢 Konferencia Liga</span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇭🇺 NB I</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇵🇹 Primeira Liga</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇪🇸 LaLiga 2</span>
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇩🇪 2. Bundesliga</span>
             </div>
           </div>
 
