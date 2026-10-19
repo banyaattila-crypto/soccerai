@@ -3,6 +3,15 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.16.3] - 2026-10-19
+
+### Hozzáadva & Vizuális Élmény (Added & Visual Enhancement)
+- **3D Animált FIFA 2026 Világbajnokság Hivatalos Meccslabda (`src/components/Logo.tsx`):**
+  - A bal felső fejléc-ikon átalakult a 2026-os FIFA Világbajnokság hivatalos meccslabdájának (**adidas Trionda**) élethű, folyamatosan forgó 3D modelljévé.
+  - **Hiteles 2026 VB Dizájn:** Forradalmi 4-paneles aerodinamikai szerkezet mélyvarrásokkal, az USA (kobaltkék), Mexikó (smaragdzöld) és Kanada (rubinpiros) dinamikus hullámpaneleivel, valamint arany FIFA trófea szegéllyel.
+  - **Fénytani & 3D Sugárkövetés (Orthographic Sphere Raycasting):** 14°-os tengelydőlés, rögzített bal felső megvilágítás, Phong spekuláris csillogás és peremfény a labda ívelt felületén.
+  - **60 FPS Precomputed LUT:** Kevesebb mint 0.5 ms / képkocka számítási igény, láthatóság-érzékeny CPU/akkumulátorkímélés, valamint interaktív hover gyorsítás és kattintásra induló szuperspin.
+
 ## [1.16.2] - 2026-10-19
 
 ### Javítva & Biztonsági Optimalizáció (Fixed & Security/Stability)

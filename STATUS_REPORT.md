@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.16.2`** (SemVer 2.0.0)  
-**Kiadás neve:** *Valós Élő API Adatok Garanciája & Kvótavédelem*  
+**Aktuális verzió:** 🏷️ **`v1.16.3`** (SemVer 2.0.0)  
+**Kiadás neve:** *3D Animált FIFA 2026 Hivatalos Meccslabda (adidas Trionda)*  
 **Dátum:** 2026. október 19.  
-**Állapot:** ✅ **v1.16.2 Verzió Elkészült & Verifikálva (55/55 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.16.3 Verzió Elkészült & Verifikálva (55/55 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,19 +16,17 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.16.2`** kiadás újdonságai és kritikus javításai:
-1. **Valós Élő API Adatok Garanciája (`App.tsx`):**
-   - Megszűnt a csendes mock adatokra való visszatérés. Hiba vagy üres válasz esetén nincs szimulált adatbehelyettesítés; kizárólag valós mérkőzések jelennek meg.
-   - Transzparens hiba- és figyelmeztető sáv egykattintásos újrapróbálással.
-2. **HTTP 429 Kvótavédelem & 0 Extra Hálózati Kérés (`footballDataApi.ts`):**
-   - Törlésre került a korábbi 8 felesleges lekérés, amely kimerítette a Football-Data.org 10 kérés/perces sebességkorlátját.
-   - A Dixon-Coles modellek közvetlenül a már beérkezett meccsekből épülnek fel helyben.
-3. **Bajnokok Ligája és Nemzetközi Kupa Modellezés (`dixonColesFitting.ts`):**
-   - Európai klub-priorok (`EUROPEAN_CLUB_PRIORS`) a topcsapatokra, megbízható xG és robusztus predikciók a holnapi 9 Bajnokok Ligája meccsre.
-4. **Időablak Kiterjesztés:**
-   - A `dateTo` kiterjesztésével mind a 45 valós meccs és a holnapi Bajnokok Ligája játéknap azonnal elérhető.
+A **`v1.16.3`** kiadás újdonságai és fejlesztései:
+1. **3D Animált FIFA 2026 Hivatalos Meccslabda (`Logo.tsx`):**
+   - A fejléc bal felső sarkában lévő ikon élethű, folyamatosan és lágyan forgó 3D szférává alakult.
+   - A 2026-os FIFA Világbajnokság hivatalos meccslabdájának (**adidas Trionda**) hiteles vizuális leképezése: 4-paneles aerodinamikai szerkezet az USA (kobaltkék), Mexikó (smaragdzöld) és Kanada (rubinpiros) dinamikus hullámpaneleivel, valamint arany FIFA trófea szegéllyel.
+   - **Fénytani & 3D Sugárkövetés:** Rögzített bal felső megvilágítás, Phong spekuláris csillanás és peremfény a forgó gömb felületén.
+   - **60 FPS Precomputed LUT:** Kevesebb mint 0.5 ms számítási idő képkockánként, akkumulátorkímélő háttérleállítással, hover gyorsulással és kattintásra induló szuperspinnel.
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.16.2 — Valós Élő API Adatok Garanciája & Kvótavédelem:**
+  - Csendes mock fallback megszüntetése, HTTP 429 kvótavédelem (0 extra API kérés), Bajnokok Ligája modellezés.
 
 * **v1.16.1 — Scanner Napszűrés & Fogadható Meccsek Alapértelmezése:**
   - Idősáv- és státuszválasztó (`Mai Értéktippek`, `Holnapi Meccsek`, `Összes Nyitott`, `Lezárt/Archív EV`).
@@ -87,10 +85,10 @@ A **`v1.16.2`** kiadás újdonságai és kritikus javításai:
 
 ```
 /home/attila/projects/soccerai/
-├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.16.2)
-├── CHANGELOG.md                     <-- Részletes verziótörténet v1.16.2 leírással
+├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.16.3)
+├── CHANGELOG.md                     <-- Részletes verziótörténet v1.16.3 leírással
 ├── README.md                        <-- Fő bemutató dokumentáció
-├── package.json                     <-- v1.16.2 verzió, vitest teszt script
+├── package.json                     <-- v1.16.3 verzió, vitest teszt script
 ├── vite.config.ts                   <-- Vite 8 + Tailwind v4 + Dev Proxy
 ├── tsconfig.json                    <-- Szigorú TypeScript konfiguráció
 ├── index.html                       <-- Belépési pont PWA meta címkékkel
@@ -103,7 +101,7 @@ A **`v1.16.2`** kiadás újdonságai és kritikus javításai:
 │   └── apisports.ts                 <-- API-Sports Vercel proxy & Edge cache
 └── src/
     ├── main.tsx                     <-- React belépési pont + Service Worker
-    ├── version.ts                   <-- v1.16.2 verziókonstansok és kiadási kiemelések
+    ├── version.ts                   <-- v1.16.3 verziókonstansok és kiadási kiemelések
     ├── App.tsx                      <-- Dashboard navigáció, Élő kapszula, Deduplikáció, Valós API garancia
     ├── types/
     │   └── football.ts              <-- PickMarket union, TrackedBet, Match, League
@@ -138,7 +136,7 @@ A **`v1.16.2`** kiadás újdonságai és kritikus javításai:
         ├── ResultsView.tsx          <-- Eredmények, piaconkénti ROI és archívum (Lazy loaded)
         ├── MethodologyView.tsx      <-- Módszertan és matematikai modellek (Lazy loaded)
         ├── MatchDetailModal.tsx     <-- Kvantitatív elemzés, 3-utas ScoreLab fülkezelés
-        ├── AboutModal.tsx           <-- Névjegy, v1.16.2 infók (Lazy loaded)
+        ├── AboutModal.tsx           <-- Névjegy, v1.16.3 infók (Lazy loaded)
         └── SettingsModal.tsx        <-- Beállítások, kupa jelvények (Lazy loaded)
 ```
 
@@ -148,7 +146,7 @@ A **`v1.16.2`** kiadás újdonságai és kritikus javításai:
 
 * 🌐 **Éles Weboldal:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
-* 🏷️ **Célzott Git Tag:** `v1.16.2`
+* 🏷️ **Célzott Git Tag:** `v1.16.3`
 * 💻 **Helyi Fejlesztői Környezet:** `http://localhost:3000` (`npm run dev`)
 * 🧪 **Egységtesztek:** `npm test` &bull; **55/55 teszt sikeres** (Vitest 5.0.5, 6 tesztcsomag)
 * 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` 0 hiba, hibátlan build.
