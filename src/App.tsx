@@ -330,6 +330,18 @@ export function App() {
     };
   }, [matches, yesterdayDateStr]);
 
+  const liveMatchCount = useMemo(
+    () => matches.filter((m) => m.status === 'LIVE').length,
+    [matches]
+  );
+
+  const handleGoToLive = () => {
+    setActiveTab('grid');
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('focitipp_filter_live'));
+    }, 10);
+  };
+
   return (
     <div className="min-h-screen bg-transparent text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
       
@@ -348,6 +360,8 @@ export function App() {
         isLoading={isLoading}
         onRefresh={handleRefresh}
         currentBankroll={currentBankroll}
+        liveMatchCount={liveMatchCount}
+        onGoToLive={handleGoToLive}
       />
 
       {/* Új PWA verzió elérhető sáv */}

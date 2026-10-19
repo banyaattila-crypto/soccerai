@@ -149,7 +149,12 @@ export const MOCK_MATCHES: Match[] = [
     leagueFlag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
     kickoffTime: '16:00',
     kickoffDate: TODAY,
-    status: 'UPCOMING',
+    status: 'LIVE',
+    minute: 68,
+    homeScore: 2,
+    awayScore: 1,
+    homeHalfTimeScore: 1,
+    awayHalfTimeScore: 0,
     homeTeam: {
       id: 'man-city',
       name: 'Manchester City',

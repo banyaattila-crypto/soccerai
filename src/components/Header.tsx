@@ -29,6 +29,8 @@ interface HeaderProps {
   isLoading: boolean;
   onRefresh: () => void;
   currentBankroll?: number;
+  liveMatchCount?: number;
+  onGoToLive?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,6 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   isLoading,
   onRefresh,
   currentBankroll,
+  liveMatchCount,
+  onGoToLive,
 }) => {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
@@ -193,8 +197,37 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
 
-          {/* Jobb oldal: Műveletek (Bankroll chip, Frissítés, Szelvény, Névjegy, Beállítások) */}
+          {/* Jobb oldal: Műveletek (Élő kapszula, Bankroll chip, Frissítés, Szelvény, Névjegy, Beállítások) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Élő Mérkőzés Pulzáló Kapszula */}
+            {liveMatchCount !== undefined && liveMatchCount > 0 ? (
+              <button
+                type="button"
+                onClick={onGoToLive}
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 transition-all cursor-pointer shadow-sm shadow-red-950/40 animate-pulse"
+                title={`${liveMatchCount} élő mérkőzés folyamatban! Kattints az élő meccsekhez.`}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-red-200 flex items-center gap-1">
+                  <span>ÉLŐ</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-red-500 text-white font-mono text-[9px] sm:text-[10px]">
+                    {liveMatchCount}
+                  </span>
+                </span>
+              </button>
+            ) : (
+              <span
+                className="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-500 text-[10px] font-semibold"
+                title="Jelenleg nincs folyamatban lévő élő mérkőzés"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                <span>0 Élő</span>
+              </span>
+            )}
+
             {/* Live Bankroll Chip */}
             {currentBankroll !== undefined && (
               <button

@@ -265,10 +265,26 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   };
 
   const [onlyStrongSignals, setOnlyStrongSignals] = useState<boolean>(false);
+  const [onlyLiveMatches, setOnlyLiveMatches] = useState<boolean>(false);
   const [signalThreshold, setSignalThreshold] = useState<number>(() => {
     if (typeof window === 'undefined') return 60;
     return parseInt(localStorage.getItem('focitipp_threshold') || '60', 10);
   });
+
+  const liveMatchesCount = useMemo(
+    () => matches.filter((m) => m.status === 'LIVE').length,
+    [matches]
+  );
+
+  useEffect(() => {
+    const handleLiveFilter = () => {
+      setOnlyLiveMatches(true);
+      setDayFilter('today');
+      setSelectedLeague('all');
+    };
+    window.addEventListener('focitipp_filter_live', handleLiveFilter);
+    return () => window.removeEventListener('focitipp_filter_live', handleLiveFilter);
+  }, [setDayFilter]);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -407,9 +423,14 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         if (!hasStrong) return false;
       }
 
+      // Csak élő mérkőzések
+      if (onlyLiveMatches && match.status !== 'LIVE') {
+        return false;
+      }
+
       return true;
     });
-  }, [dayMatches, effectiveLeague, searchQuery, onlyStrongSignals, signalThreshold]);
+  }, [dayMatches, effectiveLeague, searchQuery, onlyStrongSignals, signalThreshold, onlyLiveMatches]);
 
   // Csoportosítás bajnokság szerint ha viewMode === 'league'
   const groupedByLeague = useMemo(() => {
@@ -677,6 +698,32 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                 <span>Csak Kiemelt Jelek ({signalThreshold}%+)</span>
               </button>
 
+              {/* Élő mérkőzések gyorsszűrő gomb */}
+              <button
+                type="button"
+                onClick={() => setOnlyLiveMatches(!onlyLiveMatches)}
+                className={`px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                  onlyLiveMatches
+                    ? 'bg-red-500/25 text-red-200 border border-red-500/60 shadow-sm'
+                    : liveMatchesCount > 0
+                    ? 'bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/30'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50'
+                }`}
+                title="Csak az éppen folyamatban lévő mérkőzések szűrése"
+              >
+                <span className="relative flex h-2 w-2">
+                  {liveMatchesCount > 0 && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      liveMatchesCount > 0 ? 'bg-red-500' : 'bg-slate-500'
+                    }`}
+                  ></span>
+                </span>
+                <span>Csak Élő ({liveMatchesCount})</span>
+              </button>
+
               <button
                 onClick={() => setViewMode(viewMode === 'league' ? 'time' : 'league')}
                 className="px-2.5 py-1 rounded-md font-medium bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50 flex items-center gap-1.5 cursor-pointer"
@@ -895,6 +942,15 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
             <p className="text-xs text-slate-400 mt-1">
               Próbáld meg kikapcsolni a szűrőket, vagy válaszd a „Minden Bajnokság” fület.
             </p>
+            {onlyLiveMatches && (
+              <button
+                type="button"
+                onClick={() => setOnlyLiveMatches(false)}
+                className="mt-3 mr-2 px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs cursor-pointer shadow-md"
+              >
+                Élő szűrő kikapcsolása (Összes meccs)
+              </button>
+            )}
             {effectiveLeague !== 'all' && (
               <button
                 onClick={() => setSelectedLeague('all')}

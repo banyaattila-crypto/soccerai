@@ -3,6 +3,20 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.15.0] - 2026-10-19
+
+### Hozzáadva (Added)
+- **Pulzáló Élő Meccs Kapszula a Fejlécben (`src/components/Header.tsx`):**
+  - Élénk piros, animált pulzáló (`animate-ping`) élő meccs számláló kapszula a fejléc jobb felső műveleti sávjában.
+  - Közvetlen kattintásra automatikusan átvált a meccslistára és bekapcsolja az élő szűrőt.
+  - Ha nincs folyamatban lévő meccs, diszkrét mentesített jelzőként funkcionál.
+- **Élő Mérkőzések Gyorsszűrő Kapcsoló (`src/components/StatsGrid.tsx`):**
+  - Dedikált „Csak Élő” gomb a vezérlősávban valós idejű mérkőzésszámlálóval és pulzáló jelvénnyel.
+  - Globális eseményvezérlés (`focitipp_filter_live`): Fejlécből történő kattintásra azonnal megnyitja és beállítja az élő találkozók listáját.
+  - Intelligens üres állapot kezelés gyorsgombbal a szűrő visszakapcsolására.
+- **Valós Idejű Élő Eredmény & Perc Jelzések a Felületen:**
+  - Játékperc (`minute'`), hazai és vendég gólok és lezárási állapot azonnali renderelése.
+
 ## [1.14.0] - 2026-10-19
 
 ### Hozzáadva (Added)
