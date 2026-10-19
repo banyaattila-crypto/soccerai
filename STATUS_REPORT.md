@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.16.1`** (SemVer 2.0.0)  
-**Kiadás neve:** *Scanner Napszűrés & Fogadható Meccsek Alapértelmezése*  
+**Aktuális verzió:** 🏷️ **`v1.16.2`** (SemVer 2.0.0)  
+**Kiadás neve:** *Valós Élő API Adatok Garanciája & Kvótavédelem*  
 **Dátum:** 2026. október 19.  
-**Állapot:** ✅ **v1.16.1 Verzió Elkészült & Verifikálva (55/55 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.16.2 Verzió Elkészült & Verifikálva (55/55 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,17 +16,23 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.16.1`** kiadás újdonságai és fejlesztései:
-1. **Scanner Időszak & Státusz Választó (`ScannerView.tsx`):**
-   - Dedikált, azonnal elérhető idősáv- és státuszválasztó: `⚡ Mai Értéktippek`, `📅 Holnapi Meccsek`, `🌐 Összes Nyitott Meccs`, és `🏁 Lezárt / Archív EV`.
-   - Dinamikus találatszámláló az éppen aktív szűrésre.
-2. **Fogadható Meccsek Alapértelmezése (`scannerService.ts`):**
-   - A Scanner alapértelmezetten kizárólag a fogadható (`UPCOMING` és `LIVE`) mérkőzéseket rangsorolja (`statusFilter: 'open_only'`), így a lezárt tegnapi meccsek nem nyomják el a mai lehetőségeket.
-   - Visszamenőleges elemzéshez a lezárt mérkőzések a `Lezárt / Archív EV` gombbal egyetlen kattintással előhívhatók.
-3. **Időzóna-biztos Helyi Dátumkezelés:**
-   - Áttérés a `getRelativeDateStr` központi helyi időzónás dátumkezelőre a `.toISOString()` UTC-eltolódásának megszüntetésére.
+A **`v1.16.2`** kiadás újdonságai és kritikus javításai:
+1. **Valós Élő API Adatok Garanciája (`App.tsx`):**
+   - Megszűnt a csendes mock adatokra való visszatérés. Hiba vagy üres válasz esetén nincs szimulált adatbehelyettesítés; kizárólag valós mérkőzések jelennek meg.
+   - Transzparens hiba- és figyelmeztető sáv egykattintásos újrapróbálással.
+2. **HTTP 429 Kvótavédelem & 0 Extra Hálózati Kérés (`footballDataApi.ts`):**
+   - Törlésre került a korábbi 8 felesleges lekérés, amely kimerítette a Football-Data.org 10 kérés/perces sebességkorlátját.
+   - A Dixon-Coles modellek közvetlenül a már beérkezett meccsekből épülnek fel helyben.
+3. **Bajnokok Ligája és Nemzetközi Kupa Modellezés (`dixonColesFitting.ts`):**
+   - Európai klub-priorok (`EUROPEAN_CLUB_PRIORS`) a topcsapatokra, megbízható xG és robusztus predikciók a holnapi 9 Bajnokok Ligája meccsre.
+4. **Időablak Kiterjesztés:**
+   - A `dateTo` kiterjesztésével mind a 45 valós meccs és a holnapi Bajnokok Ligája játéknap azonnal elérhető.
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.16.1 — Scanner Napszűrés & Fogadható Meccsek Alapértelmezése:**
+  - Idősáv- és státuszválasztó (`Mai Értéktippek`, `Holnapi Meccsek`, `Összes Nyitott`, `Lezárt/Archív EV`).
+  - Nyitott meccsek rangsorolása alapértelmezettként (`statusFilter: 'open_only'`).
 
 * **v1.16.0 — Nemzetközi Kupák Teljes Lefedettsége (UCL, UEL, UECL):**
   - Bajnokok Ligája (⭐), Európa Liga (🏆), Konferencia Liga (🟢) bekötve empirikus kupa gólátlagokkal.
@@ -81,35 +87,35 @@ A **`v1.16.1`** kiadás újdonságai és fejlesztései:
 
 ```
 /home/attila/projects/soccerai/
-├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.16.1)
-├── CHANGELOG.md                     <-- Részletes verziótörténet v1.16.1 leírással
+├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.16.2)
+├── CHANGELOG.md                     <-- Részletes verziótörténet v1.16.2 leírással
 ├── README.md                        <-- Fő bemutató dokumentáció
-├── package.json                     <-- v1.16.1 verzió, vitest teszt script
+├── package.json                     <-- v1.16.2 verzió, vitest teszt script
 ├── vite.config.ts                   <-- Vite 8 + Tailwind v4 + Dev Proxy
 ├── tsconfig.json                    <-- Szigorú TypeScript konfiguráció
 ├── index.html                       <-- Belépési pont PWA meta címkékkel
 ├── public/
 │   ├── manifest.json                <-- PWA Web App Manifest
-│   ├── sw.js                        <-- Service Worker (v1.16.1, Cache-First & Network-First)
+│   ├── sw.js                        <-- Service Worker (Cache-First & Network-First)
 │   └── icons/                       <-- PWA ikonok
 ├── api/
 │   ├── matches.ts                   <-- Football-Data.org Vercel proxy & Edge cache
 │   └── apisports.ts                 <-- API-Sports Vercel proxy & Edge cache
 └── src/
     ├── main.tsx                     <-- React belépési pont + Service Worker
-    ├── version.ts                   <-- v1.16.1 verziókonstansok és kiadási kiemelések
-    ├── App.tsx                      <-- Dashboard navigáció, Élő kapszula, Deduplikáció
+    ├── version.ts                   <-- v1.16.2 verziókonstansok és kiadási kiemelések
+    ├── App.tsx                      <-- Dashboard navigáció, Élő kapszula, Deduplikáció, Valós API garancia
     ├── types/
     │   └── football.ts              <-- PickMarket union, TrackedBet, Match, League
     ├── services/
     │   ├── betEvaluation.ts         <-- Egzakt matematikai piac-kiértékelő modul
-    │   ├── dixonColesFitting.ts     <-- Dixon-Coles MLE paraméter-illesztés
+    │   ├── dixonColesFitting.ts     <-- Dixon-Coles MLE paraméter-illesztés + Európai club priorok
     │   ├── historyService.ts        <-- Kvótavédett mérkőzésarchívum (max 150)
     │   ├── bankrollService.ts       <-- Bankroll menedzsment, perzisztencia, auto-settle
     │   ├── predictionEngine.ts      <-- Dixon-Coles, Shin de-vig, λ-rács, Kelly
     │   ├── scoreLabService.ts       <-- 5x5 Poisson mátrix, H2H kalkuláció és formaindex
     │   ├── scannerService.ts        <-- Kvantitatív értékkereső, +EV piacok, időszak-szűrés, liga radar
-    │   ├── footballDataApi.ts       <-- Football-Data.org API kliens (CL, EL, EC)
+    │   ├── footballDataApi.ts       <-- Football-Data.org API kliens (CL, EL, EC, 0 extra hívás, kvótavédelem)
     │   ├── apiSportsClient.ts       <-- API-Sports kliens (UCL 2, UEL 3, UECL 848)
     │   └── __tests__/               <-- 55 db Vitest egységteszt (6 tesztcsomag)
     │       ├── betEvaluation.test.ts
@@ -132,7 +138,7 @@ A **`v1.16.1`** kiadás újdonságai és fejlesztései:
         ├── ResultsView.tsx          <-- Eredmények, piaconkénti ROI és archívum (Lazy loaded)
         ├── MethodologyView.tsx      <-- Módszertan és matematikai modellek (Lazy loaded)
         ├── MatchDetailModal.tsx     <-- Kvantitatív elemzés, 3-utas ScoreLab fülkezelés
-        ├── AboutModal.tsx           <-- Névjegy, v1.16.1 infók (Lazy loaded)
+        ├── AboutModal.tsx           <-- Névjegy, v1.16.2 infók (Lazy loaded)
         └── SettingsModal.tsx        <-- Beállítások, kupa jelvények (Lazy loaded)
 ```
 
@@ -142,7 +148,7 @@ A **`v1.16.1`** kiadás újdonságai és fejlesztései:
 
 * 🌐 **Éles Weboldal:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
-* 🏷️ **Célzott Git Tag:** `v1.16.1`
+* 🏷️ **Célzott Git Tag:** `v1.16.2`
 * 💻 **Helyi Fejlesztői Környezet:** `http://localhost:3000` (`npm run dev`)
 * 🧪 **Egységtesztek:** `npm test` &bull; **55/55 teszt sikeres** (Vitest 5.0.5, 6 tesztcsomag)
 * 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` 0 hiba, hibátlan build.

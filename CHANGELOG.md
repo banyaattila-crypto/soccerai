@@ -3,6 +3,21 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.16.2] - 2026-10-19
+
+### Javítva & Biztonsági Optimalizáció (Fixed & Security/Stability)
+- **Valós Élő API Adatok Garanciája (`src/App.tsx`):**
+  - Megszűnt a csendes és félrevezető visszatérés a beépített mock mintameccsekre (`MOCK_MATCHES`).
+  - Hálózati hiba vagy üres API válasz esetén a rendszer kizárólag üres listát és egyértelmű, transzparens hiba/figyelmeztető sávot jelenít meg egykattintásos `Újrapróbálás` gombbal.
+  - A szimulált mintaadatok kizárólag akkor töltődnek be, ha a felhasználó a Beállításokban kézzel kiválasztja a „Beépített Offline Szimulációs Motor” üzemmódot.
+- **HTTP 429 Kvótavédelem & 0 Extra Hálózati Kérés (`src/services/footballDataApi.ts`):**
+  - Megszűnt a korábbi 8 párhuzamos API lekérés a befejezett meccsekért, amely másodpercek alatt kimerítette a Football-Data.org ingyenes tier-jének 10 kérés/perc sebességkorlátját.
+  - A Dixon-Coles modellek közvetlenül a már letöltött meccsekből helyben a memóriában épülnek fel, így 1 kérés történik 9 helyett (100% kvótatakarékosság).
+- **Lekérdezési Időablak Javítása (`src/services/footballDataApi.ts`):**
+  - A `dateTo` időablak `+2` napra bővült, megszüntetve a 00:00 UTC cutoff problémát, így a holnapi 9 valós Bajnokok Ligája mérkőzés azonnal bekerül a kínálatba.
+- **Bajnokok Ligája és Európai Kupa Empirikus Priorok (`src/services/dixonColesFitting.ts`):**
+  - Beépített európai klub-priorok (`EUROPEAN_CLUB_PRIORS`) a topcsapatokra (Man City, PSG, Barcelona, Liverpool, Dortmund, Napoli, Roma, Atleti stb.), amelyek pontos xG-t és megbízható Dixon-Coles predikciókat szolgáltatnak kupa meccseken is.
+
 ## [1.16.1] - 2026-10-19
 
 ### Javítva & Továbbfejlesztve (Fixed & Enhanced)
