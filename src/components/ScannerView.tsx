@@ -42,6 +42,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   // Állapotok
   const [activePreset, setActivePreset] = useState<ScannerPreset>('best_ev');
   const [activeSubTab, setActiveSubTab] = useState<'opportunities' | 'league_radar'>('opportunities');
+  const [dayFilter, setDayFilter] = useState<'today' | 'tomorrow' | 'all' | 'yesterday'>('today');
+  const [statusFilter, setStatusFilter] = useState<'open_only' | 'all' | 'finished'>('open_only');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
   const [minProb, setMinProb] = useState<number>(50);
@@ -58,10 +60,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       preset: activePreset,
       minProb,
       leagueId: selectedLeague,
+      dayFilter,
+      statusFilter,
       searchQuery,
       sortBy,
     });
-  }, [allOpportunities, activePreset, minProb, selectedLeague, searchQuery, sortBy]);
+  }, [allOpportunities, activePreset, minProb, selectedLeague, dayFilter, statusFilter, searchQuery, sortBy]);
 
   // Ligák radar statisztikái
   const leagueRadarStats = useMemo(() => {
@@ -178,6 +182,71 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       {activeSubTab === 'opportunities' ? (
         <div className="space-y-4">
           
+          {/* Időszak & Státusz Választó Sáv */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
+              <button
+                onClick={() => {
+                  setDayFilter('today');
+                  setStatusFilter('open_only');
+                }}
+                className={`py-1.5 px-3 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+                  dayFilter === 'today' && statusFilter === 'open_only'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-black'
+                    : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>Mai Értéktippek</span>
+              </button>
+              <button
+                onClick={() => {
+                  setDayFilter('tomorrow');
+                  setStatusFilter('open_only');
+                }}
+                className={`py-1.5 px-3 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+                  dayFilter === 'tomorrow' && statusFilter === 'open_only'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-black'
+                    : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Holnapi Meccsek</span>
+              </button>
+              <button
+                onClick={() => {
+                  setDayFilter('all');
+                  setStatusFilter('open_only');
+                }}
+                className={`py-1.5 px-3 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+                  dayFilter === 'all' && statusFilter === 'open_only'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-black'
+                    : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Összes Nyitott Meccs</span>
+              </button>
+              <button
+                onClick={() => {
+                  setDayFilter('all');
+                  setStatusFilter('finished');
+                }}
+                className={`py-1.5 px-3 rounded-lg font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+                  statusFilter === 'finished'
+                    ? 'bg-slate-700 text-white border-slate-600 shadow-md font-black'
+                    : 'bg-slate-950/70 border-slate-800 text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                <span>Lezárt / Archív EV</span>
+              </button>
+            </div>
+            <div className="text-[11px] text-slate-400 font-mono shrink-0">
+              Találatok: <span className="font-bold text-emerald-400">{filteredOpportunities.length}</span> db lehetőség
+            </div>
+          </div>
+
           {/* Preset Választó Kapszulák */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
             {presets.map((p) => (

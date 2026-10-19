@@ -1,5 +1,6 @@
 import { Match, PickMarket } from '../types/football';
 import { calculateExpectedValue, quarterKelly } from './predictionEngine';
+import { getRelativeDateStr } from '../utils/dateUtils';
 
 export type ScannerPreset =
   | 'all'
@@ -48,6 +49,7 @@ export interface ScannerFilterOptions {
   minOdds?: number;
   leagueId?: string; // 'ALL' vagy konkrét id
   dayFilter?: 'all' | 'today' | 'tomorrow' | 'yesterday';
+  statusFilter?: 'open_only' | 'all' | 'finished';
   sortBy?: ScannerSortBy;
   searchQuery?: string;
 }
@@ -243,11 +245,20 @@ export function filterAndSortOpportunities(
     minOdds = 1.01,
     leagueId = 'ALL',
     dayFilter = 'all',
+    statusFilter = 'open_only',
     sortBy = 'ev',
     searchQuery = '',
   } = options;
 
   let filtered = opportunities.filter((item) => {
+    // 0. Státusz szűrés (Alapértelmezésben csak a fogadható UPCOMING és LIVE mérkőzések)
+    if (statusFilter === 'open_only' && item.match.status === 'FINISHED') {
+      return false;
+    }
+    if (statusFilter === 'finished' && item.match.status !== 'FINISHED') {
+      return false;
+    }
+
     // 1. Odds és valószínűségi alsó korlátok
     if (item.probability < minProb) return false;
     if (item.odds < minOdds) return false;
@@ -259,17 +270,13 @@ export function filterAndSortOpportunities(
 
     // 3. Nap szűrés
     if (dayFilter !== 'all') {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getRelativeDateStr(0);
+      const tomorrow = getRelativeDateStr(1);
+      const yesterday = getRelativeDateStr(-1);
       const matchDate = item.match.kickoffDate;
       if (dayFilter === 'today' && matchDate !== today) return false;
-      if (dayFilter === 'tomorrow') {
-        const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-        if (matchDate !== tomorrow) return false;
-      }
-      if (dayFilter === 'yesterday') {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-        if (matchDate !== yesterday) return false;
-      }
+      if (dayFilter === 'tomorrow' && matchDate !== tomorrow) return false;
+      if (dayFilter === 'yesterday' && matchDate !== yesterday) return false;
     }
 
     // 4. Keresési kifejezés (csapatnév vagy bajnokság)

@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.16.1] - 2026-10-19
+
+### Javítva & Továbbfejlesztve (Fixed & Enhanced)
+- **Scanner Időszak & Státusz Választó (`src/components/ScannerView.tsx`):**
+  - Dedikált, azonnal elérhető idősáv-választó gombok: `⚡ Mai Értéktippek`, `📅 Holnapi Meccsek`, `🌐 Összes Nyitott Meccs`, és `🏁 Lezárt / Archív EV`.
+  - Dinamikus találatszámláló az éppen aktív szűrésre.
+- **Fogadható Meccsek Alapértelmezése (`src/services/scannerService.ts`):**
+  - A Scanner alapértelmezetten kizárólag a fogadható (`UPCOMING` és `LIVE`) mérkőzéseket vizsgálja és rangsorolja (`statusFilter: 'open_only'`), így a korábban lezárt meccsek nem nyomják el a mai és holnapi lehetőségeket.
+  - A lezárt meccsek külön kérésre, a `Lezárt / Archív EV` gombra kattintva bármikor ellenőrizhetők visszamenőleges elemzéshez.
+- **Időzóna-biztos Dátumszűrés:**
+  - Áttérés a `getRelativeDateStr` központi helyi időzónás dátumkezelőre a `.toISOString()` UTC-eltolódásának megszüntetésére.
+
 ## [1.16.0] - 2026-10-19
 
 ### Hozzáadva (Added)
