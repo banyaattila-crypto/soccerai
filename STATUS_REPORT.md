@@ -17,11 +17,11 @@
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
 A **`v1.16.3`** kiadás újdonságai és fejlesztései:
-1. **3D Animált FIFA 2026 Hivatalos Meccslabda (`Logo.tsx`):**
-   - A fejléc bal felső sarkában lévő ikon élethű, folyamatosan és lágyan forgó 3D szférává alakult.
-   - A 2026-os FIFA Világbajnokság hivatalos meccslabdájának (**adidas Trionda**) hiteles vizuális leképezése: 4-paneles aerodinamikai szerkezet az USA (kobaltkék), Mexikó (smaragdzöld) és Kanada (rubinpiros) dinamikus hullámpaneleivel, valamint arany FIFA trófea szegéllyel.
-   - **Fénytani & 3D Sugárkövetés:** Rögzített bal felső megvilágítás, Phong spekuláris csillanás és peremfény a forgó gömb felületén.
-   - **60 FPS Precomputed LUT:** Kevesebb mint 0.5 ms számítási idő képkockánként, akkumulátorkímélő háttérleállítással, hover gyorsulással és kattintásra induló szuperspinnel.
+1. **3D Animált FIFA 2026 Hivatalos Meccslabda (adidas Trionda Pro World Cup, `Logo.tsx`):**
+   - A fejléc bal felső sarkában lévő ikon a hivatalos **TRIONDA PRO WORLD CUP** meccslabda élethű 3D modelljévé alakult.
+   - **Borotvaéles 3D Vektormodell:** A korábbi raszteres mintát felváltotta a szubpixel pontosságú 3D gömbi projekció. A 4 aerodinamikai mélyvarrás, az USA kobaltkék (csillaggal), Mexikó smaragdzöld és Kanada rubinpiros hullámpanjelei arany FIFA trófea szegéllyel, valamint az adidas 3-sávos és arany `TRIONDA PRO` és `FIFA WORLD CUP 2026` minőségi jelzésekkel élesen jelennek meg.
+   - **Ultra-Lassú, Nyugodt 3D Forgás:** A forgási sebesség a felhasználói kérésnek megfelelően lelassult (~45 másodperc / teljes 360° kör), így a labda nem pörög túl gyorsan, hanem méltóságteljesen és lágyan úszik át a térben.
+   - **Fotorealisztikus 3D Fények:** Rögzített bal felső megvilágítás, valódi mélységi árnyék és stadion-reflektor spekuláris csillogás a gömb felületén.
 
 ### Korábbi Fő Verziók Eredményei:
 
