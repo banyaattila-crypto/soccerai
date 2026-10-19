@@ -361,6 +361,142 @@ export function fitDixonColesModel(
 }
 
 /**
+ * Európai topcsapatok és nemzetközi kupa résztvevők empirikus prior paraméterei
+ * (amikor a 3 napos API ablakban még nem fejeződött be meccsük, vagy más bajnokságból érkeznek pl. BL-ben)
+ */
+export const EUROPEAN_CLUB_PRIORS: Record<string, { attack: number; defense: number }> = {
+  // Premier League
+  mancity: { attack: 1.45, defense: 0.70 },
+  manchestercity: { attack: 1.45, defense: 0.70 },
+  liverpool: { attack: 1.42, defense: 0.72 },
+  arsenal: { attack: 1.38, defense: 0.68 },
+  chelsea: { attack: 1.28, defense: 0.90 },
+  tottenham: { attack: 1.32, defense: 0.92 },
+  tottenhamhotspur: { attack: 1.32, defense: 0.92 },
+  astonvilla: { attack: 1.25, defense: 0.88 },
+  manchesterunited: { attack: 1.20, defense: 0.95 },
+  manunited: { attack: 1.20, defense: 0.95 },
+  newcastle: { attack: 1.25, defense: 0.90 },
+  brighton: { attack: 1.22, defense: 0.92 },
+  coventry: { attack: 0.95, defense: 1.20 },
+  coventrycity: { attack: 0.95, defense: 1.20 },
+  wolverhampton: { attack: 1.05, defense: 1.15 },
+  wolves: { attack: 1.05, defense: 1.15 },
+  portsmouth: { attack: 0.90, defense: 1.25 },
+
+  // La Liga
+  realmadrid: { attack: 1.45, defense: 0.72 },
+  barca: { attack: 1.40, defense: 0.78 },
+  barcelona: { attack: 1.40, defense: 0.78 },
+  atletico: { attack: 1.25, defense: 0.80 },
+  atleticomadrid: { attack: 1.25, defense: 0.80 },
+  atleti: { attack: 1.25, defense: 0.80 },
+  realsociedad: { attack: 1.15, defense: 0.90 },
+  sociedad: { attack: 1.15, defense: 0.90 },
+  villarreal: { attack: 1.20, defense: 0.92 },
+  athletic: { attack: 1.18, defense: 0.88 },
+  athleticbilbao: { attack: 1.18, defense: 0.88 },
+  sevilla: { attack: 1.12, defense: 1.05 },
+  getafe: { attack: 0.95, defense: 0.95 },
+  rayovallecano: { attack: 1.02, defense: 1.10 },
+
+  // Serie A
+  inter: { attack: 1.38, defense: 0.75 },
+  milan: { attack: 1.28, defense: 0.85 },
+  acmilan: { attack: 1.28, defense: 0.85 },
+  juventus: { attack: 1.25, defense: 0.80 },
+  napoli: { attack: 1.28, defense: 0.80 },
+  roma: { attack: 1.22, defense: 0.85 },
+  asroma: { attack: 1.22, defense: 0.85 },
+  atalanta: { attack: 1.30, defense: 0.90 },
+  lazio: { attack: 1.20, defense: 0.90 },
+  monza: { attack: 0.95, defense: 1.15 },
+  cagliari: { attack: 0.92, defense: 1.20 },
+  parma: { attack: 1.05, defense: 1.18 },
+  torino: { attack: 1.02, defense: 0.98 },
+
+  // Bundesliga
+  bayern: { attack: 1.48, defense: 0.75 },
+  bayernmunich: { attack: 1.48, defense: 0.75 },
+  bayernmunchen: { attack: 1.48, defense: 0.75 },
+  dortmund: { attack: 1.35, defense: 0.85 },
+  borussiadortmund: { attack: 1.35, defense: 0.85 },
+  leverkusen: { attack: 1.38, defense: 0.82 },
+  bayerleverkusen: { attack: 1.38, defense: 0.82 },
+  leipzig: { attack: 1.28, defense: 0.88 },
+  rbleipzig: { attack: 1.28, defense: 0.88 },
+  stuttgart: { attack: 1.22, defense: 0.95 },
+  vfb: { attack: 1.22, defense: 0.95 },
+  frankfurt: { attack: 1.20, defense: 0.95 },
+
+  // Ligue 1
+  psg: { attack: 1.42, defense: 0.78 },
+  parissaintgermain: { attack: 1.42, defense: 0.78 },
+  monaco: { attack: 1.25, defense: 0.90 },
+  marseille: { attack: 1.22, defense: 0.92 },
+  lille: { attack: 1.20, defense: 0.88 },
+  lyon: { attack: 1.20, defense: 0.95 },
+
+  // Eredivisie & Primeira Liga
+  psv: { attack: 1.30, defense: 0.88 },
+  feyenoord: { attack: 1.22, defense: 0.90 },
+  ajax: { attack: 1.22, defense: 0.92 },
+  sporting: { attack: 1.30, defense: 0.82 },
+  sportingcp: { attack: 1.30, defense: 0.82 },
+  benfica: { attack: 1.24, defense: 0.85 },
+  porto: { attack: 1.22, defense: 0.85 },
+  braga: { attack: 1.18, defense: 0.92 },
+  gilvicente: { attack: 0.95, defense: 1.15 },
+
+  // Nemzetközi európai kupa csapatok
+  fenerbahce: { attack: 1.22, defense: 0.92 },
+  galatasaray: { attack: 1.25, defense: 0.92 },
+  slaviapraha: { attack: 1.12, defense: 1.05 },
+  bodglimt: { attack: 1.08, defense: 1.12 },
+  bodoglimt: { attack: 1.08, defense: 1.12 },
+  slbratislava: { attack: 0.85, defense: 1.30 },
+  slovanbratislava: { attack: 0.85, defense: 1.30 },
+  paeaek: { attack: 0.90, defense: 1.25 },
+  aek: { attack: 0.90, defense: 1.25 },
+  aekathens: { attack: 0.90, defense: 1.25 },
+  sabah: { attack: 0.80, defense: 1.35 },
+  sabahfk: { attack: 0.80, defense: 1.35 },
+
+  // Brazil Série A
+  corinthians: { attack: 1.05, defense: 1.02 },
+  vitoria: { attack: 0.92, defense: 1.18 },
+  saopaulo: { attack: 1.08, defense: 1.02 },
+  flamengo: { attack: 1.25, defense: 0.90 },
+  palmeiras: { attack: 1.25, defense: 0.88 },
+  botafogo: { attack: 1.22, defense: 0.90 },
+};
+
+function getClubPriorRating(teamName: string): TeamRating | undefined {
+  const norm = normalizeTeamName(teamName);
+  if (!norm) return undefined;
+  let prior = EUROPEAN_CLUB_PRIORS[norm];
+  if (!prior) {
+    const key = Object.keys(EUROPEAN_CLUB_PRIORS).find((k) => k.includes(norm) || norm.includes(k));
+    if (key) prior = EUROPEAN_CLUB_PRIORS[key];
+  }
+  if (!prior) return undefined;
+
+  return {
+    attack: prior.attack,
+    defense: prior.defense,
+    goalsScored: Math.round(prior.attack * 10),
+    goalsConceded: Math.round(prior.defense * 10),
+    matchesPlayed: 10,
+    homeScored: Math.round(prior.attack * 5),
+    homeConceded: Math.round(prior.defense * 5),
+    awayScored: Math.round(prior.attack * 5),
+    awayConceded: Math.round(prior.defense * 5),
+    homeMatches: 5,
+    awayMatches: 5,
+  };
+}
+
+/**
  * Kiszámítja a két csapat valós várható góljait (xG: lambda, mu) a Dixon-Coles modellből
  */
 export function computeExpectedGoalsFromModel(
@@ -376,52 +512,47 @@ export function computeExpectedGoalsFromModel(
   awayRating?: TeamRating;
   isFitted: boolean;
 } {
-  if (!model || Object.keys(model.teams).length === 0) {
-    return {
-      homeXg: fallbackHomeAvg,
-      awayXg: fallbackAwayAvg,
-      isFitted: false,
-    };
-  }
-
   const hNorm = normalizeTeamName(homeTeamName);
   const aNorm = normalizeTeamName(awayTeamName);
 
-  // Keresés normalizált név vagy részleges egyezés alapján
-  let hRating = model.teams[hNorm];
-  let aRating = model.teams[aNorm];
+  let hRating: TeamRating | undefined = model?.teams[hNorm];
+  let aRating: TeamRating | undefined = model?.teams[aNorm];
 
-  if (!hRating) {
+  if (model?.teams && !hRating) {
     const matchKey = Object.keys(model.teams).find(
       (k) => k.includes(hNorm) || hNorm.includes(k)
     );
     if (matchKey) hRating = model.teams[matchKey];
   }
-  if (!aRating) {
+  if (model?.teams && !aRating) {
     const matchKey = Object.keys(model.teams).find(
       (k) => k.includes(aNorm) || aNorm.includes(k)
     );
     if (matchKey) aRating = model.teams[matchKey];
   }
 
-  // Ha a csapat nem szerepel a modellben (pl. nem játszott még meccset), ligaátlagot (1.0) kap
+  // Fallback European club priors, ha a csapat nem szerepel a lokális mintában
+  if (!hRating) hRating = getClubPriorRating(homeTeamName);
+  if (!aRating) aRating = getClubPriorRating(awayTeamName);
+
   const homeAttack = hRating ? hRating.attack : 1.0;
   const homeDefense = hRating ? hRating.defense : 1.0;
   const awayAttack = aRating ? aRating.attack : 1.0;
   const awayDefense = aRating ? aRating.defense : 1.0;
 
-  // Dixon-Coles képlet:
-  // lambda_home = alpha_home * beta_away * avgHomeGoals
-  // mu_away     = alpha_away * beta_home * avgAwayGoals
-  const lh = homeAttack * awayDefense * model.avgHomeGoals;
-  const la = awayAttack * homeDefense * model.avgAwayGoals;
+  const avgH = model?.avgHomeGoals ?? fallbackHomeAvg;
+  const avgA = model?.avgAwayGoals ?? fallbackAwayAvg;
+  const homeAdv = model?.homeAdvantage ?? 1.15;
+
+  const lh = homeAttack * awayDefense * avgH * (homeAdv / 1.12);
+  const la = awayAttack * homeDefense * avgA;
 
   return {
     homeXg: Math.max(0.2, Math.round(lh * 10) / 10),
     awayXg: Math.max(0.2, Math.round(la * 10) / 10),
     homeRating: hRating,
     awayRating: aRating,
-    isFitted: Boolean(hRating && aRating),
+    isFitted: Boolean(hRating || aRating),
   };
 }
 

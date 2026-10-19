@@ -89,6 +89,7 @@ export function App() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiSuccessNotice, setApiSuccessNotice] = useState<string | null>(null);
+  const [apiErrorNotice, setApiErrorNotice] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // Élő meccsek betöltése (Football-Data.org Top ligák + API-Sports másodosztályok és NB I)
@@ -101,13 +102,16 @@ export function App() {
       forceRefresh: boolean = false
     ) => {
       if (source === 'builtin') {
+        // Kizárólag akkor töltünk be mintát, ha a felhasználó kifejezetten a Szimulációs Módot választotta!
         setMatches(MOCK_MATCHES);
         setIsDemoMode(true);
         setApiSuccessNotice(null);
+        setApiErrorNotice(null);
         return;
       }
 
       setIsLoading(true);
+      setApiErrorNotice(null);
       try {
         const liveMainPromise = fetchLiveMatches(fbKey, forceRefresh).catch((e) => {
           console.warn('Football-Data.org hiba:', e);
@@ -138,6 +142,7 @@ export function App() {
         if (combined.length > 0) {
           setMatches(combined);
           setIsDemoMode(false);
+          setApiErrorNotice(null);
           persistFinishedMatchesToHistory(combined);
           const secText = liveSecondary.length > 0
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} egyéb európai & másodosztályú liga)`
@@ -146,13 +151,23 @@ export function App() {
             `Sikeres szinkronizáció! ${combined.length} valós mérkőzés elérhető${secText}.`
           );
         } else {
-          setMatches(MOCK_MATCHES);
-          setIsDemoMode(true);
+          // NEM helyettesítünk be kamu meccseket!
+          setMatches([]);
+          setIsDemoMode(false);
+          setApiSuccessNotice(null);
+          setApiErrorNotice(
+            'Nem érkezett valós mérkőzés az API-tól a megadott időszakra (vagy a lekérési kvóta épp pihen). Nem töltünk be kamu adatokat. Kérlek várj pár másodpercet és kattints az újratöltésre!'
+          );
         }
-      } catch (err) {
-        console.warn('API lekérési hiba, offline adatokra visszatérés:', err);
-        setMatches(MOCK_MATCHES);
-        setIsDemoMode(true);
+      } catch (err: unknown) {
+        console.error('API lekérési hiba:', err);
+        setMatches([]);
+        setIsDemoMode(false);
+        setApiSuccessNotice(null);
+        const errMsg = err instanceof Error ? err.message : 'Ismeretlen hálózati hiba';
+        setApiErrorNotice(
+          `API szinkronizációs hiba: ${errMsg}. Nem használunk kamu/mock adatokat. Kérlek próbáld újra pár másodperc múlva!`
+        );
       } finally {
         setIsLoading(false);
       }
@@ -172,6 +187,13 @@ export function App() {
       return () => clearTimeout(t);
     }
   }, [apiSuccessNotice]);
+
+  useEffect(() => {
+    if (apiErrorNotice) {
+      const t = setTimeout(() => setApiErrorNotice(null), 8000);
+      return () => clearTimeout(t);
+    }
+  }, [apiErrorNotice]);
 
   // PWA Service Worker frissítés detektálás ("Új verzió elérhető")
   const [swUpdateReg, setSwUpdateReg] = useState<ServiceWorkerRegistration | null>(null);
@@ -395,6 +417,20 @@ export function App() {
         </div>
       )}
 
+      {/* API Hiba / Figyelmeztető banner */}
+      {apiErrorNotice && (
+        <div className="bg-rose-500/15 border-b border-rose-500/30 px-4 py-2.5 text-center text-xs text-rose-300 font-bold flex items-center justify-center gap-3">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+          <span>{apiErrorNotice}</span>
+          <button
+            onClick={handleRefresh}
+            className="px-2.5 py-1 rounded bg-rose-500/30 hover:bg-rose-500/50 text-white font-bold transition-colors cursor-pointer border border-rose-500/40 text-[11px]"
+          >
+            Újrapróbálás
+          </button>
+        </div>
+      )}
+
       {/* 2. Kompakt Állapotsáv & Hőtérkép Jelmagyarázat */}
       <HeroKpi
         matchCount={todayMatches.length}
@@ -407,6 +443,24 @@ export function App() {
 
       {/* 3. Fő Tartalom az aktív fül szerint (minden fül szigorúan csak a saját nézetét mutatja) */}
       <main className="flex-1">
+        {matches.length === 0 && !isLoading && (
+          <div className="max-w-xl mx-auto my-12 p-8 bg-mesh-card border border-slate-800 rounded-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/30">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Nincs betöltött mérkőzés</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Az élő API-ról jelenleg nem érkezett mérkőzés a megadott időszakra. A rendszer szigorúan elutasítja a kamu/mock adatokat, így kizárólag valós, hiteles meccsek jelenhetnek meg.
+            </p>
+            <button
+              onClick={handleRefresh}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors cursor-pointer shadow-lg shadow-amber-500/20"
+            >
+              🔄 Élő adatok lekérése most
+            </button>
+          </div>
+        )}
+
         {activeTab === 'picks' && (
           <TopPicks
             matches={todayMatches}

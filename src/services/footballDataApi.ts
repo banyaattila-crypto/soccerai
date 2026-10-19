@@ -90,61 +90,6 @@ export const COMPETITION_MAP: Record<
   PPL: { id: 'primeira_liga', name: 'Primeira Liga', country: 'Portugália', flag: '🇵🇹', priority: 12 },
 };
 
-/**
- * Bajnokság befejezett meccseinek lekérése és valós Dixon-Coles modell illesztése
- */
-async function getOrFetchDixonColesLeagueModel(
-  compCode: string,
-  apiKey: string = ''
-): Promise<FittedDixonColesModel | null> {
-  const cached = loadLeagueModel(compCode);
-  if (cached) return cached;
-
-  const endpoints = [`/api/matches?competition=${compCode}&status=FINISHED`];
-  if (apiKey.trim()) {
-    endpoints.push(
-      `https://api.football-data.org/v4/competitions/${compCode}/matches?status=FINISHED`
-    );
-  }
-
-  for (const url of endpoints) {
-    try {
-      const headers: Record<string, string> = {};
-      if (apiKey.trim()) headers['X-Auth-Token'] = apiKey.trim();
-
-      const res = await fetch(url, { headers });
-      if (!res.ok) continue;
-
-      const data: FootballDataResponse = await res.json();
-      if (!data || !Array.isArray(data.matches) || data.matches.length === 0) continue;
-
-      const finishedResults: FinishedMatchResult[] = data.matches
-        .filter(
-          (m) =>
-            m.status === 'FINISHED' &&
-            m.score?.fullTime?.home !== null &&
-            m.score?.fullTime?.away !== null
-        )
-        .map((m) => ({
-          homeTeam: m.homeTeam.name,
-          awayTeam: m.awayTeam.name,
-          homeGoals: m.score.fullTime.home!,
-          awayGoals: m.score.fullTime.away!,
-          date: m.utcDate ? m.utcDate.split('T')[0] : undefined,
-        }));
-
-      if (finishedResults.length >= 5) {
-        const fitted = fitDixonColesModel(finishedResults, compCode);
-        saveLeagueModel(fitted);
-        return fitted;
-      }
-    } catch {
-      // Továbblépés következő végpontra vagy fallbackre
-    }
-  }
-
-  return null;
-}
 
 const CACHE_KEY = 'soccerai_live_matches_cache_v4';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perces gyorsítótár
@@ -171,9 +116,9 @@ export async function fetchLiveMatches(
     }
   }
 
-  // Explicit 3 napos időablak (Tegnap -> Holnap), hogy a Tegnap / Ma / Holnap fülek pontosak legyenek
+  // Explicit 3 napos időablak (Tegnap -> Holnap este lezárásáig), hogy az összes valós meccs és kupa átjöjjön
   const dateFrom = getRelativeDateStr(-1);
-  const dateTo = getRelativeDateStr(1);
+  const dateTo = getRelativeDateStr(2);
   const query = `?dateFrom=${dateFrom}&dateTo=${dateTo}`;
 
   const endpoints = [`/api/matches${query}`];
@@ -209,17 +154,42 @@ export async function fetchLiveMatches(
     );
   }
 
-  // Egyedi bajnokságok összegyűjtése és valós Dixon-Coles modell illesztése / betöltése
+  // Egyedi bajnokságok összegyűjtése és valós Dixon-Coles modell illesztése helyben (0 extra API hívás, kvótavédelem)
   const uniqueCompCodes = Array.from(
     new Set(rawData.matches.map((m) => m.competition.code || 'PL'))
   );
 
   const leagueModelsMap: Record<string, FittedDixonColesModel | null> = {};
-  await Promise.all(
-    uniqueCompCodes.map(async (code) => {
-      leagueModelsMap[code] = await getOrFetchDixonColesLeagueModel(code, apiKey);
-    })
-  );
+  for (const code of uniqueCompCodes) {
+    leagueModelsMap[code] = loadLeagueModel(code);
+  }
+
+  // A letöltött befejezett meccsekből helyben illesztjük a modelleket extra hálózati kérések nélkül
+  for (const code of uniqueCompCodes) {
+    if (!leagueModelsMap[code]) {
+      const finishedForComp: FinishedMatchResult[] = rawData.matches
+        .filter(
+          (m) =>
+            (m.competition.code || 'PL') === code &&
+            m.status === 'FINISHED' &&
+            m.score?.fullTime?.home !== null &&
+            m.score?.fullTime?.away !== null
+        )
+        .map((m) => ({
+          homeTeam: m.homeTeam.name,
+          awayTeam: m.awayTeam.name,
+          homeGoals: m.score.fullTime.home!,
+          awayGoals: m.score.fullTime.away!,
+          date: m.utcDate ? m.utcDate.split('T')[0] : undefined,
+        }));
+
+      if (finishedForComp.length >= 4) {
+        const fitted = fitDixonColesModel(finishedForComp, code);
+        saveLeagueModel(fitted);
+        leagueModelsMap[code] = fitted;
+      }
+    }
+  }
 
   // Konvertálás a belső Match formátumra
   const matches: Match[] = rawData.matches.map((m) => {
