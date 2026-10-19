@@ -32,6 +32,9 @@ const BankrollView = React.lazy(() =>
 const MethodologyView = React.lazy(() =>
   import('./components/MethodologyView').then((m) => ({ default: m.MethodologyView }))
 );
+const ScannerView = React.lazy(() =>
+  import('./components/ScannerView').then((m) => ({ default: m.ScannerView }))
+);
 import {
   createTrackedBet,
   getTrackedBets,
@@ -419,6 +422,15 @@ export function App() {
             </div>
           }
         >
+          {activeTab === 'scanner' && (
+            <ScannerView
+              matches={matches}
+              onSelectMatch={setSelectedMatch}
+              onAddToBetSlip={handleAddToBetSlip}
+              betSlipItems={betSlipItems}
+            />
+          )}
+
           {activeTab === 'results' && (
             <ResultsView matches={matches} onSelectMatch={setSelectedMatch} />
           )}

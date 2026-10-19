@@ -3,6 +3,22 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.14.0] - 2026-10-19
+
+### Hozzáadva (Added)
+- **Kvantitatív Értékkereső & Piacvizsgáló (`src/components/ScannerView.tsx`):**
+  - Teljes körű piacvizsgáló modul a teljes meccskínálatból kinyert fogadási lehetőségek automatikus rangsorolásával.
+  - 8 db intelligens preset kapszula: 💎 +EV Értéktippek, 🎯 Kiemelt MI Tippek, ⚽ Over 2.5 Gólradar, 🥅 Mindkét Csapat Lő (BTTS), 🛡️ Erős Favoritok, ⚡ 1. Félidő >0.5 Gól, 💣 Értékes Meglepetések és Összes lehetőség.
+  - Dinamikus szűrő- és rendezősáv: Valós idejű kereső csapatra és ligára, bajnokságválasztó, minimum modell-esély küszöbök (50%+, 60%+, 70%+) és 5-irányú rendezés (+EV %, Valószínűség, Szorzó, Negyed-Kelly méret, Kezdési idő).
+  - Találati kártyák valós Pinnacle/Bet365 vagy szimulált bukmékeri oddsokkal, várható éllel (+EV %), Negyed-Kelly tőkeallokációval és közvetlen szelvényre tevéssel.
+- **Bajnokság Statisztikai & Értékradar Nézet:**
+  - Kvantitatív liga-ranglista átlagos várható gólok (xG), Over 2.5 gyakoriság, BTTS arány és top gólvárakozású mérkőzés szerint rendezve.
+- **Navigáció Bővítése (`src/components/Header.tsx`, `src/App.tsx`):**
+  - Új `scanner` tab bekötve mind az asztali navigációs sávba, mind a mobil 6-oszlopos kompakt gombsorba.
+  - Dinamikus `React.lazy` és `Suspense` kód-felosztás a minimális bundle méret megőrzése érdekében.
+- **Dedikált Scanner Szolgáltatás & 3 Új Egységteszt (`scannerService.ts`, `scannerService.test.ts`):**
+  - Összesen 48 db sikeres Vitest egységteszt, 100%-os típusbiztonság és 0 Oxlint hiba/figyelmeztetés.
+
 ## [1.13.0] - 2026-10-19
 
 ### Hozzáadva (Added)

@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.13.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *ScoreLab H2H, Csapat-összehasonlítás & Bivariáns Dixon-Coles Poisson Gólmátrix*  
+**Aktuális verzió:** 🏷️ **`v1.14.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Kvantitatív Értékkereső (Scanner), +EV Élek & Bajnokság Statisztikai Radar*  
 **Dátum:** 2026. október 19.  
-**Állapot:** ✅ **v1.13.0 Verzió Elkészült & Verifikálva (45/45 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.14.0 Verzió Elkészült & Verifikálva (48/48 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,11 +16,11 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.13.0`** kiadás elhozza a részletes ScoreLab meccsanalitikai modulokat közvetlenül a meccs részletek felületére:
-1. **ScoreLab H2H & Csapat-összehasonlító Kártyák:** Forma- és momentum-index (utolsó 5 mérkőzés pontozása), dinamikus összehasonlító sávok ($xG$, támadóerő $\alpha$, védelmi stabilitás $\beta$), lőtt/kapott gólátlagok és egymás elleni találkozók mélyelemzése.
-2. **Bivariáns Dixon-Coles Poisson Gólmátrix (Heatmap):** 5x5-ös interaktív valószínűségi hőtérkép cellánkénti esélyekkel és fair szorzókkal ($1/p$), Top 6 legvalószínűbb pontos végeredmény érmes rangsorral és gólszám-intervallumokkal.
-3. **3-utas Fülválasztó a Meccs Részletekben:** `[📊 Áttekintés & Oddsok]`, `[⚔️ H2H & Csapatok]`, `[🎯 Poisson Mátrix]` modern, zökkenőmentes lapozó felülettel.
-4. **45 db Automatizált Vitest Egységteszt:** Teljes matematikai és statisztikai tesztlefedettség, 0 hiba, 0 figyelmeztetés.
+A **`v1.14.0`** kiadás elhozza a teljes körű **Kvantitatív Értékkeresőt (Scanner)**:
+1. **Értékkereső Radar (ScannerView):** Automatikus piaci lehetőség-szűrés a teljes kínálatból 8 okos presettel (💎 +EV Értéktippek, 🎯 Kiemelt MI Tippek, ⚽ Over 2.5 Gólradar, 🥅 Mindkét Csapat Lő, 🛡️ Erős Favoritok, ⚡ 1. Félidő Gól, 💣 Értékes Meglepetések és Összes lehetőség).
+2. **Kvantitatív Liga Statisztikai Radar:** A ligák ranglistája várható gólátlag (xG), Over 2.5 gyakoriság és BTTS arány szerint.
+3. **Navigáció:** Új közvetlen Scanner fül az asztali és mobil gombsorban egyaránt, lazy loading kód-felosztással.
+4. **48 db Automatizált Vitest Egységteszt:** Teljes matematikai és statisztikai tesztlefedettség, 0 hiba, 0 figyelmeztetés.
 
 ### Fő Megvalósítások a v1.12.0-ban:
 

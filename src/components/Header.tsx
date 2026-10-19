@@ -11,11 +11,12 @@ import {
   Download,
   Smartphone,
   Wallet,
+  Radar,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { APP_VERSION } from '../version';
 
-export type AppTab = 'picks' | 'grid' | 'results' | 'bankroll' | 'methodology';
+export type AppTab = 'picks' | 'grid' | 'scanner' | 'results' | 'bankroll' | 'methodology';
 
 interface HeaderProps {
   onOpenSettings: () => void;
@@ -144,6 +145,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('scanner')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'scanner'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Radar className="w-3.5 h-3.5" />
+              <span>Scanner (+EV)</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('results')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'results'
@@ -269,9 +282,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Mobilon megjelenő másodlagos kompakt 5-oszlopos Tab-sáv */}
+        {/* Mobilon megjelenő másodlagos kompakt 6-oszlopos Tab-sáv */}
         <div className="md:hidden pb-2 pt-0.5">
-          <nav className="grid grid-cols-5 gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800/90 text-center">
+          <nav className="grid grid-cols-6 gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800/90 text-center">
             <button
               onClick={() => setActiveTab('picks')}
               className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
@@ -294,6 +307,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <LayoutGrid className="w-3 h-3 shrink-0" />
               <span className="truncate">Rács</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('scanner')}
+              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
+                activeTab === 'scanner'
+                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Radar className="w-3 h-3 shrink-0" />
+              <span className="truncate">Scan</span>
             </button>
 
             <button
