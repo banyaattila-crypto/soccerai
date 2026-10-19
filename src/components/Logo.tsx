@@ -7,183 +7,118 @@ interface LogoProps {
 }
 
 /**
- * 2026-os FIFA Világbajnokság (USA - Mexikó - Kanada) Hivatalos Meccslabda (adidas Trionda)
- * Nagy felbontású equirectangular textúra generálás az offscreen canvas-en:
- * - Gyöngyházfehér alap finom bőrmintázattal
- * - 4-paneles forradalmi aerodinamikai mélyvarrások
- * - 3 dinamikus nemzeti hullám (USA kobaltkék, Mexikó smaragdzöld, Kanada rubinpiros)
- * - Arany FIFA trófea szegélyek és hivatalos 2026 / adidas jelvények
+ * 3D Pont leképzése gömbfelületről 2D képernyőre ortografikus vetítéssel és 14°-os dőlésszöggel
  */
-function createTriondaTexture(): Uint32Array {
-  const TW = 384;
-  const TH = 192;
+function projectSphere(
+  lon: number,
+  lat: number,
+  theta: number,
+  R: number,
+  cx: number,
+  cy: number,
+  cosT: number,
+  sinT: number
+): { x: number; y: number; z: number; visible: boolean } {
+  const l = lon + theta;
+  const x0 = Math.cos(lat) * Math.sin(l);
+  const y0 = Math.sin(lat);
+  const z0 = Math.cos(lat) * Math.cos(l);
 
-  if (typeof document === 'undefined') {
-    return new Uint32Array(TW * TH).fill(0xffffffff);
-  }
+  // Döntött Y-tengely körüli forgatás
+  const x = x0;
+  const y = y0 * cosT - z0 * sinT;
+  const z = y0 * sinT + z0 * cosT;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = TW;
-  canvas.height = TH;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return new Uint32Array(TW * TH).fill(0xffffffff);
-
-  // 1. Gyöngyházfehér alaptest finom mikromintázattal
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, TH);
-  bgGrad.addColorStop(0, '#FFFFFF');
-  bgGrad.addColorStop(0.5, '#F8FAFC');
-  bgGrad.addColorStop(1, '#F1F5F9');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, TW, TH);
-
-  // Finom bőr textúra hexagonális mikro-rács
-  ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
-  ctx.lineWidth = 0.5;
-  const step = 8;
-  for (let x = 0; x < TW; x += step) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, TH);
-    ctx.stroke();
-  }
-  for (let y = 0; y < TH; y += step) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(TW, y);
-    ctx.stroke();
-  }
-
-  // 2. A 3 Fő Hullám (Tri-Onda) kirajzolása
-  // A) 1. Hullám: USA Kobalt- és Királykék (csillag motívumokkal és arany szegéllyel)
-  const drawWave = (
-    centerX: number,
-    centerY: number,
-    color1: string,
-    color2: string,
-    color3: string,
-    goldColor: string,
-    isStar: boolean
-  ) => {
-    ctx.save();
-    ctx.translate(centerX, centerY);
-
-    // Fő aerodinamikai hullámszalag
-    const waveGrad = ctx.createLinearGradient(-50, -40, 50, 40);
-    waveGrad.addColorStop(0, color1);
-    waveGrad.addColorStop(0.5, color2);
-    waveGrad.addColorStop(1, color3);
-
-    // Külső arany szegély (FIFA Trophy Gold)
-    ctx.strokeStyle = goldColor;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(-58, -34);
-    ctx.bezierCurveTo(-30, -55, 30, -10, 60, -38);
-    ctx.bezierCurveTo(45, 15, 10, 45, -35, 30);
-    ctx.bezierCurveTo(-55, 20, -65, -5, -58, -34);
-    ctx.closePath();
-    ctx.stroke();
-
-    // Belső színes dinamikus hullámtest
-    ctx.fillStyle = waveGrad;
-    ctx.beginPath();
-    ctx.moveTo(-56, -32);
-    ctx.bezierCurveTo(-28, -52, 28, -8, 58, -36);
-    ctx.bezierCurveTo(43, 13, 8, 43, -33, 28);
-    ctx.bezierCurveTo(-53, 18, -63, -3, -56, -32);
-    ctx.closePath();
-    ctx.fill();
-
-    // Másodlagos belső aerodinamikai vágat
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.beginPath();
-    ctx.moveTo(-40, -20);
-    ctx.bezierCurveTo(-15, -35, 15, -5, 38, -25);
-    ctx.bezierCurveTo(28, 5, 5, 25, -20, 15);
-    ctx.closePath();
-    ctx.fill();
-
-    // Grafikai díszítő motívum (USA csillag vagy Mexikó tollív)
-    if (isStar) {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(-10, -5, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(15, 5, 2.8, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-20, 0);
-      ctx.lineTo(20, 0);
-      ctx.stroke();
-    }
-
-    ctx.restore();
+  return {
+    x: cx + x * R,
+    y: cy + y * R,
+    z,
+    visible: z > -0.15,
   };
-
-  // 1. Hullámpár (USA Kék: Pacific & Atlantic Navy)
-  drawWave(TW * 0.18, TH * 0.42, '#0F172A', '#1D4ED8', '#38BDF8', '#F59E0B', true);
-  drawWave(TW * 0.68, TH * 0.45, '#0F172A', '#1D4ED8', '#38BDF8', '#F59E0B', true);
-
-  // 2. Hullámpár (Mexikó Smaragdzöld: Sierra & Aztec Green)
-  drawWave(TW * 0.38, TH * 0.72, '#064E3B', '#059669', '#34D399', '#FBBF24', false);
-  drawWave(TW * 0.88, TH * 0.70, '#064E3B', '#059669', '#34D399', '#FBBF24', false);
-
-  // 3. Hullámpár (Kanada Rubinpiros: Crimson Maple)
-  drawWave(TW * 0.38, TH * 0.22, '#881337', '#DC2626', '#F87171', '#F59E0B', false);
-  drawWave(TW * 0.88, TH * 0.20, '#881337', '#DC2626', '#F87171', '#F59E0B', false);
-
-  // 3. Forradalmi 4-paneles ívelt mélyvarrások (Debossed aerodynamic seams)
-  ctx.strokeStyle = 'rgba(30, 41, 59, 0.75)';
-  ctx.lineWidth = 2.4;
-  ctx.lineCap = 'round';
-
-  ctx.beginPath();
-  ctx.moveTo(0, TH * 0.5);
-  ctx.bezierCurveTo(TW * 0.25, TH * 0.1, TW * 0.25, TH * 0.9, TW * 0.5, TH * 0.5);
-  ctx.bezierCurveTo(TW * 0.75, TH * 0.1, TW * 0.75, TH * 0.9, TW, TH * 0.5);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(0, TH * 0.15);
-  ctx.bezierCurveTo(TW * 0.3, TH * 0.35, TW * 0.7, TH * 0.05, TW, TH * 0.25);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(0, TH * 0.85);
-  ctx.bezierCurveTo(TW * 0.3, TH * 0.65, TW * 0.7, TH * 0.95, TW, TH * 0.75);
-  ctx.stroke();
-
-  // 4. Hivatalos FIFA World Cup 2026 & Trionda Feliratok és Adidas 3-Bar Logo
-  // Adidas embléma a fehér bőrön
-  ctx.save();
-  ctx.translate(TW * 0.5, TH * 0.28);
-  ctx.fillStyle = '#0F172A';
-  // 3 sáv
-  ctx.fillRect(-6, -4, 3, 8);
-  ctx.fillRect(-1, -6, 3, 10);
-  ctx.fillRect(4, -8, 3, 12);
-  ctx.restore();
-
-  // FIFA World Cup 2026 Arany Embléma
-  ctx.save();
-  ctx.translate(TW * 0.5, TH * 0.72);
-  ctx.fillStyle = '#D97706';
-  ctx.font = 'bold 9px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('FIFA 2026', 0, -2);
-  ctx.font = 'bold 7px system-ui, sans-serif';
-  ctx.fillStyle = '#1E293B';
-  ctx.fillText('TRIONDA', 0, 7);
-  ctx.restore();
-
-  const imgData = ctx.getImageData(0, 0, TW, TH);
-  return new Uint32Array(imgData.data.buffer);
 }
 
+/**
+ * Zárt gömbi sokszög / hullámszalag kirajzolása Canvas 2D-n, sima görbékkel
+ */
+function drawSphericalPolygon(
+  ctx: CanvasRenderingContext2D,
+  points: [number, number][],
+  theta: number,
+  R: number,
+  cx: number,
+  cy: number,
+  cosT: number,
+  sinT: number
+): boolean {
+  const projected = points.map(([lon, lat]) =>
+    projectSphere(lon, lat, theta, R, cx, cy, cosT, sinT)
+  );
+
+  // Ha a pontok többsége a gömb mögött van, nem rajzoljuk ki
+  const visibleCount = projected.filter((p) => p.z > 0).length;
+  if (visibleCount < 2) return false;
+
+  ctx.beginPath();
+  let first = true;
+  for (let i = 0; i < projected.length; i++) {
+    const p = projected[i];
+    if (first) {
+      ctx.moveTo(p.x, p.y);
+      first = false;
+    } else {
+      const prev = projected[i - 1];
+      const midX = (prev.x + p.x) / 2;
+      const midY = (prev.y + p.y) / 2;
+      ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+    }
+  }
+  const last = projected[projected.length - 1];
+  const p0 = projected[0];
+  ctx.quadraticCurveTo(last.x, last.y, p0.x, p0.y);
+  ctx.closePath();
+
+  return true;
+}
+
+/**
+ * Gömbi 3D vonallánc (varrásvonal) rajzolása
+ */
+function drawSphericalPolyline(
+  ctx: CanvasRenderingContext2D,
+  points: [number, number][],
+  theta: number,
+  R: number,
+  cx: number,
+  cy: number,
+  cosT: number,
+  sinT: number
+): void {
+  const projected = points.map(([lon, lat]) =>
+    projectSphere(lon, lat, theta, R, cx, cy, cosT, sinT)
+  );
+
+  ctx.beginPath();
+  let started = false;
+  for (let i = 0; i < projected.length; i++) {
+    const p = projected[i];
+    if (p.z > -0.05) {
+      if (!started) {
+        ctx.moveTo(p.x, p.y);
+        started = true;
+      } else {
+        ctx.lineTo(p.x, p.y);
+      }
+    } else {
+      started = false;
+    }
+  }
+  ctx.stroke();
+}
+
+/**
+ * 2026 FIFA World Cup Official Match Ball: ADIDAS TRIONDA PRO
+ * Élethű, prémium 3D-ben, ultra-lassan és finoman forgó hivatalos meccslabda.
+ */
 export const Logo: React.FC<LogoProps> = ({
   className = '',
   size = 42,
@@ -200,91 +135,122 @@ export const Logo: React.FC<LogoProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Retina / HiDPI skálázás a borotvaéles megjelenítéshez
+    // Retina / HiDPI kijelző támogatás (2x felbontás a borotvaéles vektorgrafikához)
     const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2.5);
     const pixelSize = Math.round(size * dpr);
     canvas.width = pixelSize;
     canvas.height = pixelSize;
 
     const R = Math.round(pixelSize * 0.38); // A labda sugara a canvas közepén
-    const centerX = pixelSize / 2;
-    const centerY = pixelSize / 2;
+    const cx = pixelSize / 2;
+    const cy = pixelSize / 2;
 
-    const TW = 384;
-    const TH = 192;
-    const texData = createTriondaTexture();
-
-    // 3D Szféra Sugárkövetési Előszámítás (Lookup Table - LUT a maximális FPS-hez)
-    const tilt = (14 * Math.PI) / 180; // 14 fokos természetes dőlésszög
+    // 14 fokos természetes forgástengely dőlés
+    const tilt = (14 * Math.PI) / 180;
     const cosT = Math.cos(tilt);
     const sinT = Math.sin(tilt);
 
-    interface LutPixel {
-      pxIndex: number;
-      u0: number;
-      v: number;
-      diffuse: number;
-      specular: number;
-      rim: number;
-    }
+    // ================= TRIONDA PRO 3D GÖMBI KOORDINÁTÁK =================
+    // 3 Aerodinamikai Nemzeti Hullámszárny (120 fokos körosztásban)
+    // 1. USA Kobaltkék hullám (Pacific/Atlantic Navy & Royal Blue)
+    const waveUSA: [number, number][] = [
+      [-0.45, 0.35],
+      [-0.2, 0.55],
+      [0.15, 0.48],
+      [0.45, 0.25],
+      [0.55, 0.05],
+      [0.35, -0.08],
+      [0.1, 0.08],
+      [-0.15, 0.18],
+      [-0.35, 0.12],
+      [-0.45, 0.22],
+    ];
 
-    const lut: LutPixel[] = [];
+    const innerUSA: [number, number][] = [
+      [-0.3, 0.32],
+      [-0.1, 0.44],
+      [0.2, 0.38],
+      [0.35, 0.2],
+      [0.22, 0.08],
+      [0.05, 0.18],
+      [-0.18, 0.24],
+    ];
 
-    // Fényforrás pozíciója a bal felső térből: L = (-0.42, -0.55, 0.72) normalizálva
-    const lx = -0.42;
-    const ly = -0.55;
-    const lz = 0.72;
+    // 2. Mexikó Smaragdzöld hullám (Aztec & Sierra Emerald Green, +120 fok)
+    const offsetMex = (2 * Math.PI) / 3;
+    const waveMex: [number, number][] = [
+      [offsetMex - 0.45, -0.15],
+      [offsetMex - 0.2, 0.1],
+      [offsetMex + 0.15, 0.25],
+      [offsetMex + 0.45, 0.15],
+      [offsetMex + 0.55, -0.08],
+      [offsetMex + 0.35, -0.3],
+      [offsetMex + 0.1, -0.22],
+      [offsetMex - 0.15, -0.1],
+      [offsetMex - 0.35, -0.22],
+      [offsetMex - 0.45, -0.18],
+    ];
 
-    for (let y = -R; y <= R; y++) {
-      for (let x = -R; x <= R; x++) {
-        const d2 = x * x + y * y;
-        if (d2 <= R * R) {
-          const z = Math.sqrt(R * R - d2);
-          const nx = x / R;
-          const ny = y / R;
-          const nz = z / R;
+    const innerMex: [number, number][] = [
+      [offsetMex - 0.3, -0.08],
+      [offsetMex - 0.08, 0.12],
+      [offsetMex + 0.22, 0.16],
+      [offsetMex + 0.36, 0.06],
+      [offsetMex + 0.22, -0.14],
+      [offsetMex + 0.04, -0.08],
+      [offsetMex - 0.18, -0.04],
+    ];
 
-          // Döntött tengely körüli koordinátatranszformáció
-          const y1 = y * cosT + z * sinT;
-          const z1 = -y * sinT + z * cosT;
+    // 3. Kanada Rubinpiros hullám (Crimson Maple, +240 fok)
+    const offsetCan = (4 * Math.PI) / 3;
+    const waveCan: [number, number][] = [
+      [offsetCan - 0.45, 0.1],
+      [offsetCan - 0.25, -0.2],
+      [offsetCan + 0.05, -0.38],
+      [offsetCan + 0.35, -0.28],
+      [offsetCan + 0.5, -0.05],
+      [offsetCan + 0.35, 0.18],
+      [offsetCan + 0.1, 0.12],
+      [offsetCan - 0.1, -0.02],
+      [offsetCan - 0.3, 0.02],
+      [offsetCan - 0.42, 0.08],
+    ];
 
-          // Hosszúsági és szélességi körök
-          const lon0 = Math.atan2(x, z1); // -PI .. PI
-          const lat = Math.asin(Math.max(-1, Math.min(1, y1 / R))); // -PI/2 .. PI/2
+    const innerCan: [number, number][] = [
+      [offsetCan - 0.3, -0.06],
+      [offsetCan - 0.15, -0.22],
+      [offsetCan + 0.12, -0.26],
+      [offsetCan + 0.32, -0.14],
+      [offsetCan + 0.2, 0.06],
+      [offsetCan + 0.04, 0.02],
+      [offsetCan - 0.15, -0.04],
+    ];
 
-          const u0 = (lon0 / (2 * Math.PI) + 0.5) * TW;
-          const v = Math.max(0, Math.min(TH - 1, ((0.5 - lat / Math.PI) * TH) | 0));
-
-          // 3D Fény-árnyék számítás: Diffúz + Környezeti + Spekuláris csillanás + Peremfény
-          const dot = nx * lx + ny * ly + nz * lz;
-          const diff = Math.max(0, dot);
-          const ambient = 0.38 + 0.62 * diff;
-
-          // Visszavert sugár a fényes bőrfelülethez (Specular Phong rz a kamera (0,0,1) felé)
-          const rz = 2 * dot * nz - lz;
-          const specDot = Math.max(0, rz);
-          const spec = Math.pow(specDot, 14) * 0.95;
-
-          // Finom peremfény (Rim light) a labda sziluettjén
-          const rim = Math.pow(1 - nz, 3) * 0.35;
-
-          const pxIndex = Math.round(centerY + y) * pixelSize + Math.round(centerX + x);
-
-          lut.push({
-            pxIndex,
-            u0,
-            v,
-            diffuse: ambient,
-            specular: spec,
-            rim,
-          });
-        }
-      }
-    }
-
-    const outputImgData = ctx.createImageData(pixelSize, pixelSize);
-    const outData = new Uint32Array(outputImgData.data.buffer);
-    const nPixels = lut.length;
+    // 4-Paneles ívelt mélyvarrások (Thermally-bonded aerodynamic panel seams)
+    const seam1: [number, number][] = [
+      [-0.8, 1.2],
+      [-0.4, 0.7],
+      [-0.05, 0.3],
+      [0.35, -0.1],
+      [0.6, -0.5],
+      [0.8, -1.2],
+    ];
+    const seam2: [number, number][] = [
+      [offsetMex - 0.8, 1.2],
+      [offsetMex - 0.4, 0.7],
+      [offsetMex - 0.05, 0.3],
+      [offsetMex + 0.35, -0.1],
+      [offsetMex + 0.6, -0.5],
+      [offsetMex + 0.8, -1.2],
+    ];
+    const seam3: [number, number][] = [
+      [offsetCan - 0.8, 1.2],
+      [offsetCan - 0.4, 0.7],
+      [offsetCan - 0.05, 0.3],
+      [offsetCan + 0.35, -0.1],
+      [offsetCan + 0.6, -0.5],
+      [offsetCan + 0.8, -1.2],
+    ];
 
     let animId: number;
     let rotationAngle = 0;
@@ -307,75 +273,250 @@ export const Logo: React.FC<LogoProps> = ({
       const dt = Math.min(64, now - lastTime);
       lastTime = now;
 
-      // Forgási sebesség szabályozás: Alap: ~16 mp / teljes 360 kör; Hover: enyhén gyorsabb; Click: szuperspin
-      let speed = 0.00038;
-      if (isSuperSpinning) speed = 0.0035;
-      else if (isHovered) speed = 0.00075;
+      // FORGÁSI SEBESSÉG: Ultra-lassú, elegáns és méltóságteljes (~45 mp / teljes 360° kör)
+      let speed = 0.00014; // Nyugodt, luxus 3D forgási sebesség
+      if (isSuperSpinning) speed = 0.0028;
+      else if (isHovered) speed = 0.00032;
 
       rotationAngle += speed * dt;
-      if (rotationAngle > 1000) rotationAngle = 0;
+      if (rotationAngle > Math.PI * 2) rotationAngle -= Math.PI * 2;
 
-      const thetaShift = (rotationAngle * TW) % TW;
+      const theta = rotationAngle;
 
-      // 1. Háttér törlése
-      outData.fill(0);
+      ctx.clearRect(0, 0, pixelSize, pixelSize);
 
-      // 2. 3D Gömb felületének pixel alapú renderelése (LUT-tal ~0.4ms)
-      for (let i = 0; i < nPixels; i++) {
-        const item = lut[i];
-        const u = ((item.u0 + thetaShift) % TW + TW) % TW | 0;
-        const v = item.v;
-
-        const srcCol = texData[v * TW + u];
-        const srcR = srcCol & 0xff;
-        const srcG = (srcCol >> 8) & 0xff;
-        const srcB = (srcCol >> 16) & 0xff;
-
-        // Fény-árnyék és csillanás szintézis
-        const light = item.diffuse;
-        const specVal = item.specular * 255;
-        const rimVal = item.rim * 255;
-
-        const r = Math.min(255, (srcR * light + specVal + rimVal) | 0);
-        const g = Math.min(255, (srcG * light + specVal + rimVal) | 0);
-        const b = Math.min(255, (srcB * light + specVal + rimVal * 1.2) | 0);
-
-        outData[item.pxIndex] = (255 << 24) | (b << 16) | (g << 8) | r;
-      }
-
-      ctx.putImageData(outputImgData, 0, 0);
-
-      // 3. Külső Prémium Arany/Smaragd Fénykoszorú (Orbital Tech Glow)
+      // ================= 1. KÜLSŐ ORBITÁLIS TECH GYŰRŰ =================
       ctx.save();
-      const orbitAngle = now * 0.001;
-
-      // Lágy külső árnyék és aura
-      const grad = ctx.createRadialGradient(centerX, centerY, R * 0.9, centerX, centerY, R * 1.22);
-      grad.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
-      grad.addColorStop(0.6, 'rgba(16, 185, 129, 0.15)');
-      grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
-      ctx.fillStyle = grad;
+      const orbitAngle = now * 0.0006;
+      // Arany & smaragd finom technológiai aura
+      const haloGrad = ctx.createRadialGradient(cx, cy, R * 0.88, cx, cy, R * 1.24);
+      haloGrad.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
+      haloGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.12)');
+      haloGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+      ctx.fillStyle = haloGrad;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, R * 1.22, 0, Math.PI * 2);
+      ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2);
       ctx.fill();
 
-      // Finom arany keringési ív
-      ctx.strokeStyle = isHovered ? '#FDE68A' : 'rgba(245, 158, 11, 0.45)';
+      // Arany és smaragd diszkrét keringési ívek
+      ctx.strokeStyle = isHovered ? '#FDE68A' : 'rgba(245, 158, 11, 0.5)';
       ctx.lineWidth = 1.2 * dpr;
-      ctx.setLineDash([8 * dpr, 6 * dpr]);
+      ctx.setLineDash([7 * dpr, 6 * dpr]);
       ctx.beginPath();
-      ctx.arc(centerX, centerY, R * 1.12, orbitAngle, orbitAngle + Math.PI * 1.3);
+      ctx.arc(cx, cy, R * 1.14, orbitAngle, orbitAngle + Math.PI * 1.2);
       ctx.stroke();
 
-      // Smaragd ellentétes ív
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
       ctx.lineWidth = 1 * dpr;
-      ctx.setLineDash([4 * dpr, 8 * dpr]);
+      ctx.setLineDash([4 * dpr, 7 * dpr]);
       ctx.beginPath();
-      ctx.arc(centerX, centerY, R * 1.12, -orbitAngle, -orbitAngle + Math.PI);
+      ctx.arc(cx, cy, R * 1.14, -orbitAngle, -orbitAngle + Math.PI * 0.9);
+      ctx.stroke();
+      ctx.restore();
+
+      // ================= 2. 3D SZFÉRA MASZK & ALAPTEST =================
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.clip(); // Minden gömbfelületre rajzolt elem borotvaélesen lekerekítve
+
+      // Bázis Gyöngyházfehér 3D Bőrgömb (fénypont a bal felső részben)
+      const lightX = cx - R * 0.32;
+      const lightY = cy - R * 0.35;
+      const ballBase = ctx.createRadialGradient(lightX, lightY, R * 0.08, cx, cy, R * 1.05);
+      ballBase.addColorStop(0, '#FFFFFF');
+      ballBase.addColorStop(0.4, '#F8FAFC');
+      ballBase.addColorStop(0.75, '#E2E8F0');
+      ballBase.addColorStop(0.95, '#94A3B8');
+      ballBase.addColorStop(1, '#475569');
+      ctx.fillStyle = ballBase;
+      ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+      // Finom mikro-domborítás (Hexagonális bőr textúra átlátszóan)
+      ctx.strokeStyle = 'rgba(203, 213, 225, 0.25)';
+      ctx.lineWidth = 0.6 * dpr;
+      const hexStep = 6 * dpr;
+      for (let x = cx - R; x < cx + R; x += hexStep) {
+        ctx.beginPath();
+        ctx.moveTo(x, cy - R);
+        ctx.lineTo(x, cy + R);
+        ctx.stroke();
+      }
+
+      // ================= 3. TRIONDA PRO 4-PANELES MÉLYVARRÁSOK =================
+      // Mély varrás-árnyék és domború világos perem
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Sötét belső varrás-árok
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.65)';
+      ctx.lineWidth = 2.2 * dpr;
+      drawSphericalPolyline(ctx, seam1, theta, R, cx, cy, cosT, sinT);
+      drawSphericalPolyline(ctx, seam2, theta, R, cx, cy, cosT, sinT);
+      drawSphericalPolyline(ctx, seam3, theta, R, cx, cy, cosT, sinT);
+
+      // Fényes varrás-perem kiemelés
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 0.9 * dpr;
+      drawSphericalPolyline(ctx, seam1, theta + 0.03, R, cx, cy, cosT, sinT);
+      drawSphericalPolyline(ctx, seam2, theta + 0.03, R, cx, cy, cosT, sinT);
+      drawSphericalPolyline(ctx, seam3, theta + 0.03, R, cx, cy, cosT, sinT);
+
+      // ================= 4. A 3 HITELES TRIONDA PRO HULLÁM =================
+
+      // A) 1. Hullám: USA KOBALT- ÉS ÉGSZÍNKÉK (Stars & Stripes dinamizmus)
+      if (drawSphericalPolygon(ctx, waveUSA, theta, R, cx, cy, cosT, sinT)) {
+        // Arany szegély (FIFA Trophy Gold)
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.stroke();
+
+        // Kék színátmenet
+        const usaGrad = ctx.createLinearGradient(cx - R * 0.4, cy - R * 0.2, cx + R * 0.4, cy + R * 0.2);
+        usaGrad.addColorStop(0, '#0F172A');
+        usaGrad.addColorStop(0.3, '#1D4ED8');
+        usaGrad.addColorStop(0.7, '#2563EB');
+        usaGrad.addColorStop(1, '#38BDF8');
+        ctx.fillStyle = usaGrad;
+        ctx.fill();
+
+        // Belső világoskék aerodinamikai betét
+        if (drawSphericalPolygon(ctx, innerUSA, theta, R, cx, cy, cosT, sinT)) {
+          ctx.fillStyle = 'rgba(224, 242, 254, 0.85)';
+          ctx.fill();
+        }
+
+        // Fehér csillag motívum a kék hullám szívében
+        const starPos = projectSphere(-0.05, 0.35, theta, R, cx, cy, cosT, sinT);
+        if (starPos.z > 0.1) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(starPos.x, starPos.y, 2.2 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // B) 2. Hullám: MEXIKÓ SMARAGD- ÉS JADEZÖLD (Aztec & Sierra Waves)
+      if (drawSphericalPolygon(ctx, waveMex, theta, R, cx, cy, cosT, sinT)) {
+        ctx.strokeStyle = '#FBBF24';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.stroke();
+
+        const mexGrad = ctx.createLinearGradient(cx - R * 0.3, cy + R * 0.3, cx + R * 0.3, cy - R * 0.3);
+        mexGrad.addColorStop(0, '#064E3B');
+        mexGrad.addColorStop(0.35, '#059669');
+        mexGrad.addColorStop(0.75, '#10B981');
+        mexGrad.addColorStop(1, '#34D399');
+        ctx.fillStyle = mexGrad;
+        ctx.fill();
+
+        if (drawSphericalPolygon(ctx, innerMex, theta, R, cx, cy, cosT, sinT)) {
+          ctx.fillStyle = 'rgba(209, 250, 229, 0.85)';
+          ctx.fill();
+        }
+      }
+
+      // C) 3. Hullám: KANADA RUBIN- ÉS SKARLÁTVÖRÖS (Crimson Maple Blades)
+      if (drawSphericalPolygon(ctx, waveCan, theta, R, cx, cy, cosT, sinT)) {
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.stroke();
+
+        const canGrad = ctx.createLinearGradient(cx + R * 0.4, cy - R * 0.2, cx - R * 0.4, cy + R * 0.2);
+        canGrad.addColorStop(0, '#881337');
+        canGrad.addColorStop(0.3, '#B91C1C');
+        canGrad.addColorStop(0.7, '#EF4444');
+        canGrad.addColorStop(1, '#F87171');
+        ctx.fillStyle = canGrad;
+        ctx.fill();
+
+        if (drawSphericalPolygon(ctx, innerCan, theta, R, cx, cy, cosT, sinT)) {
+          ctx.fillStyle = 'rgba(254, 226, 226, 0.85)';
+          ctx.fill();
+        }
+      }
+
+      // ================= 5. HIVATALOS MÁRKAJELZÉSEK (TRIONDA PRO WORLD CUP) =================
+
+      // A) 1. Panel: Hivatalos ADIDAS 3-Bar Logo & "TRIONDA PRO" felirat
+      const adidasPos = projectSphere(offsetMex * 0.5, 0.1, theta, R, cx, cy, cosT, sinT);
+      if (adidasPos.z > 0.15) {
+        ctx.save();
+        ctx.translate(adidasPos.x, adidasPos.y);
+        ctx.scale(adidasPos.z, adidasPos.z); // 3D perspektivikus méretcsökkenés
+
+        // Adidas 3 sáv
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-6 * dpr, -2 * dpr, 2.8 * dpr, 6 * dpr);
+        ctx.fillRect(-1.5 * dpr, -4 * dpr, 2.8 * dpr, 8 * dpr);
+        ctx.fillRect(3 * dpr, -6 * dpr, 2.8 * dpr, 10 * dpr);
+
+        // "TRIONDA" felirat
+        ctx.fillStyle = '#0F172A';
+        ctx.font = `900 ${Math.max(6, 6.5 * dpr)}px system-ui, -apple-system, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('TRIONDA', 0, 9 * dpr);
+
+        // "PRO" arany minőségi kapszula
+        ctx.fillStyle = '#D97706';
+        ctx.font = `bold ${Math.max(5, 5 * dpr)}px system-ui, sans-serif`;
+        ctx.fillText('PRO', 0, 15 * dpr);
+
+        ctx.restore();
+      }
+
+      // B) 2. Panel: "FIFA WORLD CUP 2026" Hivatalos Embléma
+      const fifaPos = projectSphere(offsetCan * 0.5, -0.08, theta, R, cx, cy, cosT, sinT);
+      if (fifaPos.z > 0.15) {
+        ctx.save();
+        ctx.translate(fifaPos.x, fifaPos.y);
+        ctx.scale(fifaPos.z, fifaPos.z);
+
+        // Arany trófea sziluett
+        ctx.fillStyle = '#D97706';
+        ctx.font = `900 ${Math.max(6, 7 * dpr)}px system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('2026', 0, -2 * dpr);
+
+        ctx.font = `bold ${Math.max(4.5, 5 * dpr)}px system-ui, sans-serif`;
+        ctx.fillStyle = '#1E293B';
+        ctx.fillText('WORLD CUP', 0, 4.5 * dpr);
+
+        ctx.fillStyle = '#D97706';
+        ctx.fillText('★ OFFICIAL ★', 0, 10.5 * dpr);
+
+        ctx.restore();
+      }
+
+      // ================= 6. 3D FÉNYEK, ÁRNYÉKOK & FÉNYTÜKRÖZŐDÉS =================
+
+      // A) Mélységi sötét árnyék az alsó-jobb féltekén
+      const shadowGrad = ctx.createRadialGradient(cx + R * 0.45, cy + R * 0.45, R * 0.2, cx, cy, R);
+      shadowGrad.addColorStop(0, 'rgba(15, 23, 42, 0)');
+      shadowGrad.addColorStop(0.65, 'rgba(15, 23, 42, 0.35)');
+      shadowGrad.addColorStop(1, 'rgba(2, 6, 23, 0.7)');
+      ctx.fillStyle = shadowGrad;
+      ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+      // B) Fő lágy fénytükröződés (Stadium floodlight specular highlight a bal felső peremen)
+      const specX = cx - R * 0.34;
+      const specY = cy - R * 0.36;
+      const specGrad = ctx.createRadialGradient(specX, specY, 0, specX, specY, R * 0.55);
+      specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+      specGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
+      specGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.08)');
+      specGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = specGrad;
+      ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+
+      // C) Finom peremfény (Rim light) a bal felső és alsó peremen
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1.2 * dpr;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R - 0.6 * dpr, Math.PI * 0.9, Math.PI * 1.6);
       ctx.stroke();
 
-      ctx.restore();
+      ctx.restore(); // 3D gömb maszk lezárása
 
       animId = requestAnimationFrame(render);
     };
@@ -391,7 +532,7 @@ export const Logo: React.FC<LogoProps> = ({
   const handleClick = () => {
     if (!interactive) return;
     setIsSuperSpinning(true);
-    setTimeout(() => setIsSuperSpinning(false), 1400);
+    setTimeout(() => setIsSuperSpinning(false), 1200);
   };
 
   return (
@@ -399,7 +540,7 @@ export const Logo: React.FC<LogoProps> = ({
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      title="FIFA 2026 Világbajnokság hivatalos meccslabda (adidas Trionda) • 3D forgatás"
+      title="FIFA 2026 Világbajnokság hivatalos meccslabda: adidas TRIONDA PRO • 3D forgatás"
       className={`relative inline-flex items-center justify-center select-none cursor-pointer transition-transform duration-300 ${
         isHovered ? 'scale-105' : 'scale-100'
       } ${className}`}
@@ -415,7 +556,7 @@ export const Logo: React.FC<LogoProps> = ({
           height: size,
           display: 'block',
         }}
-        className="rounded-full drop-shadow-[0_0_10px_rgba(245,158,11,0.4)]"
+        className="rounded-full drop-shadow-[0_0_12px_rgba(245,158,11,0.45)]"
       />
     </div>
   );
