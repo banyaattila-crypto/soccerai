@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.12.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Nemzetközi Bajnokságok Bővítése (Primeira Liga, Süper Lig, Jupiler Pro, MLS & Top Európa) & Kereszt-API Deduplikáció*  
+**Aktuális verzió:** 🏷️ **`v1.13.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *ScoreLab H2H, Csapat-összehasonlítás & Bivariáns Dixon-Coles Poisson Gólmátrix*  
 **Dátum:** 2026. október 19.  
-**Állapot:** ✅ **v1.12.0 Verzió Elkészült & Verifikálva (38/38 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.13.0 Verzió Elkészült & Verifikálva (45/45 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,7 +16,11 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.12.0`** kiadás jelentősen kibővíti az elérhető nemzetközi bajnokságok körét: a korábbi 5 nagy liga, a BL és az NB I mellett mostantól a portugál **Primeira Liga**, a belga **Jupiler Pro League**, a török **Süper Lig**, az osztrák **Tipico Bundesliga**, a svájci **Super League**, a skót **Premiership**, a lengyel **Ekstraklasa**, a görög **Super League 1** és az amerikai **MLS** is teljes mértékben elérhető valós adatokkal és Dixon-Coles Poisson modellezéssel, mindezt megbízható kereszt-API deduplikációval.
+A **`v1.13.0`** kiadás elhozza a részletes ScoreLab meccsanalitikai modulokat közvetlenül a meccs részletek felületére:
+1. **ScoreLab H2H & Csapat-összehasonlító Kártyák:** Forma- és momentum-index (utolsó 5 mérkőzés pontozása), dinamikus összehasonlító sávok ($xG$, támadóerő $\alpha$, védelmi stabilitás $\beta$), lőtt/kapott gólátlagok és egymás elleni találkozók mélyelemzése.
+2. **Bivariáns Dixon-Coles Poisson Gólmátrix (Heatmap):** 5x5-ös interaktív valószínűségi hőtérkép cellánkénti esélyekkel és fair szorzókkal ($1/p$), Top 6 legvalószínűbb pontos végeredmény érmes rangsorral és gólszám-intervallumokkal.
+3. **3-utas Fülválasztó a Meccs Részletekben:** `[📊 Áttekintés & Oddsok]`, `[⚔️ H2H & Csapatok]`, `[🎯 Poisson Mátrix]` modern, zökkenőmentes lapozó felülettel.
+4. **45 db Automatizált Vitest Egységteszt:** Teljes matematikai és statisztikai tesztlefedettség, 0 hiba, 0 figyelmeztetés.
 
 ### Fő Megvalósítások a v1.12.0-ban:
 

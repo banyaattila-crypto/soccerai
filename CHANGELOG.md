@@ -3,6 +3,25 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.13.0] - 2026-10-19
+
+### Hozzáadva (Added)
+- **ScoreLab Csapat-összehasonlító Kártya (`src/components/ScoreLabH2HCard.tsx`):**
+  - Forma- és momentum-index: Az utolsó 5 mérkőzés pontozása (W=3p, D=1p, L=0p, max 15p) és arányos vizualizációja.
+  - Kétoldalas dinamikus összehasonlító sávok: Várható gólok ($xG$), támadási hatékonyság ($\alpha$), védelmi stabilitás ($\beta$, alacsonyabb a kedvezőbb) és lőtt/kapott gólátlagok.
+  - Felső intelligens modell-összegző panel a legfőbb meccsdinamikai és előny-tényezőkkel.
+- **Részletes Egymás Elleni Történet (Head-to-Head):**
+  - Rögzített H2H találkozók esetén: Győzelmi mérleg (Hazai, Döntetlen, Vendég), átlagos H2H gólszám, mindkét csapat szerez gólt (BTTS) arány és a korábbi összecsapások eredményei kártyákon.
+  - Új vagy közvetlen múlt nélküli párosításoknál: Intelligens szimulált összecsapási elemzés a csapatok szezonbeli Dixon-Coles MLE paraméterei és aktuális formája alapján.
+- **Bivariáns Dixon-Coles Poisson Gólmátrix (`src/components/ScoreLabPoissonMatrix.tsx`):**
+  - Interaktív 5x5-ös pontos végeredmény valószínűségi hőtérkép cellánkénti esélyekkel és fair szorzókkal ($1/p$).
+  - Top 6 legvalószínűbb pontos végeredmény rangsor (pl. 🥇 1-1, 🥈 2-1, 🥉 1-0) kimeneteli színkódolással (1, X, 2).
+  - Gólszám-intervallum sávok (0-1 gól, 2-3 gól, 4+ gól) és 1X2 mátrix zónák összesítése.
+- **3-utas Fülválasztó a Meccs Részletekben (`src/components/MatchDetailModal.tsx`):**
+  - `[📊 Áttekintés & Oddsok]`, `[⚔️ H2H & Csapatok]`, `[🎯 Poisson Mátrix]` fülek az áttekinthető, modern navigációért.
+- **ScoreLab Szolgáltatás & 7 Új Egységteszt (`scoreLabService.ts`, `scoreLabService.test.ts`):**
+  - Összesen 45 db sikeres Vitest egységteszt, 100%-os matematikai stabilitás és 0 Oxlint hiba/figyelmeztetés.
+
 ## [1.12.0] - 2026-10-19
 
 ### Hozzáadva (Added)

@@ -13,8 +13,12 @@ import {
   Zap,
   Calendar,
   Clock,
+  Swords,
+  Grid3X3,
 } from 'lucide-react';
 import { resolveApiSportsFixtureId, fetchFixtureOdds } from '../services/apiSportsClient';
+import { ScoreLabH2HCard } from './ScoreLabH2HCard';
+import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
 
 interface MatchDetailModalProps {
   match: Match | null;
@@ -30,6 +34,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   betSlipItems,
 }) => {
   // 1. Hookok feltétel nélkül, mindig legfelül (React Rules of Hooks garancia)
+  const [activeTab, setActiveTab] = useState<'overview' | 'h2h' | 'matrix'>('overview');
   const [realOdds, setRealOdds] = useState<FixtureRealOdds | null>(match ? match.realOdds || null : null);
   const [loadingOdds, setLoadingOdds] = useState<boolean>(false);
   const [activeBookieTab, setActiveBookieTab] = useState<'pinnacle' | 'bet365' | 'best'>('pinnacle');
@@ -258,9 +263,60 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             </div>
           </div>
 
-          {/* AI Elemzői összefoglaló kártya */}
-          {match.aiPick && (
-            <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-[#0A101F] border border-amber-500/30 space-y-2">
+          {/* ScoreLab Navigációs Fülek */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-900/90 rounded-xl border border-slate-800 text-xs">
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className={`flex-1 py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'overview'
+                  ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Áttekintés &amp; Oddsok</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('h2h')}
+              className={`flex-1 py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'h2h'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Swords className="w-3.5 h-3.5" />
+              <span>H2H &amp; Csapatok</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('matrix')}
+              className={`flex-1 py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+                activeTab === 'matrix'
+                  ? 'bg-blue-600 text-white shadow-md font-black'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <Grid3X3 className="w-3.5 h-3.5" />
+              <span>Poisson Mátrix</span>
+            </button>
+          </div>
+
+          {/* Tab 2: H2H & Csapat-összehasonlítás */}
+          {activeTab === 'h2h' && <ScoreLabH2HCard match={match} />}
+
+          {/* Tab 3: Poisson Gólmátrix */}
+          {activeTab === 'matrix' && <ScoreLabPoissonMatrix match={match} />}
+
+          {/* Tab 1: Fő Áttekintés & Élő Oddsok */}
+          {activeTab === 'overview' && (
+            <>
+              {/* AI Elemzői összefoglaló kártya */}
+              {match.aiPick && (
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-[#0A101F] border border-amber-500/30 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider">
                   <Sparkles className="w-4 h-4" />
@@ -706,6 +762,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 </div>
               )}
             </div>
+          )}
+            </>
           )}
 
         </div>
