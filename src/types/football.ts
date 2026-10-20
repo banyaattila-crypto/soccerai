@@ -1,4 +1,10 @@
-export type MatchStatus = 'UPCOMING' | 'LIVE' | 'FINISHED';
+export type MatchStatus =
+  | 'UPCOMING'
+  | 'LIVE'
+  | 'FINISHED'
+  | 'POSTPONED'
+  | 'CANCELLED'
+  | 'SUSPENDED';
 
 export interface Team {
   id: string;
@@ -192,6 +198,9 @@ export interface BetSlipItem {
   bookmakerName?: string;
   oddsExpiresAt?: string;
   isExpired?: boolean;
+  matchStatus?: MatchStatus;
+  kickoffDate?: string;
+  kickoffTime?: string;
 }
 
 export type TrackedBetStatus = 'PENDING' | 'WON' | 'LOST' | 'VOID';

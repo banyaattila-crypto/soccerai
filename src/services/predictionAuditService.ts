@@ -99,7 +99,7 @@ export function saveAuditLog(records: PredictionAuditRecord[]): void {
       .sort((a, b) => b.kickoffTimestamp - a.kickoffTimestamp)
       .slice(0, MAX_AUDIT_RECORDS);
     localStorage.setItem(STORAGE_KEY_AUDIT_LOG, JSON.stringify(sorted));
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
       window.dispatchEvent(new Event('focitipp_audit_log_updated'));
     }
   } catch (err) {
@@ -419,4 +419,147 @@ export function exportAuditLogAsJson(): string {
     null,
     2
   );
+}
+
+export interface AuditImportResult {
+  success: boolean;
+  importedCount: number;
+  rejectedCount: number;
+  verifiedCount: number;
+  totalRecordsInLog: number;
+  message: string;
+  errors: string[];
+}
+
+/**
+ * Audit napló importálása JSON szövegből szigorú kriptográfiai és integritási ellenőrzéssel.
+ * Csak olyan rekordokat fogad el, amelyek rendelkeznek érvényes pre-kickoff tamper-evident ellenőrző aláírással (auditHash).
+ */
+export function importAuditLogFromJson(jsonStr: string): AuditImportResult {
+  try {
+    const parsed = JSON.parse(jsonStr);
+    const candidateRecords: PredictionAuditRecord[] = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray(parsed?.records)
+      ? parsed.records
+      : [];
+
+    if (candidateRecords.length === 0) {
+      return {
+        success: false,
+        importedCount: 0,
+        rejectedCount: 0,
+        verifiedCount: 0,
+        totalRecordsInLog: getAuditLog().length,
+        message: 'A megadott JSON nem tartalmaz auditált predikciós rekordokat.',
+        errors: ['A JSON fájl nem tartalmaz feldolgozható rekordokat.'],
+      };
+    }
+
+    const currentLog = getAuditLog();
+    const map = new Map<string, PredictionAuditRecord>();
+    for (const r of currentLog) {
+      map.set(r.id, r);
+    }
+
+    let importedCount = 0;
+    let rejectedCount = 0;
+    const errors: string[] = [];
+
+    for (const r of candidateRecords) {
+      // 1. Mezők alapszintű ellenőrzése
+      if (
+        !r.id ||
+        !r.matchId ||
+        !r.loggedAt ||
+        !r.kickoffDate ||
+        !r.kickoffTime ||
+        typeof r.kickoffTimestamp !== 'number' ||
+        !r.pick ||
+        !r.pick.market ||
+        typeof r.pick.odds !== 'number' ||
+        typeof r.pick.probability !== 'number' ||
+        !r.auditHash
+      ) {
+        rejectedCount++;
+        continue;
+      }
+
+      // 2. Kriptográfiai integritás ellenőrzése (Tamper-evident hash)
+      const expectedHash = computeRecordHash({
+        matchId: r.matchId,
+        kickoffTimestamp: r.kickoffTimestamp,
+        loggedAt: r.loggedAt,
+        market: r.pick.market,
+        probability: r.pick.probability,
+        odds: r.pick.odds,
+      });
+
+      if (expectedHash !== r.auditHash) {
+        console.warn(`Audit integritási hiba a ${r.id} rekordnál: az aláírás hamisított vagy sérült!`);
+        rejectedCount++;
+        errors.push(`Hamisított aláírás a meccsnél (${r.matchId}): érvénytelen hash.`);
+        continue;
+      }
+
+      // 3. Provenance ellenőrzés
+      if (r.provenance !== 'VERIFIED_PRE_MATCH') {
+        rejectedCount++;
+        errors.push(`Nem hitelesített pre-match rekord (${r.id}): provenance !== VERIFIED_PRE_MATCH.`);
+        continue;
+      }
+
+      // 4. Beszúrás vagy intelligens frissítés (ha meglévő pending, de importáltban lezárt eredmény van)
+      const existing = map.get(r.id);
+      if (!existing) {
+        map.set(r.id, r);
+        importedCount++;
+      } else if (!existing.settled && r.settled) {
+        map.set(r.id, {
+          ...existing,
+          settled: true,
+          settledAt: r.settledAt,
+          homeScore: r.homeScore,
+          awayScore: r.awayScore,
+          status: r.status,
+          profit: r.profit,
+          roi: r.roi,
+        });
+        importedCount++;
+      }
+    }
+
+    const merged = Array.from(map.values()).sort(
+      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
+    );
+
+    saveAuditLog(merged);
+
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new Event('focitipp_audit_log_updated'));
+    }
+
+    return {
+      success: importedCount > 0,
+      importedCount,
+      rejectedCount,
+      verifiedCount: importedCount,
+      totalRecordsInLog: merged.length,
+      message: `${importedCount} hitelesített rekord sikeresen importálva${
+        rejectedCount > 0 ? ` (${rejectedCount} érvénytelen/hamisított rekord elutasítva)` : ''
+      }.`,
+      errors,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Ismeretlen hiba';
+    return {
+      success: false,
+      importedCount: 0,
+      rejectedCount: 0,
+      verifiedCount: 0,
+      totalRecordsInLog: getAuditLog().length,
+      message: `Érvénytelen JSON formátum: ${msg}`,
+      errors: [`Érvénytelen JSON formátum: ${msg}`],
+    };
+  }
 }

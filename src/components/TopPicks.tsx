@@ -458,6 +458,9 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     bookmakerName: pick.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker,
                     oddsExpiresAt: pick.oddsExpiresAt,
                     isExpired: pick.isOddsExpired,
+                    matchStatus: match.status,
+                    kickoffDate: match.kickoffDate,
+                    kickoffTime: match.kickoffTime,
                   })
                 }
                 onSelectMatch={() => onSelectMatch(match)}
@@ -533,6 +536,9 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                           bookmakerName: p.bookmakerName || m.realOdds?.bestOdds.home?.bookmaker,
                           oddsExpiresAt: p.oddsExpiresAt,
                           isExpired: isExp,
+                          matchStatus: m.status,
+                          kickoffDate: m.kickoffDate,
+                          kickoffTime: m.kickoffTime,
                         });
                       }}
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold shrink-0 border transition-all cursor-pointer ${

@@ -12,6 +12,10 @@ import {
   FittedDixonColesModel,
   FinishedMatchResult,
 } from './dixonColesFitting';
+import {
+  checkFootballDataQuota,
+  recordFootballDataCall,
+} from './quotaService';
 
 interface FootballDataMatch {
   id: number;
@@ -102,12 +106,18 @@ export async function fetchLiveMatches(
   apiKey: string = '',
   forceRefresh: boolean = false
 ): Promise<Match[]> {
-  if (!forceRefresh) {
+  // 1. Gyorsítótár vagy kvótagyorsítótár ellenőrzése
+  const quota = checkFootballDataQuota();
+  if (!forceRefresh || quota.isRateLimited) {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { timestamp, data } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL_MS && Array.isArray(data) && data.length > 0) {
+        // Friss cache, VAGY aktív kvótakorlát miatti stale cache fallback
+        if ((Date.now() - timestamp < CACHE_TTL_MS || quota.isRateLimited) && Array.isArray(data) && data.length > 0) {
+          if (quota.isRateLimited) {
+            console.warn(`Football-Data kvótakorlát aktív (${quota.retryAfterSeconds}s), meglévő gyorsítótárazott adatok használata.`);
+          }
           return data;
         }
       }
@@ -137,6 +147,8 @@ export async function fetchLiveMatches(
       }
 
       const res = await fetch(url, { headers });
+      recordFootballDataCall(res.status, res.headers);
+
       if (res.ok) {
         rawData = await res.json();
         break;
@@ -149,6 +161,20 @@ export async function fetchLiveMatches(
   }
 
   if (!rawData || !Array.isArray(rawData.matches)) {
+    // Stale cache megmentő fallback: Ha hálózati vagy kvótahiba van, meglévő adatok megmentése
+    try {
+      const stale = localStorage.getItem(CACHE_KEY);
+      if (stale) {
+        const { data } = JSON.parse(stale);
+        if (Array.isArray(data) && data.length > 0) {
+          console.warn('API hiba, de a meglévő gyorsítótár megmentette az adatokat:', lastError?.message);
+          return data;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     throw new Error(
       lastError?.message || 'Nem sikerült lekérni a football-data.org adatokat.'
     );
@@ -211,6 +237,12 @@ export async function fetchLiveMatches(
       status = 'LIVE';
     } else if (m.status === 'FINISHED' || m.status === 'AWARDED') {
       status = 'FINISHED';
+    } else if (m.status === 'POSTPONED') {
+      status = 'POSTPONED';
+    } else if (m.status === 'CANCELLED') {
+      status = 'CANCELLED';
+    } else if (m.status === 'SUSPENDED') {
+      status = 'SUSPENDED';
     }
 
     const leagueModel = leagueModelsMap[compCode] || null;

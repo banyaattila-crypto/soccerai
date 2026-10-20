@@ -16,6 +16,10 @@ import {
   fitDixonColesModel,
   FinishedMatchResult,
 } from './dixonColesFitting';
+import {
+  checkApiSportsQuota,
+  recordApiSportsCall,
+} from './quotaService';
 
 export const API_SPORTS_DEFAULT_KEY = '';
 const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v2';
@@ -334,13 +338,17 @@ export async function fetchApiSportsMatches(
   // Elavult régebbi napok gyorsítótárának automatikus ürítése a kvótaszakadás megelőzésére
   pruneOldApiSportsCache(dateStr);
 
-  // 1. Gyorsítótár ellenőrzése (0 API hívás!)
-  if (!forceRefresh) {
+  // 1. Gyorsítótár vagy kvótavédelem ellenőrzése
+  const quota = checkApiSportsQuota();
+  if (!forceRefresh || quota.isRateLimited) {
     try {
       const cached = localStorage.getItem(cacheKeyWithDate);
       if (cached) {
         const { timestamp, data } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL_MS && Array.isArray(data) && data.length > 0) {
+        if ((Date.now() - timestamp < CACHE_TTL_MS || quota.isRateLimited) && Array.isArray(data) && data.length > 0) {
+          if (quota.isRateLimited) {
+            console.warn(`API-Sports kvótakorlát aktív (${quota.retryAfterSeconds}s), meglévő gyorsítótár használata.`);
+          }
           return data;
         }
       }
@@ -365,6 +373,11 @@ export async function fetchApiSportsMatches(
         headers['x-apisports-key'] = apiKey.trim();
       }
       const res = await fetch(url, { headers });
+      recordApiSportsCall(
+        res.status,
+        res.headers?.get ? res.headers.get('x-ratelimit-requests-remaining') || undefined : undefined,
+        res.headers?.get ? res.headers.get('x-ratelimit-requests-limit') || undefined : undefined
+      );
 
       if (res.ok) {
         const parsed: ApiSportsFixturesResponse = await res.json();
@@ -381,6 +394,20 @@ export async function fetchApiSportsMatches(
   }
 
   if (!rawData || !rawData.response) {
+    // Stale cache megmentő fallback
+    try {
+      const stale = localStorage.getItem(cacheKeyWithDate);
+      if (stale) {
+        const { data } = JSON.parse(stale);
+        if (Array.isArray(data) && data.length > 0) {
+          console.warn('API-Sports hiba, meglévő gyorsítótár megmentette az adatokat:', lastError?.message);
+          return data;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     console.warn('API-Sports meccsek lekérése sikertelen:', lastError?.message);
     return [];
   }
@@ -441,6 +468,12 @@ export async function fetchApiSportsMatches(
       status = 'LIVE';
     } else if (['FT', 'AET', 'PEN'].includes(statusShort)) {
       status = 'FINISHED';
+    } else if (['PST'].includes(statusShort)) {
+      status = 'POSTPONED';
+    } else if (['CANC', 'ABD'].includes(statusShort)) {
+      status = 'CANCELLED';
+    } else if (['SUSP', 'INT'].includes(statusShort)) {
+      status = 'SUSPENDED';
     }
 
     const homeTeamName = f.teams.home.name;
@@ -634,21 +667,22 @@ export async function fetchFixtureOdds(
   forceRefresh = false
 ): Promise<FixtureRealOdds | null> {
   const cacheKey = `${ODDS_CACHE_PREFIX}${fixtureId}`;
+  const quota = checkApiSportsQuota();
 
-  // 1. Gyorsítótár ellenőrzése (0 API hívás!)
-  if (!forceRefresh) {
+  // 1. Gyorsítótár vagy kvótavédelem ellenőrzése (0 API hívás!)
+  if (!forceRefresh || quota.isRateLimited) {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const { timestamp, data } = JSON.parse(cached);
         const age = Date.now() - (typeof timestamp === 'number' ? timestamp : 0);
-        if (age < ODDS_CACHE_TTL_MS && data) {
+        if ((age < ODDS_CACHE_TTL_MS || quota.isRateLimited) && data) {
           const remainingMinutes = Math.max(0, Math.floor((ODDS_CACHE_TTL_MS - age) / 60000));
           return {
             ...data,
             expiresAt: new Date(timestamp + ODDS_CACHE_TTL_MS).toISOString(),
             ttlMinutes: remainingMinutes,
-            isExpired: false,
+            isExpired: age >= ODDS_CACHE_TTL_MS,
           };
         }
       }
@@ -673,6 +707,11 @@ export async function fetchFixtureOdds(
         headers['x-apisports-key'] = apiKey.trim();
       }
       const res = await fetch(url, { headers });
+      recordApiSportsCall(
+        res.status,
+        res.headers?.get ? res.headers.get('x-ratelimit-requests-remaining') || undefined : undefined,
+        res.headers?.get ? res.headers.get('x-ratelimit-requests-limit') || undefined : undefined
+      );
 
       if (res.ok) {
         const parsed: ApiSportsOddsResponse = await res.json();
@@ -689,6 +728,11 @@ export async function fetchFixtureOdds(
   }
 
   if (!rawData || !rawData.response || rawData.response.length === 0) {
+    // Stale fallback meglévő gyorsítótárból
+    const fallback = getCachedFixtureOdds(fixtureId);
+    if (fallback) {
+      return fallback;
+    }
     console.warn(`Nem található bukmékeri odds a ${fixtureId} meccshez:`, lastError?.message);
     return null;
   }

@@ -13,6 +13,7 @@ import {
   Clock,
   Lock,
   Download,
+  Upload,
   AlertTriangle,
   Info,
   Check,
@@ -22,6 +23,7 @@ import {
   getAuditLog,
   getVerifiedAuditStats,
   exportAuditLogAsJson,
+  importAuditLogFromJson,
   AUDIT_BASE_STAKE,
 } from '../services/predictionAuditService';
 import { getArchivedFinishedMatches } from '../services/historyService';
@@ -49,6 +51,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'YESTERDAY' | 'WEEK'>('ALL');
   const [auditLogUpdateKey, setAuditLogUpdateKey] = useState<number>(0);
   const [copiedJson, setCopiedJson] = useState<boolean>(false);
+  const [importNotice, setImportNotice] = useState<{ text: string; error?: boolean } | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const todayStr = useMemo(() => getRelativeDateStr(0), []);
   const yesterdayStr = useMemo(() => getRelativeDateStr(-1), []);
@@ -195,6 +199,32 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
     setTimeout(() => setCopiedJson(false), 2000);
   };
 
+  // JSON importálása fájlból
+  const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const content = evt.target?.result as string;
+      const res = importAuditLogFromJson(content);
+      if (res.success) {
+        setImportNotice({
+          text: `Audit napló sikeresen importálva: ${res.importedCount} rekord feldolgozva (${res.verifiedCount} hitelesített pre-match rekord).`,
+          error: false,
+        });
+        setAuditLogUpdateKey((prev) => prev + 1);
+      } else {
+        setImportNotice({
+          text: `Import sikertelen: ${res.errors.join('; ') || 'Érvénytelen audit napló formátum.'}`,
+          error: true,
+        });
+      }
+      setTimeout(() => setImportNotice(null), 6000);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <div className="py-8 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -216,6 +246,21 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
             </div>
 
             <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImportJson}
+                accept=".json"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Audit napló importálása JSON fájlból kriptográfiai ellenőrzéssel"
+              >
+                <Upload className="w-3.5 h-3.5 text-blue-400" />
+                <span>Audit Import</span>
+              </button>
               <button
                 onClick={handleCopyJson}
                 className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -234,6 +279,25 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
               </button>
             </div>
           </div>
+
+          {/* Import visszajelzés banner */}
+          {importNotice && (
+            <div
+              className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 animate-fade-in ${
+                importNotice.error
+                  ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                  : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+              }`}
+            >
+              <span>{importNotice.text}</span>
+              <button
+                onClick={() => setImportNotice(null)}
+                className="text-slate-400 hover:text-white px-1.5 py-0.5 rounded"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* Fülválasztó: Hitelesített Pre-Match vs Nem Auditált Előzmények */}
           <div className="flex border-b border-slate-800 gap-2">

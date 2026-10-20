@@ -534,6 +534,9 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       bookmakerName: !isSim ? bookie : undefined,
       oddsExpiresAt: match.aiPick?.oddsExpiresAt,
       isExpired: isExp,
+      matchStatus: match.status,
+      kickoffDate: match.kickoffDate,
+      kickoffTime: match.kickoffTime,
     });
   };
 

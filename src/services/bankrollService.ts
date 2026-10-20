@@ -456,19 +456,104 @@ export function exportBetsToJson(): string {
 }
 
 /**
- * Tétnapló importálása JSON szövegből
+ * Tétnapló importálása JSON szövegből (szigorú séma-ellenőrzéssel és formátumtámogatással)
  */
 export function importBetsFromJson(jsonStr: string): boolean {
   try {
     const parsed = JSON.parse(jsonStr);
-    if (parsed && Array.isArray(parsed.bets)) {
-      saveTrackedBets(parsed.bets);
-      if (typeof parsed.initialBankroll === 'number' && parsed.initialBankroll > 0) {
-        setInitialBankroll(parsed.initialBankroll);
+    if (!parsed) return false;
+
+    // Támogatjuk mind a becsomagolt objektumot { bets: [...], initialBankroll?: number }, mind a közvetlen tömböt [...]
+    let rawBets: any[] = [];
+    let initialBankroll: number | undefined;
+
+    if (Array.isArray(parsed)) {
+      rawBets = parsed;
+    } else if (typeof parsed === 'object') {
+      if (Array.isArray(parsed.bets)) {
+        rawBets = parsed.bets;
       }
-      return true;
+      if (typeof parsed.initialBankroll === 'number' && parsed.initialBankroll > 0) {
+        initialBankroll = parsed.initialBankroll;
+      }
     }
-    return false;
+
+    if (!Array.isArray(rawBets) || rawBets.length === 0) {
+      return false;
+    }
+
+    // Szigorú séma validáció minden szelvényre
+    const validStatuses: TrackedBetStatus[] = ['PENDING', 'WON', 'LOST', 'VOID'];
+    const validatedBets: TrackedBet[] = [];
+
+    for (const b of rawBets) {
+      if (!b || typeof b !== 'object') continue;
+      if (typeof b.id !== 'string' || !b.id.trim()) continue;
+      if (typeof b.createdAt !== 'string' || !b.createdAt.trim()) continue;
+      if (!validStatuses.includes(b.status)) continue;
+      if (typeof b.stake !== 'number' || isNaN(b.stake) || b.stake <= 0) continue;
+      if (typeof b.totalOdds !== 'number' || isNaN(b.totalOdds) || b.totalOdds < 1.0) continue;
+      if (typeof b.potentialWin !== 'number' || isNaN(b.potentialWin) || b.potentialWin < 0) continue;
+      if (!Array.isArray(b.items) || b.items.length === 0) continue;
+
+      let itemsValid = true;
+      const validItems: any[] = [];
+      for (const it of b.items) {
+        if (!it || typeof it !== 'object') {
+          itemsValid = false;
+          break;
+        }
+        if (typeof it.matchId !== 'string' || !it.matchId) {
+          itemsValid = false;
+          break;
+        }
+        if (typeof it.marketLabel !== 'string' || !it.marketLabel) {
+          itemsValid = false;
+          break;
+        }
+        if (typeof it.odds !== 'number' || isNaN(it.odds) || it.odds < 1.0) {
+          itemsValid = false;
+          break;
+        }
+        validItems.push({
+          matchId: it.matchId,
+          matchTitle: typeof it.matchTitle === 'string' ? it.matchTitle : 'Mérkőzés',
+          market: it.market,
+          marketLabel: it.marketLabel,
+          odds: it.odds,
+          probability: typeof it.probability === 'number' ? it.probability : 50,
+          quarterKellyPct: typeof it.quarterKellyPct === 'number' ? it.quarterKellyPct : undefined,
+          isWon: typeof it.isWon === 'boolean' ? it.isWon : undefined,
+          homeScore: typeof it.homeScore === 'number' ? it.homeScore : undefined,
+          awayScore: typeof it.awayScore === 'number' ? it.awayScore : undefined,
+        });
+      }
+
+      if (!itemsValid || validItems.length === 0) continue;
+
+      validatedBets.push({
+        id: b.id,
+        createdAt: b.createdAt,
+        stake: b.stake,
+        totalOdds: b.totalOdds,
+        potentialWin: b.potentialWin,
+        status: b.status,
+        notes: typeof b.notes === 'string' ? b.notes : undefined,
+        items: validItems,
+        netProfit: typeof b.netProfit === 'number' ? b.netProfit : undefined,
+        settledAt: typeof b.settledAt === 'string' ? b.settledAt : undefined,
+      });
+    }
+
+    if (validatedBets.length === 0) {
+      return false;
+    }
+
+    saveTrackedBets(validatedBets);
+    if (initialBankroll && initialBankroll > 0) {
+      setInitialBankroll(initialBankroll);
+    }
+    return true;
   } catch (e) {
     console.error('Érvénytelen JSON import:', e);
     return false;

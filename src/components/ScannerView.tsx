@@ -521,6 +521,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                             bookmakerName: opp.bookmakerName,
                             oddsExpiresAt: opp.expiresAt,
                             isExpired: opp.isExpired,
+                            matchStatus: opp.match.status,
+                            kickoffDate: opp.match.kickoffDate,
+                            kickoffTime: opp.match.kickoffTime,
                           });
                         }}
                         className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${

@@ -275,8 +275,31 @@ export function App() {
     loadMatches(newSource, newKey, sKey, sEnabled, true);
   };
 
-  // Szelvényhez adás (duplikáció szűréssel)
+  // Szelvényhez adás (duplikáció és integritás-szűréssel: nem vehetők fel lezárt vagy elkezdődött meccsek)
   const handleAddToBetSlip = (item: BetSlipItem) => {
+    if (
+      item.matchStatus === 'FINISHED' ||
+      item.matchStatus === 'LIVE' ||
+      item.matchStatus === 'POSTPONED' ||
+      item.matchStatus === 'CANCELLED' ||
+      item.matchStatus === 'SUSPENDED'
+    ) {
+      setApiErrorNotice(
+        `A mérkőzés állapota (${item.matchStatus}) miatt már nem adható a szelvényhez.`
+      );
+      return;
+    }
+    if (item.kickoffDate) {
+      const kickoffTime = item.kickoffTime || '00:00';
+      const kickoffMs = new Date(`${item.kickoffDate}T${kickoffTime}:00`).getTime();
+      if (!isNaN(kickoffMs) && kickoffMs <= Date.now()) {
+        setApiErrorNotice(
+          'A mérkőzés már elkezdődött, a szelvényre kizárólag pre-match események vehetők fel.'
+        );
+        return;
+      }
+    }
+
     setBetSlipItems((prev) => {
       const exists = prev.some(
         (i) => i.matchId === item.matchId && i.marketLabel === item.marketLabel
@@ -294,9 +317,61 @@ export function App() {
     setBetSlipItems((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleRemoveInvalidBetSlipItems = () => {
+    setBetSlipItems((prev) => {
+      return prev.filter((item) => {
+        if (
+          item.matchStatus === 'FINISHED' ||
+          item.matchStatus === 'LIVE' ||
+          item.matchStatus === 'POSTPONED' ||
+          item.matchStatus === 'CANCELLED' ||
+          item.matchStatus === 'SUSPENDED'
+        ) {
+          return false;
+        }
+        if (item.kickoffDate) {
+          const kickoffTime = item.kickoffTime || '00:00';
+          const kickoffMs = new Date(`${item.kickoffDate}T${kickoffTime}:00`).getTime();
+          if (!isNaN(kickoffMs) && kickoffMs <= Date.now()) {
+            return false;
+          }
+        }
+        return true;
+      });
+    });
+  };
+
   const handleClearBetSlip = () => {
     setBetSlipItems([]);
   };
+
+  // Szinkronizáció a meccsek friss állapotával (élővé válás, befejezés, halasztás)
+  useEffect(() => {
+    if (betSlipItems.length === 0 || matches.length === 0) return;
+    const matchMap = new Map(matches.map((m) => [m.id, m]));
+    let changed = false;
+    const updated = betSlipItems.map((item) => {
+      const liveMatch = matchMap.get(item.matchId);
+      if (!liveMatch) return item;
+      if (
+        item.matchStatus !== liveMatch.status ||
+        item.kickoffDate !== liveMatch.kickoffDate ||
+        item.kickoffTime !== liveMatch.kickoffTime
+      ) {
+        changed = true;
+        return {
+          ...item,
+          matchStatus: liveMatch.status,
+          kickoffDate: liveMatch.kickoffDate,
+          kickoffTime: liveMatch.kickoffTime,
+        };
+      }
+      return item;
+    });
+    if (changed) {
+      setBetSlipItems(updated);
+    }
+  }, [matches, betSlipItems]);
 
   // Bankroll állapotkezelés
   const [currentBankroll, setCurrentBankroll] = useState<number>(() => {
@@ -569,6 +644,7 @@ export function App() {
         items={betSlipItems}
         onRemoveItem={handleRemoveBetSlipItem}
         onClearAll={handleClearBetSlip}
+        onRemoveInvalid={handleRemoveInvalidBetSlipItems}
         onSaveToTracker={handleSaveToTracker}
         onOpenBankroll={() => {
           updateBankrollState();

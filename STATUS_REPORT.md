@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.19.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem*  
+**Aktuális verzió:** 🏷️ **`v1.20.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Kvóta-, Státusz- és Szelvény Integritás Stabilizáció*  
 **Dátum:** 2026. október 20.  
-**Állapot:** ✅ **v1.19.0 Verzió Elkészült & Verifikálva (123/123 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.20.0 Verzió Elkészült & Verifikálva (135/135 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,22 +16,32 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.19.0`** kiadás újdonságai és fejlesztései:
-1. **Valós Bukméker Oddsok (Pinnacle & Bet365) és Lejárat (TTL) Bekötése:**
-   - **Minden Ajánlási Nézet Lefedve:** A valós bukmékeri szorzók közvetlenül bekötve a `TopPicks` (3D kártya és szekunder szignálok), `ScannerView` (lehetőségek és szűrők), `StatsGrid` (rács cellák és szelvény gombok), `BetSlipDrawer` (szelvény és tétnapló), valamint a `MatchDetailModal` (részletes elemző nézet) felületekbe.
-   - **60 Perces Lejárati Idő (TTL) & Frissesség:** A gyorsítótárazott oddsok pontos lejárati idővel (`expiresAt`), hátralévő percekkel (`ttlMinutes`) és lejárati flaggel (`isExpired`) rendelkeznek. A felületeken valós idejű lejárati pill (`🏢 Pinnacle ⏳ 45p`) jelzi a piaci adat korát.
-   - **Lejárt Odds Kezelés:** Ha a bukmékeri odds lejár (>= 60 perc), a rendszer automatikusan megjelöli (`🔴 Lejárt odds`), a szorzót áthúzva jelzi, és azonnal zárolja a piaci él számítást az újrafrissítésig.
-2. **Szimulált Árak Védelme & Value/Kelly Letiltása:**
-   - **Szigorú Value (+EV%) és Kelly Zárolás:** Szimulált árképzés esetén (`isSimulatedOdds === true`, hiányzó bukmékeri szorzó vagy lejárt odds) a Value (+EV%) és a Negyed-Kelly tét kijelzése szigorúan **le van tiltva és 0.0%-ra állítva**.
-   - **Megtévesztés Kizárása:** Megszűnt az önigazoló arbitrázs illúziója (amikor a modell a saját szintetikus árrésével számolt ki pozitív EV-t). A szimulált tippeken és lehetőségeken egyértelmű jelölés látható: `🧪 Szimulált ár (Value / Kelly letiltva)`.
-3. **Scanner Valós Odds Szűrés & Preset Szigorítás:**
-   - **„Csak Valós Oddsok” Kapcsoló:** Új szűrőgomb a Scanner vezérlősávjában, amely egyetlen kattintással kizárja az összes szimulált vagy lejárt piacot.
-   - **Megbízható `best_ev` Preset:** A „Legjobb Érték (+EV)” preset immár kizárólag érvényes, nem lejárt, valós bukmékeri oddsokból származó pozitív éleket listáz.
-4. **11 Új Dedikált Regressziós Teszt (`realOddsExpirationRegression.test.ts`):**
-   - Teszteli a 60 perces lejárati TTL számítást, a lejárat detektálást, az `attachCachedRealOddsToMatches` viselkedését, a `predictionEngine` szimulált ár zárolását, valamint a `scannerService` szűrési garanciáit.
-   - A projekt teljes tesztkészlete **123/123 sikeres teszttel** (100% pass) fut le.
+A **`v1.20.0`** kiadás újdonságai és fejlesztései (Négy Fő Pillér):
+1. **API Kvóta & Rate Limit Védelem (`quotaService.ts`):**
+   - **Csúszóablakos Ráta-korlátozás (Sliding Window):** Football-Data.org hívások követése pontos percenkénti csúszóablakkal (10 req/min). A 11. hívás blokkolásra kerül dinamikus `retryAfterSeconds` visszaszámlálóval.
+   - **Napi Limit Menedzsment (API-Sports):** API-Sports napi 100 kéréskeretének automatikus számlálása és perzisztálása; válaszfejlécek (`x-ratelimit-requests-remaining`) szinkronizálása.
+   - **Intelligens 429 Backoff:** HTTP 429 válasz esetén automatikus pihenőidő (Retry-After fejléc vagy 60s) aktiválása mindkét külső szolgáltatónál.
+   - **Megmentő Gyorsítótár (Stale Cache Fallback):** Hálózati vagy kvótahiba esetén a rendszer nem üríti ki a képernyőt (`[]`), hanem a legfrissebb érvényes mérkőzéseket jeleníti meg barátságos figyelmeztető sáv kíséretében.
+2. **Mérkőzés Státuszok Stabilizálása:**
+   - **Pontos Állapot Leképezés (`POSTPONED`, `CANCELLED`, `SUSPENDED`):** Bővített `MatchStatus` típus. A korábban hibásan `UPCOMING`-ra visszahulló elmaradt/félbeszakadt mérkőzések a valós státuszukkal jelennek meg.
+   - **Fogadási Zárolás:** Elhalasztott, törölt, élő vagy befejezett meccsekre a szelvényhez adás azonnal tiltott.
+3. **Megmásíthatatlan Audit Napló & Tétnapló Import:**
+   - **Kriptográfiai SHA-256 Integritás-ellenőrzés (`predictionAuditService.ts`):** Új `importAuditLogFromJson` funkció, amely importáláskor matematikai hash-ellenőrzéssel (`auditHash`) vizsgálja meg minden rekord hitelességét. Az utólag módosított oddsokat vagy valószínűségeket a rendszer azonnal elutasítja.
+   - **Audit Import Gomb a Felületen (`ResultsView.tsx`):** Egykattintásos JSON feltöltés, állapot-visszajelzés és a hitelesített rekordok azonnali beolvasása.
+   - **Szigorú Séma-validáció a Tétnaplóban (`bankrollService.ts`):** Mind a becsomagolt formátum (`{ bets: [...], initialBankroll: ... }`), mind a közvetlen tömb (`[...]`) támogatott szigorú értéktartomány ellenőrzéssel (pozitív tét, odds >= 1.0, érvényes kimenetelek).
+4. **Szelvény Integritás & Automatikus Tisztítás (`BetSlipDrawer.tsx`, `App.tsx`):**
+   - **Élő Állapot Szinkronizáció:** A háttérben frissülő meccsadatok automatikusan aktualizálják a szelvényen lévő tételeket (`matchStatus`, `kickoffDate`, `kickoffTime`).
+   - **Elkezdődött/Lezárt Meccsek Figyelmeztetése:** Piros kerettel és egyértelmű okkal (`⚠️ A mérkőzés már befejeződött`, `⚠️ A mérkőzés éppen zajlik`, `⚠️ A mérkőzés már elkezdődött`) jelöli az érvénytelen tételeket.
+   - **Tisztító Gomb:** Új „🧹 Tisztítás / Érvénytelenek eltávolítása” funkció, amely egyetlen gombnyomással törli az időközben érvénytelenné vált tételeket.
+   - **Mentésvédelem:** A „Rögzítés Tétnaplóba” gomb zárolva van mindaddig, amíg érvénytelen esemény található a szelvényen.
+5. **12 Új Dedikált Regressziós Teszt (`quotaAndIntegrityRegression.test.ts`):**
+   - Teszteli a csúszóablakos kvótát, napi korlátot, 429 backoff-ot, kriptográfiai hash-ellenőrzést, szigorú tétnapló importot, és a szelvény érvénytelenítési logikát.
+   - A teljes tesztkészlet **135/135 sikeres teszttel** (100% pass) fut le.
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.19.0 — Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem:**
+  - Élő Pinnacle és Bet365 oddsok közvetlen bekötése, 60 perces lejárati idő (TTL), szimulált árak esetén Value (+EV%) és Kelly-tét letiltása (123/123 zöld teszt).
 
 * **v1.18.0 — Egységesített Modellképlet & Numerikus Invariánsok Regressziója:**
   - Kanonikus `computeDixonColesExpectedGoals`, közös nemnegatív `dixonColesTau`, Hare-Niemeyer legnagyobb maradvány 100% normalizáció, Fréchet határok és 48 invariáns teszt (112/112 zöld teszt).
@@ -108,10 +118,10 @@ A **`v1.19.0`** kiadás újdonságai és fejlesztései:
 
 ```
 /home/attila/projects/soccerai/
-├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.16.3)
-├── CHANGELOG.md                     <-- Részletes verziótörténet v1.16.3 leírással
+├── STATUS_REPORT.md                 <-- Aktuális projekt státusz jelentés (v1.20.0)
+├── CHANGELOG.md                     <-- Részletes verziótörténet v1.20.0 leírással
 ├── README.md                        <-- Fő bemutató dokumentáció
-├── package.json                     <-- v1.16.3 verzió, vitest teszt script
+├── package.json                     <-- v1.20.0 verzió, vitest teszt script
 ├── vite.config.ts                   <-- Vite 8 + Tailwind v4 + Dev Proxy
 ├── tsconfig.json                    <-- Szigorú TypeScript konfiguráció
 ├── index.html                       <-- Belépési pont PWA meta címkékkel
@@ -124,21 +134,27 @@ A **`v1.19.0`** kiadás újdonságai és fejlesztései:
 │   └── apisports.ts                 <-- API-Sports Vercel proxy & Edge cache
 └── src/
     ├── main.tsx                     <-- React belépési pont + Service Worker
-    ├── version.ts                   <-- v1.16.3 verziókonstansok és kiadási kiemelések
-    ├── App.tsx                      <-- Dashboard navigáció, Élő kapszula, Deduplikáció, Valós API garancia
+    ├── version.ts                   <-- v1.20.0 verziókonstansok és kiadási kiemelések
+    ├── App.tsx                      <-- Dashboard navigáció, Élő kapszula, Deduplikáció, Valós API garancia, Szelvény szinkron
     ├── types/
-    │   └── football.ts              <-- PickMarket union, TrackedBet, Match, League
+    │   └── football.ts              <-- PickMarket, TrackedBet, Match, League, MatchStatus (POSTPONED, CANCELLED, SUSPENDED)
     ├── services/
+    │   ├── quotaService.ts          <-- Centralizált kvóta- és kérésszám menedzser (Sliding window & Backoff)
     │   ├── betEvaluation.ts         <-- Egzakt matematikai piac-kiértékelő modul
     │   ├── dixonColesFitting.ts     <-- Dixon-Coles MLE paraméter-illesztés + Európai club priorok
     │   ├── historyService.ts        <-- Kvótavédett mérkőzésarchívum (max 150)
-    │   ├── bankrollService.ts       <-- Bankroll menedzsment, perzisztencia, auto-settle
+    │   ├── bankrollService.ts       <-- Bankroll menedzsment, perzisztencia, auto-settle, szigorú JSON import
+    │   ├── predictionAuditService.ts <-- Megmásíthatatlan pre-match audit napló & SHA-256 tamper-evident import
     │   ├── predictionEngine.ts      <-- Dixon-Coles, Shin de-vig, λ-rács, Kelly
     │   ├── scoreLabService.ts       <-- 5x5 Poisson mátrix, H2H kalkuláció és formaindex
     │   ├── scannerService.ts        <-- Kvantitatív értékkereső, +EV piacok, időszak-szűrés, liga radar
-    │   ├── footballDataApi.ts       <-- Football-Data.org API kliens (CL, EL, EC, 0 extra hívás, kvótavédelem)
-    │   ├── apiSportsClient.ts       <-- API-Sports kliens (UCL 2, UEL 3, UECL 848)
-    │   └── __tests__/               <-- 55 db Vitest egységteszt (6 tesztcsomag)
+    │   ├── footballDataApi.ts       <-- Football-Data.org API kliens (kvótavédelem, stale cache mentés)
+    │   ├── apiSportsClient.ts       <-- API-Sports kliens (kvótavédelem, stale cache mentés)
+    │   └── __tests__/               <-- 135 db Vitest egységteszt (10 tesztcsomag)
+    │       ├── quotaAndIntegrityRegression.test.ts
+    │       ├── realOddsExpirationRegression.test.ts
+    │       ├── modelInvariantsRegression.test.ts
+    │       ├── predictionAuditService.test.ts
     │       ├── betEvaluation.test.ts
     │       ├── predictionEngine.test.ts
     │       ├── bankrollService.test.ts
@@ -148,7 +164,7 @@ A **`v1.19.0`** kiadás újdonságai és fejlesztései:
     └── components/
         ├── ThreeDBall.tsx           <-- 3D interaktív forgó futball-labda komponens
         ├── BankrollView.tsx         <-- Tétnapló, KPI kártyák, szelvények (Lazy loaded)
-        ├── BetSlipDrawer.tsx        <-- Szelvényépítő korreláció-figyelmeztetéssel
+        ├── BetSlipDrawer.tsx        <-- Szelvényépítő érvénytelen meccs szűréssel és tisztító gombbal
         ├── Header.tsx               <-- Navigáció, élő kapszula pulzáló jelvény
         ├── HeroKpi.tsx              <-- Fő KPI sáv, 3D labda, dinamikus mutatók
         ├── StatsGrid.tsx            <-- Mérkőzésrács, kupa- és bajnokságszűrő, „Csak Élő”
@@ -156,10 +172,10 @@ A **`v1.19.0`** kiadás újdonságai és fejlesztései:
         ├── ScannerView.tsx          <-- Kvantitatív Értékkereső, Időszak- és Státuszválasztó, Bajnokság Radar
         ├── ScoreLabH2HCard.tsx      <-- Csapat-összehasonlítás, momentum és H2H mérleg
         ├── ScoreLabPoissonMatrix.tsx <-- 5x5 interaktív Dixon-Coles hőtérkép & Top 6
-        ├── ResultsView.tsx          <-- Eredmények, piaconkénti ROI és archívum (Lazy loaded)
+        ├── ResultsView.tsx          <-- Eredmények, audit napló importálás és archívum (Lazy loaded)
         ├── MethodologyView.tsx      <-- Módszertan és matematikai modellek (Lazy loaded)
         ├── MatchDetailModal.tsx     <-- Kvantitatív elemzés, 3-utas ScoreLab fülkezelés
-        ├── AboutModal.tsx           <-- Névjegy, v1.16.3 infók (Lazy loaded)
+        ├── AboutModal.tsx           <-- Névjegy, v1.20.0 infók (Lazy loaded)
         └── SettingsModal.tsx        <-- Beállítások, kupa jelvények (Lazy loaded)
 ```
 
@@ -169,9 +185,9 @@ A **`v1.19.0`** kiadás újdonságai és fejlesztései:
 
 * 🌐 **Éles Weboldal:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)
 * 🐙 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)
-* 🏷️ **Célzott Git Tag:** `v1.16.3`
+* 🏷️ **Célzott Git Tag:** `v1.20.0`
 * 💻 **Helyi Fejlesztői Környezet:** `http://localhost:3000` (`npm run dev`)
-* 🧪 **Egységtesztek:** `npm test` &bull; **55/55 teszt sikeres** (Vitest 5.0.5, 6 tesztcsomag)
+* 🧪 **Egységtesztek:** `npm test` &bull; **135/135 teszt sikeres** (Vitest 5.0.5, 10 tesztcsomag)
 * 🧹 **Kódminőség:** `oxlint` 0 hiba, 0 figyelmeztetés | `tsc -b && vite build` 0 hiba, hibátlan build.
 
 ---

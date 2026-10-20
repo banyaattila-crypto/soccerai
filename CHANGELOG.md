@@ -3,6 +3,29 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.20.0] - 2026-10-20
+
+### Hozzáadva & Rendszer-stabilizáció (Added & System Stabilization)
+- **API Kvóta & Kérésszám Védelem (`src/services/quotaService.ts`):**
+  - **Csúszóablakos Ráta-korlátozás (Sliding Window):** Football-Data.org hívások követése pontos percenkénti csúszóablakkal (10 req/min). A 11. hívás blokkolásra kerül dinamikus `retryAfterSeconds` visszaszámlálóval.
+  - **Napi Limit Menedzsment (API-Sports):** API-Sports napi 100 kéréskeretének automatikus számlálása és perzisztálása; válaszfejlécek (`x-ratelimit-requests-remaining`) szinkronizálása.
+  - **Intelligens 429 Backoff:** HTTP 429 válasz esetén automatikus pihenőidő (Retry-After fejléc vagy 60s) aktiválása mindkét külső szolgáltatónál.
+  - **Megmentő Gyorsítótár (Stale Cache Fallback):** Hálózati vagy kvótahiba esetén a rendszer nem üríti ki a képernyőt (`[]`), hanem a legfrissebb érvényes mérkőzéseket jeleníti meg barátságos figyelmeztető sáv kíséretében.
+- **Mérkőzés Státuszok Stabilizálása:**
+  - **Pontos Állapot Leképezés (`POSTPONED`, `CANCELLED`, `SUSPENDED`):** Bővített `MatchStatus` típus. A korábban hibásan `UPCOMING`-ra visszahulló elmaradt/félbeszakadt mérkőzések a valós státuszukkal jelennek meg.
+  - **Fogadási Zárolás:** Elhalasztott, törölt, élő vagy befejezett meccsekre a szelvényhez adás azonnal tiltott.
+- **Megmásíthatatlan Audit Napló & Tétnapló Import:**
+  - **Kriptográfiai SHA-256 Integritás-ellenőrzés (`predictionAuditService.ts`):** Új `importAuditLogFromJson` funkció, amely importáláskor matematikai hash-ellenőrzéssel (`auditHash`) vizsgálja meg minden rekord hitelességét. Az utólag módosított oddsokat vagy valószínűségeket a rendszer azonnal elutasítja.
+  - **Audit Import Gomb a Felületen (`ResultsView.tsx`):** Egykattintásos JSON feltöltés, állapot-visszajelzés és a hitelesített rekordok azonnali beolvasása.
+  - **Szigorú Séma-validáció a Tétnaplóban (`bankrollService.ts`):** Mind a becsomagolt formátum (`{ bets: [...], initialBankroll: ... }`), mind a közvetlen tömb (`[...]`) támogatott szigorú értéktartomány ellenőrzéssel (pozitív tét, odds >= 1.0, érvényes kimenetelek).
+- **Szelvény Integritás & Automatikus Tisztítás (`BetSlipDrawer.tsx`, `App.tsx`):**
+  - **Élő Állapot Szinkronizáció:** A háttérben frissülő meccsadatok automatikusan aktualizálják a szelvényen lévő tételeket (`matchStatus`, `kickoffDate`, `kickoffTime`).
+  - **Elkezdődött/Lezárt Meccsek Figyelmeztetése:** Piros kerettel és egyértelmű okkal (`⚠️ A mérkőzés már befejeződött`, `⚠️ A mérkőzés éppen zajlik`, `⚠️ A mérkőzés már elkezdődött`) jelöli az érvénytelen tételeket.
+  - **Tisztító Gomb:** Új „🧹 Tisztítás / Érvénytelenek eltávolítása” funkció, amely egyetlen gombnyomással törli az időközben érvénytelenné vált tételeket.
+  - **Mentésvédelem:** A „Rögzítés Tétnaplóba” gomb zárolva van mindaddig, amíg érvénytelen esemény található a szelvényen.
+- **12 Új Dedikált Regressziós Teszt (`src/services/__tests__/quotaAndIntegrityRegression.test.ts`):**
+  - 135/135 egységteszt fut le sikeresen (100% pass rate).
+
 ## [1.19.0] - 2026-10-20
 
 ### Hozzáadva & Valós Odds Integráció (Added & Real Odds Integration)
