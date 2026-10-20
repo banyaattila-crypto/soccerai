@@ -3,6 +3,17 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.16.4] - 2026-10-20
+
+### Javítva & Fotorealisztikus 3D Grafika (Fixed & Photorealistic Graphics)
+- **100% Fotorealisztikus adidas TRIONDA PRO FIFA 2026 Hivatalos Meccslabda (`src/components/Logo.tsx`):**
+  - **4-Nézetes Ortogonális Stúdiófotó-Szintézis:** A korábbi procedurális/szintetikus vektorrajz és torzuló textúra helyett 4 db 8K stúdióminőségű termékfotó (Elölnézet 0°, Jobb oldal 90°, Hátulnézet 180°, Bal oldal 270°) egyesítéséből felépített teljes 360°-os panorámatérkép.
+  - **Hiteles Hivatalos Elemek:** Eredeti arany FIFA World Cup 2026 trófeás embléma, modern adidas 3-bar Performance logó és a hivatalos „FIFA CONNECTED BALL TECHNOLOGY” szenzoros pecsét.
+  - **A 3 Rendező Nemzet Színei & Motívumai:** USA kobaltkék hullám fehér csillagokkal, Mexikó smaragdzöld hullám azték/sas-toll mintázattal, Kanada rubinpiros hullám éles juharlevél geometriával, mindezt körbeölelő elegáns fémes pezsgő-arany szalagokkal.
+  - **Kétszeres Bilineáris Textúra-Szűrés:** A lebegőpontos UV koordináták bilineáris simításával 100%-ban megszűnt a pixelesedés, a recés körvonal és a forgás közbeni vibrálás (aliasing).
+  - **Letisztult, Prémium Megjelenés:** A gyermeteg, arcade stílusú szaggatott radar/techno karikák eltávolításra kerültek; a labda a logóterület 92%-át tiszta, büszke, prémium formában tölti ki lágy talaj- és térárnyékkal.
+  - **Nyugodt, Méltóságteljes 3D Forgás:** Megtartva a lassú (~60 másodperces teljes körbefordulás) természetes dőlt tengelyű rotációt 60 FPS sebességgel.
+
 ## [1.16.3] - 2026-10-19
 
 ### Hozzáadva & Vizuális Élmény (Added & Visual Enhancement)

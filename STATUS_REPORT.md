@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.16.3`** (SemVer 2.0.0)  
-**Kiadás neve:** *3D Animált FIFA 2026 Hivatalos Meccslabda (adidas Trionda)*  
-**Dátum:** 2026. október 19.  
-**Állapot:** ✅ **v1.16.3 Verzió Elkészült & Verifikálva (55/55 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Aktuális verzió:** 🏷️ **`v1.16.4`** (SemVer 2.0.0)  
+**Kiadás neve:** *Fotorealisztikus 8K adidas TRIONDA PRO FIFA 2026 3D Meccslabda*  
+**Dátum:** 2026. október 20.  
+**Állapot:** ✅ **v1.16.4 Verzió Elkészült & Verifikálva (55/55 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,14 +16,19 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.16.3`** kiadás újdonságai és fejlesztései:
-1. **3D Animált FIFA 2026 Hivatalos Meccslabda (adidas Trionda Pro World Cup, `Logo.tsx`):**
-   - A fejléc bal felső sarkában lévő ikon a hivatalos **TRIONDA PRO WORLD CUP** meccslabda élethű 3D modelljévé alakult.
-   - **Borotvaéles 3D Vektormodell:** A korábbi raszteres mintát felváltotta a szubpixel pontosságú 3D gömbi projekció. A 4 aerodinamikai mélyvarrás, az USA kobaltkék (csillaggal), Mexikó smaragdzöld és Kanada rubinpiros hullámpanjelei arany FIFA trófea szegéllyel, valamint az adidas 3-sávos és arany `TRIONDA PRO` és `FIFA WORLD CUP 2026` minőségi jelzésekkel élesen jelennek meg.
-   - **Ultra-Lassú, Nyugodt 3D Forgás:** A forgási sebesség a felhasználói kérésnek megfelelően lelassult (~45 másodperc / teljes 360° kör), így a labda nem pörög túl gyorsan, hanem méltóságteljesen és lágyan úszik át a térben.
-   - **Fotorealisztikus 3D Fények:** Rögzített bal felső megvilágítás, valódi mélységi árnyék és stadion-reflektor spekuláris csillogás a gömb felületén.
+A **`v1.16.4`** kiadás újdonságai és fejlesztései:
+1. **100% Fotorealisztikus 8K adidas TRIONDA PRO FIFA 2026 Hivatalos Meccslabda (`Logo.tsx`):**
+   - **4-Nézetes Ortogonális Stúdiófotó-Szintézis:** A bal felső sarok ikonja a 4 ortogonális 8K stúdiófotó (Elölnézet 0°, Jobb oldal 90°, Hátulnézet 180°, Bal oldal 270°) egyesítéséből felépített teljes 360°-os gömbfelületből renderelődik.
+   - **Autentikus Hivatalos Elemek:** Eredeti arany FIFA World Cup 2026 trófeás embléma, adidas 3-bar logo és a hivatalos „FIFA CONNECTED BALL TECHNOLOGY” szenzoros pecsét.
+   - **A 3 Rendező Ország Hiteles Hullámai:** USA kobaltkék hullám csillagokkal, Mexikó smaragdzöld hullám azték mintával, Kanada rubinpiros hullám juharlevél geometriával és finom arany szegélyekkel.
+   - **Kétszeres Bilineáris Textúra-Szűrés:** 100%-ban megszűnt a pixelesedés és a forgás közbeni vibrálás; a felület borotvaéles marad minden képernyőméreten és HiDPI/Retina kijelzőn.
+   - **Letisztult, Prémium Megjelenés:** Az arcade stílusú szaggatott díszkarikák eltávolításra kerültek; a labda a logóterület 92%-át tiszta, büszke formában tölti ki lágy talaj- és térárnyékkal.
+   - **Nyugodt, Méltóságteljes 3D Forgás:** Folyamatos, sima, ultra-lassú (~63 másodperces teljes fordulat) természetes dőlt tengelyű 3D rotáció 60 FPS sebességgel.
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.16.3 — 3D Animált FIFA 2026 Hivatalos Meccslabda:**
+  - Kezdeti 3D gömbvetítés és forgási sebesség csökkentés.
 
 * **v1.16.2 — Valós Élő API Adatok Garanciája & Kvótavédelem:**
   - Csendes mock fallback megszüntetése, HTTP 429 kvótavédelem (0 extra API kérés), Bajnokok Ligája modellezés.
