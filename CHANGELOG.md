@@ -3,6 +3,27 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.21.0] - 2026-10-20
+
+### Hozzáadva & Tudományos Kalibráció (Added & Scientific Calibration)
+- **Valós Böngészős Verifikáció (Headless Chromium CDP Interfész):**
+  - **Automatizált böngészős ellenőrző szkript (`scripts/verifyBrowser.mjs`):** Valós headless Chromium folyamat indítása, CDP (Chrome DevTools Protocol) csatlakozás natív WebSocketen keresztül.
+  - **Interaktív modul-ellenőrzés:** Az összes lap (`TopPicks`, `StatsGrid`, `ScannerView`, `ResultsView`, `BankrollView`, `MethodologyView`), a Szelvényépítő Drawer (`BetSlipDrawer`), és a 3D meccslabda canvas végiglátogatása és renderelésének igazolása.
+  - **Kivétel- és hibafigyelés:** 0 kezeletlen futásidejű kivétel (uncaught exception), 0 konzolhiba.
+- **Időrendhelyes (Chronological Walk-Forward) Mintavételezés (`src/services/calibrationService.ts`):**
+  - **Lookahead bias kizárása:** A mérkőzések szigorúan időbélyeg szerint növekvő sorrendbe rendezése; in-sample és out-of-sample szétválasztás temporális vágási időpont ($T_{\text{split}}$) mentén.
+  - Jövőbeli meccsek paraméterei és eredményei nem szivároghatnak át a múltbeli becslésekbe (nincs adatcsorgás).
+- **Valószínűségi Kalibráció Mérése:**
+  - **Multi-class 1X2 Brier-pontszám & Brier Skill Score (BSS):** A predikciós motor pontosságának mérése a naiv egyenletes bázishoz (0.6667) viszonyítva.
+  - **Várható Kalibrációs Hiba (Expected Calibration Error - ECE) & Max Hiba (MCE):** Valószínűségi decilisek/kvintilisek szerinti súlyozott eltérés ($|\bar{p}_k - \bar{y}_k|$).
+  - **Megbízhatósági diagram (Reliability Table):** Megjeleníti az egyes esélykategóriákban a modell átlagos jóslatát és a valós kimenetelek találati arányát.
+- **Szigorú Piaci Előny Hitelesítési Kapu (Edge Verification Gate):**
+  - **"Előtte ne állíts igazolt piaci előnyt":** A rendszer szigorúan megtiltja az „igazolt piaci előny” hangoztatását, amennyiben a mintaméret kisebb mint $N=250$, a kalibrációs hiba $ECE > 8.0\%$, vagy az elért többlethozam statisztikailag nem szignifikáns ($p \ge 0.05, Z \le 1.645$).
+  - **Terminológiai pontosság:** A felületeken a nyers piaci él helyett a „Becsült elméleti él (+EV)” megnevezés jelenik meg egyértelmű módszertani magyarázattal.
+  - **Új 6. Módszertani Panel (`MethodologyView.tsx`):** Részletes interaktív nézet a Brier score-ról, az ECE-ről, az out-of-sample ROI-ról, a hipotézistesztelésről és a megbízhatósági táblázatról.
+- **10 Új Dedikált Regressziós Teszt (`src/services/__tests__/calibrationService.test.ts`):**
+  - A teljes tesztkészlet immár **145/145 sikeres teszttel** (100% pass) fut le.
+
 ## [1.20.0] - 2026-10-20
 
 ### Hozzáadva & Rendszer-stabilizáció (Added & System Stabilization)

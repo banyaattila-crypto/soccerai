@@ -201,9 +201,9 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span className={isRealActive && edge > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}>
                 {isRealActive
                   ? (pick.expectedValue > 0
-                    ? `Piaci előny (+EV): +${pick.expectedValue}%`
+                    ? `Elméleti él (+EV): +${pick.expectedValue}%`
                     : edge > 0
-                    ? `Piaci előny: +${edge}%`
+                    ? `Modell/Piac rés: +${edge}%`
                     : `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`)
                   : isExpired
                   ? 'Lejárt ár (Value letiltva)'

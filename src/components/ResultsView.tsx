@@ -241,7 +241,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 Auditált Eredmények &amp; Ellenőrizhető Megtérülés
               </h2>
               <p className="text-xs sm:text-sm text-slate-300">
-                Minden előrejelzés szigorúan a kezdőrúgás <strong>előtt</strong> rögzítésre kerül a megmásíthatatlan naplóba. Utólagos tippbeillesztés nem lehetséges.
+                Minden előrejelzés szigorúan a kezdőrúgás <strong>előtt</strong> rögzítésre kerül a megmásíthatatlan naplóba (write-once audit). Statisztikailag igazolt piaci előny kizárólag időrendhelyes, out-of-sample kalibrációval (N ≥ 250, p &lt; 0.05) állítható; a napló a lezárt mérkőzések tényleges elszámolását rögzíti.
               </p>
             </div>
 
