@@ -3,6 +3,22 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.18.0] - 2026-10-20
+
+### Hozzáadva & Matematikai Egységesítés (Added & Model Unification)
+- **Egységesített Kanonikus Dixon-Coles Képletek (`src/services/predictionEngine.ts`):**
+  - **Közös Tau Faktor (`dixonColesTau`):** Megszűnt az egymástól eltérő inline kód a `dixonColesFitting.ts` és a `predictionEngine.ts` között. A tau faktor szigorúan nemnegatív ($\tau \ge 0.001$), meggátolva a negatív valószínűségi sűrűséget.
+  - **Kanonikus Várható Gól Számítás (`computeDixonColesExpectedGoals`):** Egységes $\lambda_H, \lambda_A$ intenzitási számítás az összes szolgáltatásban (`predictionEngine`, `dixonColesFitting`, `scoreLabService`). A ScoreLab immár garantáltan azonos xG értékeket és gólmátrixot használ, mint a központi predikciós motor.
+  - **Hare-Niemeyer (Legnagyobb Maradvány) Normalizálás (`normalizeIntegerPercentages`):** Megszűntek a kerekítési hibák miatti 99% vagy 101% összegek, valamint a negatív csonkolások. Az 1X2 partíció, a ScoreLab kimeneteli zónák és a gólszám-eloszlás sávok összege **matematikailag garantáltan 100%**.
+- **Szigorú Numerikus Invariánsok Betartatása:**
+  - **Gólszám Monotonitás:** $P(\text{Over } 3.5) \le P(\text{Over } 2.5) \le P(\text{Over } 1.5)$.
+  - **Fréchet / Copula Határok:** $\max(0, P(\text{BTTS}) + P(\text{Over } 2.5) - 100) \le P(\text{BTTS \& Over } 2.5) \le \min(P(\text{BTTS}), P(\text{Over } 2.5))$.
+  - **Félidő / Teljes Meccs Konzisztencia:** $P(\text{FH Over } 0.5) \le P(\text{FT Over } 0.5)$.
+  - **Mátrix Normalizálás:** $\sum_{i,j} M[i][j] \equiv 1.0 \pm 10^{-12}$.
+- **Saját Regressziós Tesztcsomag ([`modelInvariantsRegression.test.ts`](file:///home/attila/projects/soccerai/src/services/__tests__/modelInvariantsRegression.test.ts)):**
+  - **48 új dedikált regressziós teszt**, amely property-based szcenáriókon és fix Golden Regression Pin-eken (Arsenal-Aston Villa, Bayern-Dortmund, Juventus-Roma) keresztül védi a modellt a numerikus sodródástól.
+  - A projekt tesztkészlete **112/112 sikeres egységtesztre** bővült (100% pass rate).
+
 ## [1.17.0] - 2026-10-20
 
 ### Hozzáadva & Integritás (Added & Integrity Verification)

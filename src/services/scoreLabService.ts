@@ -1,5 +1,9 @@
 import { Match } from '../types/football';
-import { calculateDixonColesMatrix } from './predictionEngine';
+import {
+  calculateDixonColesMatrix,
+  computeDixonColesExpectedGoals,
+  normalizeIntegerPercentages,
+} from './predictionEngine';
 
 export interface ScoreMatrixCell {
   homeGoals: number; // 0..4 (4 = 4+)
@@ -96,29 +100,39 @@ export interface ScoreLabTeamComparisonReport {
  * Kiszámolja a meccs Dixon-Coles Poisson valószínűségi mátrixát és a ScoreLab statisztikákat.
  */
 export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
-  // 1. Várható gólok (lh és la) meghatározása
+  // 1. Várható gólok (lh és la) meghatározása az egységes kanonikus modell szerint
   let lh = 1.45;
   let la = 1.15;
   let rho = match.quantAnalysis?.dixonColesRatings?.rho ?? -0.13;
 
-  if (match.quantAnalysis?.dixonColesRatings?.isEmpiricallyFitted) {
-    const dc = match.quantAnalysis.dixonColesRatings;
-    lh = dc.homeAttack * dc.awayDefense * (dc.homeAdvantage || 1.2);
-    la = dc.awayAttack * dc.homeDefense;
-    rho = dc.rho ?? -0.13;
-  } else if (match.homeTeam.xgAvg && match.awayTeam.xgAvg) {
+  if (match.homeTeam.xgAvg && match.awayTeam.xgAvg) {
+    // Ha a mérkőzéshez már kiszámolt xgAvg tartozik, azt használjuk közvetlenül
     lh = match.homeTeam.xgAvg;
     la = match.awayTeam.xgAvg;
+  } else if (match.quantAnalysis?.dixonColesRatings?.isEmpiricallyFitted) {
+    const dc = match.quantAnalysis.dixonColesRatings;
+    const computed = computeDixonColesExpectedGoals({
+      attackHome: dc.homeAttack,
+      defenseHome: dc.homeDefense,
+      attackAway: dc.awayAttack,
+      defenseAway: dc.awayDefense,
+      homeAdvantage: dc.homeAdvantage,
+    });
+    lh = computed.lh;
+    la = computed.la;
+    rho = dc.rho ?? -0.13;
   } else if (match.probabilities) {
     const totalGoals = 1.8 + (match.probabilities.over25 / 100) * 1.4;
-    const homeShare = match.probabilities.homeWin / Math.max(1, match.probabilities.homeWin + match.probabilities.awayWin);
+    const homeShare =
+      match.probabilities.homeWin /
+      Math.max(1, match.probabilities.homeWin + match.probabilities.awayWin);
     lh = totalGoals * homeShare;
     la = totalGoals * (1 - homeShare);
   }
 
   // Biztonsági korlátok
-  lh = Math.min(4.5, Math.max(0.35, Math.round(lh * 100) / 100));
-  la = Math.min(4.5, Math.max(0.3, Math.round(la * 100) / 100));
+  lh = Math.min(5.5, Math.max(0.2, Math.round(lh * 100) / 100));
+  la = Math.min(5.5, Math.max(0.2, Math.round(la * 100) / 100));
 
   // 8x8 Dixon-Coles mátrix generálása
   const raw8x8 = calculateDixonColesMatrix(lh, la, rho);
@@ -225,6 +239,18 @@ export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
     }
   }
 
+  // Szigorú 100%-os partíció invariánsok a Hare-Niemeyer módszerrel
+  const [normHomeWin, normDraw, normAwayWin] = normalizeIntegerPercentages([
+    sumHome,
+    sumDraw,
+    sumAway,
+  ]);
+  const [normUnder15, normMid23, normOver35] = normalizeIntegerPercentages([
+    lowP,
+    midP,
+    highP,
+  ]);
+
   return {
     matrix5x5,
     topScores,
@@ -232,14 +258,14 @@ export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
     la,
     rho,
     outcomeZones: {
-      homeWinPct: Math.round(sumHome * 100),
-      drawPct: Math.round(sumDraw * 100),
-      awayWinPct: Math.max(1, 100 - Math.round(sumHome * 100) - Math.round(sumDraw * 100)),
+      homeWinPct: normHomeWin,
+      drawPct: normDraw,
+      awayWinPct: normAwayWin,
     },
     goalsDistribution: {
-      under15Pct: Math.round(lowP * 100),
-      mid23Pct: Math.round(midP * 100),
-      over35Pct: Math.max(1, 100 - Math.round(lowP * 100) - Math.round(midP * 100)),
+      under15Pct: normUnder15,
+      mid23Pct: normMid23,
+      over35Pct: normOver35,
     },
     mostLikelyTotal: `${maxTotalGoals} gól (${Math.round(maxTotalProb * 100)}%)`,
   };

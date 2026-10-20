@@ -11,6 +11,8 @@
  * a hazai pálya előnyt (gamma) és az alacsony gólszámú korrekciós faktort (rho).
  */
 
+import { dixonColesTau, computeDixonColesExpectedGoals } from './predictionEngine';
+
 export interface FinishedMatchResult {
   homeTeam: string;
   awayTeam: string;
@@ -315,12 +317,8 @@ export function fitDixonColesModel(
       const x = m.homeGoals;
       const y = m.awayGoals;
 
-      let tau = 1.0;
-      if (x === 0 && y === 0) tau = Math.max(0.01, 1 - lh * la * r);
-      else if (x === 0 && y === 1) tau = Math.max(0.01, 1 + lh * r);
-      else if (x === 1 && y === 0) tau = Math.max(0.01, 1 + la * r);
-      else if (x === 1 && y === 1) tau = Math.max(0.01, 1 - r);
-
+      // Egységesített Dixon-Coles tau faktor használata
+      const tau = dixonColesTau(x, y, lh, la, r);
       ll += Math.log(tau);
     }
     if (ll > maxLogLik) {
@@ -544,8 +542,16 @@ export function computeExpectedGoalsFromModel(
   const avgA = model?.avgAwayGoals ?? fallbackAwayAvg;
   const homeAdv = model?.homeAdvantage ?? 1.15;
 
-  const lh = homeAttack * awayDefense * avgH * (homeAdv / 1.12);
-  const la = awayAttack * homeDefense * avgA;
+  // Egységesített Dixon-Coles várható gól képlet
+  const { lh, la } = computeDixonColesExpectedGoals({
+    attackHome: homeAttack,
+    defenseHome: homeDefense,
+    attackAway: awayAttack,
+    defenseAway: awayDefense,
+    avgHomeGoals: avgH,
+    avgAwayGoals: avgA,
+    homeAdvantage: homeAdv,
+  });
 
   return {
     homeXg: Math.max(0.2, Math.round(lh * 10) / 10),

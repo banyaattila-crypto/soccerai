@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.17.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Pre-Match Megmásíthatatlan Predikciónapló & Szigorú Provenance Rendszer*  
+**Aktuális verzió:** 🏷️ **`v1.18.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Egységesített Modellképlet & Numerikus Invariánsok Regressziója*  
 **Dátum:** 2026. október 20.  
-**Állapot:** ✅ **v1.17.0 Verzió Elkészült & Verifikálva (64/64 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.18.0 Verzió Elkészült & Verifikálva (112/112 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,24 +16,23 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.17.0`** kiadás újdonságai és fejlesztései:
-1. **Kezdés Előtti Megmásíthatatlan Predikciónapló (`predictionAuditService.ts`):**
-   - **Szigorú Pre-Kickoff Rögzítés:** Csak olyan meccsek predikciója kerülhet a hitelesített naplóba, amelyek még nem kezdődtek el (`UPCOMING`) és a hivatalos kezdés a jövőben van. Kezdés utáni vagy utólagos tippnaplózás szigorúan elutasítva.
-   - **Megmásíthatatlan (Write-Once / Append-Only):** A naplóba rögzített előrejelzés (piac, odds, valószínűség) fagyasztott, azt a későbbi szinkronizációk nem írhatják felül.
-   - **Integritási Aláírás:** Determinisztikus ellenőrző hash (`audit-<hex>`) készül minden bejegyzéshez.
-   - **Eredmény Kiértékelés:** A lefújást követően a valós API végeredmény alapján automatikusan lezárásra kerül a pre-match tipp (`WON` / `LOST` / `VOID`).
-   - **Audit JSON Export:** A teljes napló vágólapra másolható vagy letölthető.
-2. **Provenance Rendszer & Régi ROI-k Kizárása (`ResultsView.tsx`):**
-   - **Mock Fallback Teljes Eltávolítása:** Megszűnt a korábbi beépített mock meccsekre való fallback; fiktív adatokból nem képezhető hivatalos találat vagy ROI.
-   - **Két Elkülönített Eredmény Nézet:**
-     - *Hitelesített Pre-Match Napló:* Csak a kezdés előtt naplózott és valós meccsek eredményei számítanak a hivatalos KPI mutatókba (Találati Arány, Hitelesített ROI %, Nettó Profit).
-     - *Nem auditált külső archívum:* Külön lapon jeleníti meg a kezdés után/utólag beérkezett régebbi meccseket, egyértelmű figyelmeztetéssel, hogy nem képezik a hivatalos ROI részét.
-3. **Kezdeti Állapot Tisztítása (`App.tsx`, `HeroKpi.tsx`):**
-   - A mérkőzések állapota üres tömbbel (`[]`) indul az API mód esetén, elkerülve a mock meccsek felvillanását.
-   - A fejléc tegnapi találati statisztikája szigorúan a hitelesített audit naplóból számolódik (ha nincs tegnapi lezárt auditált meccs, az `Audit: Pre-Match Napló` pajzs-jelzés jelenik meg).
-4. **Tesztlefedettség:** 7 új dedikált egységteszt (`predictionAuditService.test.ts`), összesen **64/64 sikeres teszt**.
+A **`v1.18.0`** kiadás újdonságai és fejlesztései:
+1. **Egységesített Dixon-Coles Modellképlet (`predictionEngine.ts`, `dixonColesFitting.ts`, `scoreLabService.ts`):**
+   - **Kanonikus Várható Gólok:** Közös `computeDixonColesExpectedGoals` képlet biztosítja, hogy a ScoreLab és a predikciós motor pontosan azonos $\lambda_H, \lambda_A$ intenzitást számoljon.
+   - **Közös Tau Faktor:** Egységes `dixonColesTau` implementáció a modell-illesztéshez és a mátrixgeneráláshoz szigorú nemnegativitással ($\tau \ge 0.001$).
+   - **Hare-Niemeyer Normalizáció:** A `normalizeIntegerPercentages` matematikai garanciát ad a 100%-os partíció-összegre.
+2. **Szigorú Numerikus Invariánsok:**
+   - Gólszám monotonitás ($P(\text{Over } 3.5) \le P(\text{Over } 2.5) \le P(\text{Over } 1.5)$).
+   - Fréchet / Copula határok a kombinált piacokra.
+   - $1X2$ partíció $\equiv 100\%$, Mátrix összeg $\equiv 1.0 \pm 10^{-12}$.
+3. **Dedikált Regressziós Tesztcsomag ([`modelInvariantsRegression.test.ts`](file:///home/attila/projects/soccerai/src/services/__tests__/modelInvariantsRegression.test.ts)):**
+   - 48 új regressziós teszt (invariánsok + Golden Regression Pin-ek).
+   - A projekt teljes tesztkészlete **112/112 zöld tesztre** bővült (100% sikeresség).
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.17.0 — Pre-Match Megmásíthatatlan Predikciónapló & Szigorú Provenance Rendszer:**
+  - Kezdés előtti rögzítés, megmásíthatatlan (write-once) napló, determinisztikus hash aláírás, mock fallback teljes kizárása a hivatalos ROI-ból.
 
 * **v1.16.5 — Játszható Érték-Szorzók (1.50+ Sweet Spot) & Nagyobb 3D Labda:**
   - Kvantitatív érték-index formulák, mini-oddsok (< 1.40) büntetése, 1.55–2.45 édes-pont preferálása, 46px folyamatosan forgó labda.

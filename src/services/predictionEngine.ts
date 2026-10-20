@@ -3,13 +3,20 @@ import { MarketProbabilities, PickMarket, Match, QuantAnalysis } from '../types/
 const MAXG = 8;
 
 /**
- * Poisson-eloszlás
+ * Poisson-eloszlás valószínűségi sűrűségfüggvénye
+ * P(k; lambda) = (lambda^k * exp(-lambda)) / k!
  */
-function poisson(k: number, lambda: number): number {
+export function poisson(k: number, lambda: number): number {
+  if (k < 0 || lambda <= 0) {
+    return k === 0 && lambda === 0 ? 1.0 : 0.0;
+  }
   return (Math.exp(-lambda) * Math.pow(lambda, k)) / factorial(k);
 }
 
-function factorial(n: number): number {
+/**
+ * Faktoriális függvény
+ */
+export function factorial(n: number): number {
   if (n <= 1) return 1;
   let res = 1;
   for (let i = 2; i <= n; i++) res *= i;
@@ -18,23 +25,39 @@ function factorial(n: number): number {
 
 /**
  * Dixon-Coles (1997) korrekciós faktor alacsony gólszámú cellákra (0-0, 0-1, 1-0, 1-1)
- * rho = -0.13 tipikus érték
+ * Numerikus invariáns: tau >= 0.001 (a valószínűségi korrekció szigorúan nemnegatív).
  */
-function tau(i: number, j: number, lh: number, la: number, rho: number = -0.13): number {
-  if (i === 0 && j === 0) return 1.0 - lh * la * rho;
-  if (i === 0 && j === 1) return 1.0 + lh * rho;
-  if (i === 1 && j === 0) return 1.0 + la * rho;
-  if (i === 1 && j === 1) return 1.0 - rho;
-  return 1.0;
+export function dixonColesTau(
+  i: number,
+  j: number,
+  lh: number,
+  la: number,
+  rho: number = -0.13
+): number {
+  let val = 1.0;
+  if (i === 0 && j === 0) val = 1.0 - lh * la * rho;
+  else if (i === 0 && j === 1) val = 1.0 + lh * rho;
+  else if (i === 1 && j === 0) val = 1.0 + la * rho;
+  else if (i === 1 && j === 1) val = 1.0 - rho;
+  return Math.max(0.001, val);
 }
+
+// Kompatibilitási alias
+export const tau = dixonColesTau;
 
 /**
  * Dixon-Coles korrigált gólmátrix számítás
+ * Numerikus invariáns: A mátrix elemeinek összege pontosan 1.0 (100%).
  */
-export function calculateDixonColesMatrix(lh: number, la: number, rho: number = -0.13): number[][] {
+export function calculateDixonColesMatrix(
+  lh: number,
+  la: number,
+  rho: number = -0.13,
+  maxGoals: number = MAXG
+): number[][] {
   const ph: number[] = [];
   const pa: number[] = [];
-  for (let k = 0; k < MAXG; k++) {
+  for (let k = 0; k < maxGoals; k++) {
     ph.push(poisson(k, lh));
     pa.push(poisson(k, la));
   }
@@ -42,20 +65,22 @@ export function calculateDixonColesMatrix(lh: number, la: number, rho: number = 
   const m: number[][] = [];
   let totalSum = 0;
 
-  for (let i = 0; i < MAXG; i++) {
+  for (let i = 0; i < maxGoals; i++) {
     const row: number[] = [];
-    for (let j = 0; j < MAXG; j++) {
-      const val = ph[i] * pa[j] * tau(i, j, lh, la, rho);
+    for (let j = 0; j < maxGoals; j++) {
+      const val = ph[i] * pa[j] * dixonColesTau(i, j, lh, la, rho);
       row.push(val);
       totalSum += val;
     }
     m.push(row);
   }
 
-  // Normalizálás 1.0-ra
-  for (let i = 0; i < MAXG; i++) {
-    for (let j = 0; j < MAXG; j++) {
-      m[i][j] /= totalSum;
+  // Normalizálás 1.0-ra (összeg invariáns)
+  if (totalSum > 0) {
+    for (let i = 0; i < maxGoals; i++) {
+      for (let j = 0; j < maxGoals; j++) {
+        m[i][j] /= totalSum;
+      }
     }
   }
 
@@ -67,6 +92,7 @@ export function calculateDixonColesMatrix(lh: number, la: number, rho: number = 
  * (beleértve a BTTS & Over 2.5 egzakt együttes valószínűségét is)
  */
 export function extractMarketsFromMatrix(m: number[][]) {
+  const size = m.length;
   let home = 0;
   let draw = 0;
   let away = 0;
@@ -76,8 +102,8 @@ export function extractMarketsFromMatrix(m: number[][]) {
   let over35 = 0;
   let bttsAndOver25 = 0;
 
-  for (let i = 0; i < MAXG; i++) {
-    for (let j = 0; j < MAXG; j++) {
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
       const p = m[i][j];
       if (i > j) home += p;
       else if (i === j) draw += p;
@@ -95,9 +121,83 @@ export function extractMarketsFromMatrix(m: number[][]) {
 }
 
 /**
+ * Hare-Niemeyer (Legnagyobb maradvány) módszer:
+ * Garantálja, hogy a kimeneti egész százalékok összege PONTOSAN 100 legyen,
+ * megszüntetve a Math.round() miatti 99% vagy 101% partíció-hibákat.
+ */
+export function normalizeIntegerPercentages(probs: number[]): number[] {
+  const n = probs.length;
+  if (n === 0) return [];
+  const total = probs.reduce((a, b) => a + b, 0);
+  if (total <= 0) {
+    const base = Math.floor(100 / n);
+    const res = new Array(n).fill(base);
+    res[0] += 100 - base * n;
+    return res;
+  }
+
+  const exact = probs.map((p) => (p / total) * 100);
+  const floors = exact.map(Math.floor);
+  const sumFloors = floors.reduce((a, b) => a + b, 0);
+  const remainder = 100 - sumFloors;
+
+  // Törtrészek csökkenő sorrendbe állítása
+  const diffs = exact
+    .map((val, idx) => ({ idx, diff: val - floors[idx] }))
+    .sort((a, b) => b.diff - a.diff);
+
+  for (let i = 0; i < remainder; i++) {
+    floors[diffs[i % n].idx]++;
+  }
+
+  return floors;
+}
+
+export interface DixonColesParams {
+  attackHome: number;
+  defenseHome: number;
+  attackAway: number;
+  defenseAway: number;
+  avgHomeGoals?: number;
+  avgAwayGoals?: number;
+  homeAdvantage?: number;
+}
+
+/**
+ * Egységes kanonikus Dixon-Coles várható gól (xG / lambda) számítás.
+ * Garantálja a numerikus határokat és a platform-szintű konzisztenciát.
+ */
+export function computeDixonColesExpectedGoals(params: DixonColesParams): {
+  lh: number;
+  la: number;
+} {
+  const avgH = params.avgHomeGoals ?? 1.45;
+  const avgA = params.avgAwayGoals ?? 1.15;
+  const homeAdv = params.homeAdvantage ?? 1.15;
+
+  // Egységes Dixon-Coles modellképlet:
+  // lambda_H = attack_H * defense_A * avgHomeGoals * (homeAdv / 1.12)
+  // lambda_A = attack_A * defense_H * avgAwayGoals
+  const rawLh = params.attackHome * params.defenseAway * avgH * (homeAdv / 1.12);
+  const rawLa = params.attackAway * params.defenseHome * avgA;
+
+  // Numerikus stabilitási korlátok (strictly pozitív intenzitási paraméterek)
+  const lh = Math.min(5.5, Math.max(0.2, Math.round(rawLh * 100) / 100));
+  const la = Math.min(5.5, Math.max(0.2, Math.round(rawLa * 100) / 100));
+
+  return { lh, la };
+}
+
+/**
  * Fő valószínűségszámítás xG és Dixon-Coles modellezéssel.
  * Alapértelmezett homeAdvantageFactor = 1.0, mivel a bemeneti homeXg / awayXg
  * már tartalmazza a hazai/vendég kontextust (nincs dupla hazai szorzó).
+ *
+ * Szigorú numerikus invariánsok:
+ * 1. homeWin + draw + awayWin == 100% (Hare-Niemeyer partíció)
+ * 2. Over 3.5 <= Over 2.5 <= Over 1.5 (monotonitás)
+ * 3. BTTS & Over 2.5 Fréchet határok között van: max(0, BTTS + Over25 - 100) <= Combined <= min(BTTS, Over25)
+ * 4. Félidő Over 0.5 <= Teljes meccs Over 0.5
  */
 export function calculateMarketProbabilities(
   homeXg: number,
@@ -116,23 +216,49 @@ export function calculateMarketProbabilities(
   const fhHomeXg = adjHomeXg * 0.45;
   const fhAwayXg = adjAwayXg * 0.45;
   const fhNoGoalProb = poisson(0, fhHomeXg) * poisson(0, fhAwayXg);
-  const fhOver05 = Math.round((1 - fhNoGoalProb) * 100);
+  const rawFhOver05 = (1 - fhNoGoalProb) * 100;
 
-  // Százalékos normalizálás
-  const normHome = Math.round(mk.home * 100);
-  const normDraw = Math.round(mk.draw * 100);
-  const normAway = Math.max(1, 100 - normHome - normDraw);
+  // 1X2 Százalékos normalizálás (szigorú 100% partició invariáns)
+  const [normHome, normDraw, normAway] = normalizeIntegerPercentages([
+    mk.home,
+    mk.draw,
+    mk.away,
+  ]);
+
+  // Nyers százalékok
+  const rawOver15 = Math.round(mk.over15 * 100);
+  const rawOver25 = Math.round(mk.over25 * 100);
+  const rawOver35 = Math.round(mk.over35 * 100);
+  const rawBtts = Math.round(mk.btts * 100);
+  const rawBttsAndOver25 = Math.round(mk.bttsAndOver25 * 100);
+
+  // Monotonitási invariáns: Over 3.5 <= Over 2.5 <= Over 1.5
+  const over15 = Math.min(99, Math.max(1, rawOver15));
+  const over25 = Math.min(over15, Math.max(1, rawOver25));
+  const over35 = Math.min(over25, Math.max(1, rawOver35));
+
+  const bttsYes = Math.min(99, Math.max(1, rawBtts));
+
+  // Fréchet / Copula határok a BTTS & Over 2.5 kombinált piacra:
+  // max(0, btts + over25 - 100) <= bttsAndOver25 <= min(btts, over25)
+  const minCombined = Math.max(0, bttsYes + over25 - 100);
+  const maxCombined = Math.min(bttsYes, over25);
+  const bttsAndOver25 = Math.min(maxCombined, Math.max(minCombined, rawBttsAndOver25));
+
+  // Félidő invariáns: Félidő 0.5 felett <= Teljes meccs 0.5 felett
+  const ftOver05 = Math.round((1 - matrix[0][0]) * 100);
+  const fhOver05 = Math.min(ftOver05, Math.max(1, Math.round(rawFhOver05)));
 
   return {
     homeWin: normHome,
     draw: normDraw,
     awayWin: normAway,
-    bttsYes: Math.min(95, Math.max(10, Math.round(mk.btts * 100))),
-    over15: Math.min(96, Math.max(15, Math.round(mk.over15 * 100))),
-    over25: Math.min(92, Math.max(10, Math.round(mk.over25 * 100))),
-    over35: Math.min(85, Math.max(5, Math.round(mk.over35 * 100))),
-    fhOver05: Math.min(95, Math.max(20, fhOver05)),
-    bttsAndOver25: Math.min(88, Math.max(8, Math.round(mk.bttsAndOver25 * 100))),
+    bttsYes,
+    over15,
+    over25,
+    over35,
+    fhOver05,
+    bttsAndOver25,
   };
 }
 
