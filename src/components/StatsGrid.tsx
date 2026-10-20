@@ -517,6 +517,10 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
     market?: PickMarket
   ) => {
     e.stopPropagation();
+    const isSim = match.aiPick?.isSimulatedOdds !== false;
+    const isExp = match.aiPick?.isOddsExpired ?? false;
+    const bookie = match.aiPick?.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker;
+
     onAddToBetSlip({
       matchId: match.id,
       matchTitle: `${match.homeTeam.name} - ${match.awayTeam.name}`,
@@ -524,6 +528,12 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       market,
       odds,
       probability: prob,
+      quarterKellyPct: !isSim && !isExp ? match.aiPick?.quarterKellyPct : 0,
+      isRealOdds: !isSim && !isExp,
+      isSimulatedOdds: isSim,
+      bookmakerName: !isSim ? bookie : undefined,
+      oddsExpiresAt: match.aiPick?.oddsExpiresAt,
+      isExpired: isExp,
     });
   };
 

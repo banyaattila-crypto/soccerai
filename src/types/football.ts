@@ -52,6 +52,7 @@ export interface MatchOdds {
   away: number;
   bttsYes: number;
   over25: number;
+  under25?: number;
 }
 
 export interface HeadToHead {
@@ -121,6 +122,10 @@ export interface Match {
     robustnessVerdict?: 'ROBUSZTUS' | 'valószínű' | 'bizonytalan' | 'ELVETVE';
     quarterKellyPct?: number;
     isSimulatedOdds?: boolean;
+    bookmakerName?: string;
+    oddsExpiresAt?: string;
+    isOddsExpired?: boolean;
+    ttlMinutes?: number;
   };
   quantAnalysis?: QuantAnalysis;
   h2h?: HeadToHead[];
@@ -145,6 +150,9 @@ export interface BookmakerOddsItem {
 export interface FixtureRealOdds {
   fixtureId: number;
   updatedAt: string;
+  expiresAt?: string;
+  ttlMinutes?: number;
+  isExpired?: boolean;
   bookmakers: BookmakerOddsItem[];
   pinnacle?: BookmakerOddsItem;
   bet365?: BookmakerOddsItem;
@@ -179,6 +187,11 @@ export interface BetSlipItem {
   odds: number;
   probability: number;
   quarterKellyPct?: number;
+  isRealOdds?: boolean;
+  isSimulatedOdds?: boolean;
+  bookmakerName?: string;
+  oddsExpiresAt?: string;
+  isExpired?: boolean;
 }
 
 export type TrackedBetStatus = 'PENDING' | 'WON' | 'LOST' | 'VOID';

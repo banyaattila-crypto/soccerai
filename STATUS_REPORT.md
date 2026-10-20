@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.18.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Egységesített Modellképlet & Numerikus Invariánsok Regressziója*  
+**Aktuális verzió:** 🏷️ **`v1.19.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem*  
 **Dátum:** 2026. október 20.  
-**Állapot:** ✅ **v1.18.0 Verzió Elkészült & Verifikálva (112/112 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.19.0 Verzió Elkészült & Verifikálva (123/123 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,20 +16,25 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.18.0`** kiadás újdonságai és fejlesztései:
-1. **Egységesített Dixon-Coles Modellképlet (`predictionEngine.ts`, `dixonColesFitting.ts`, `scoreLabService.ts`):**
-   - **Kanonikus Várható Gólok:** Közös `computeDixonColesExpectedGoals` képlet biztosítja, hogy a ScoreLab és a predikciós motor pontosan azonos $\lambda_H, \lambda_A$ intenzitást számoljon.
-   - **Közös Tau Faktor:** Egységes `dixonColesTau` implementáció a modell-illesztéshez és a mátrixgeneráláshoz szigorú nemnegativitással ($\tau \ge 0.001$).
-   - **Hare-Niemeyer Normalizáció:** A `normalizeIntegerPercentages` matematikai garanciát ad a 100%-os partíció-összegre.
-2. **Szigorú Numerikus Invariánsok:**
-   - Gólszám monotonitás ($P(\text{Over } 3.5) \le P(\text{Over } 2.5) \le P(\text{Over } 1.5)$).
-   - Fréchet / Copula határok a kombinált piacokra.
-   - $1X2$ partíció $\equiv 100\%$, Mátrix összeg $\equiv 1.0 \pm 10^{-12}$.
-3. **Dedikált Regressziós Tesztcsomag ([`modelInvariantsRegression.test.ts`](file:///home/attila/projects/soccerai/src/services/__tests__/modelInvariantsRegression.test.ts)):**
-   - 48 új regressziós teszt (invariánsok + Golden Regression Pin-ek).
-   - A projekt teljes tesztkészlete **112/112 zöld tesztre** bővült (100% sikeresség).
+A **`v1.19.0`** kiadás újdonságai és fejlesztései:
+1. **Valós Bukméker Oddsok (Pinnacle & Bet365) és Lejárat (TTL) Bekötése:**
+   - **Minden Ajánlási Nézet Lefedve:** A valós bukmékeri szorzók közvetlenül bekötve a `TopPicks` (3D kártya és szekunder szignálok), `ScannerView` (lehetőségek és szűrők), `StatsGrid` (rács cellák és szelvény gombok), `BetSlipDrawer` (szelvény és tétnapló), valamint a `MatchDetailModal` (részletes elemző nézet) felületekbe.
+   - **60 Perces Lejárati Idő (TTL) & Frissesség:** A gyorsítótárazott oddsok pontos lejárati idővel (`expiresAt`), hátralévő percekkel (`ttlMinutes`) és lejárati flaggel (`isExpired`) rendelkeznek. A felületeken valós idejű lejárati pill (`🏢 Pinnacle ⏳ 45p`) jelzi a piaci adat korát.
+   - **Lejárt Odds Kezelés:** Ha a bukmékeri odds lejár (>= 60 perc), a rendszer automatikusan megjelöli (`🔴 Lejárt odds`), a szorzót áthúzva jelzi, és azonnal zárolja a piaci él számítást az újrafrissítésig.
+2. **Szimulált Árak Védelme & Value/Kelly Letiltása:**
+   - **Szigorú Value (+EV%) és Kelly Zárolás:** Szimulált árképzés esetén (`isSimulatedOdds === true`, hiányzó bukmékeri szorzó vagy lejárt odds) a Value (+EV%) és a Negyed-Kelly tét kijelzése szigorúan **le van tiltva és 0.0%-ra állítva**.
+   - **Megtévesztés Kizárása:** Megszűnt az önigazoló arbitrázs illúziója (amikor a modell a saját szintetikus árrésével számolt ki pozitív EV-t). A szimulált tippeken és lehetőségeken egyértelmű jelölés látható: `🧪 Szimulált ár (Value / Kelly letiltva)`.
+3. **Scanner Valós Odds Szűrés & Preset Szigorítás:**
+   - **„Csak Valós Oddsok” Kapcsoló:** Új szűrőgomb a Scanner vezérlősávjában, amely egyetlen kattintással kizárja az összes szimulált vagy lejárt piacot.
+   - **Megbízható `best_ev` Preset:** A „Legjobb Érték (+EV)” preset immár kizárólag érvényes, nem lejárt, valós bukmékeri oddsokból származó pozitív éleket listáz.
+4. **11 Új Dedikált Regressziós Teszt (`realOddsExpirationRegression.test.ts`):**
+   - Teszteli a 60 perces lejárati TTL számítást, a lejárat detektálást, az `attachCachedRealOddsToMatches` viselkedését, a `predictionEngine` szimulált ár zárolását, valamint a `scannerService` szűrési garanciáit.
+   - A projekt teljes tesztkészlete **123/123 sikeres teszttel** (100% pass) fut le.
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.18.0 — Egységesített Modellképlet & Numerikus Invariánsok Regressziója:**
+  - Kanonikus `computeDixonColesExpectedGoals`, közös nemnegatív `dixonColesTau`, Hare-Niemeyer legnagyobb maradvány 100% normalizáció, Fréchet határok és 48 invariáns teszt (112/112 zöld teszt).
 
 * **v1.17.0 — Pre-Match Megmásíthatatlan Predikciónapló & Szigorú Provenance Rendszer:**
   - Kezdés előtti rögzítés, megmásíthatatlan (write-once) napló, determinisztikus hash aláírás, mock fallback teljes kizárása a hivatalos ROI-ból.

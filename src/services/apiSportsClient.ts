@@ -21,8 +21,8 @@ export const API_SPORTS_DEFAULT_KEY = '';
 const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v2';
 const FIXTURE_LOOKUP_KEY = 'soccerai_fixture_lookup_v1';
 const ODDS_CACHE_PREFIX = 'soccerai_odds_cache_';
-const CACHE_TTL_MS = 45 * 60 * 1000; // 45 perces intelligens gyorsítótár
-const ODDS_CACHE_TTL_MS = 60 * 60 * 1000; // 60 perces odds gyorsítótár
+export const CACHE_TTL_MS = 45 * 60 * 1000; // 45 perces intelligens gyorsítótár
+export const ODDS_CACHE_TTL_MS = 60 * 60 * 1000; // 60 perces odds gyorsítótár
 
 export interface ApiSportsLeagueConfig {
   id: number;
@@ -641,8 +641,15 @@ export async function fetchFixtureOdds(
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const { timestamp, data } = JSON.parse(cached);
-        if (Date.now() - timestamp < ODDS_CACHE_TTL_MS && data) {
-          return data;
+        const age = Date.now() - (typeof timestamp === 'number' ? timestamp : 0);
+        if (age < ODDS_CACHE_TTL_MS && data) {
+          const remainingMinutes = Math.max(0, Math.floor((ODDS_CACHE_TTL_MS - age) / 60000));
+          return {
+            ...data,
+            expiresAt: new Date(timestamp + ODDS_CACHE_TTL_MS).toISOString(),
+            ttlMinutes: remainingMinutes,
+            isExpired: false,
+          };
         }
       }
     } catch {
@@ -786,15 +793,200 @@ export async function fetchFixtureOdds(
     },
   };
 
+  const nowMs = Date.now();
+  const expiresAt = new Date(nowMs + ODDS_CACHE_TTL_MS).toISOString();
+  result.expiresAt = expiresAt;
+  result.ttlMinutes = 60;
+  result.isExpired = false;
+
   // Mentés a gyorsítótárba
   try {
     localStorage.setItem(
       cacheKey,
-      JSON.stringify({ timestamp: Date.now(), data: result })
+      JSON.stringify({ timestamp: nowMs, data: result })
     );
   } catch (err) {
     console.warn('Nem sikerült elmenteni az odds cache-t:', err);
   }
 
   return result;
+}
+
+/**
+ * Lekéri a gyorsítótárazott valós oddsot, lejárati (TTL) metaadatokkal kiegészítve.
+ */
+export function getCachedFixtureOdds(
+  fixtureId: number,
+  nowMs: number = Date.now()
+): FixtureRealOdds | null {
+  const cacheKey = `${ODDS_CACHE_PREFIX}${fixtureId}`;
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (!raw) return null;
+    const { timestamp, data } = JSON.parse(raw);
+    if (!data) return null;
+
+    const age = nowMs - (typeof timestamp === 'number' ? timestamp : 0);
+    const isExpired = age >= ODDS_CACHE_TTL_MS;
+    const remainingMinutes = Math.max(0, Math.floor((ODDS_CACHE_TTL_MS - age) / 60000));
+    const expiresAt = new Date((typeof timestamp === 'number' ? timestamp : nowMs) + ODDS_CACHE_TTL_MS).toISOString();
+
+    return {
+      ...data,
+      expiresAt,
+      ttlMinutes: remainingMinutes,
+      isExpired,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Megállapítja, hogy egy valós odds adat lejárt-e (TTL túllépés vagy explicit flag).
+ */
+export function isOddsExpired(
+  realOdds: FixtureRealOdds | undefined | null,
+  nowMs: number = Date.now()
+): boolean {
+  if (!realOdds) return true;
+  if (realOdds.isExpired === true) return true;
+  if (realOdds.expiresAt) {
+    return new Date(realOdds.expiresAt).getTime() <= nowMs;
+  }
+  return false;
+}
+
+/**
+ * Kinyeri a lejárati és bukméker státuszt a nézetek számára.
+ */
+export function getOddsTtlStatus(
+  realOdds: FixtureRealOdds | undefined | null,
+  nowMs: number = Date.now()
+): {
+  isReal: boolean;
+  isExpired: boolean;
+  remainingMinutes: number;
+  bookmakerName?: string;
+  expiresAt?: string;
+} {
+  if (!realOdds || !realOdds.bestOdds) {
+    return { isReal: false, isExpired: true, remainingMinutes: 0 };
+  }
+  const expired = isOddsExpired(realOdds, nowMs);
+  let remainingMinutes = 0;
+  if (realOdds.expiresAt) {
+    remainingMinutes = Math.max(0, Math.floor((new Date(realOdds.expiresAt).getTime() - nowMs) / 60000));
+  } else if (typeof realOdds.ttlMinutes === 'number') {
+    remainingMinutes = realOdds.ttlMinutes;
+  }
+  const primaryBookie =
+    realOdds.pinnacle?.name ||
+    realOdds.bet365?.name ||
+    realOdds.bestOdds.home?.bookmaker ||
+    realOdds.bestOdds.over25?.bookmaker ||
+    'Bukméker';
+
+  return {
+    isReal: true,
+    isExpired: expired,
+    remainingMinutes,
+    bookmakerName: primaryBookie,
+    expiresAt: realOdds.expiresAt,
+  };
+}
+
+/**
+ * Hozzáfűzi a helyi gyorsítótárban lévő valós oddsokat a mérkőzésekhez.
+ * Ha létezik érvényes (nem lejárt) valós bukmékeri odds, frissíti a match.odds és match.aiPick értékeket is.
+ * Ha az odds szimulált vagy lejárt, a Value (+EV%) és Kelly tét automatikusan le lesz tiltva (0).
+ */
+export function attachCachedRealOddsToMatches(
+  matches: Match[],
+  nowMs: number = Date.now()
+): Match[] {
+  return matches.map((match) => {
+    const fId = match.apiSportsFixtureId || resolveApiSportsFixtureId(match);
+    if (!fId) {
+      if (match.aiPick) {
+        match.aiPick.isSimulatedOdds = true;
+        match.aiPick.expectedValue = 0;
+        match.aiPick.quarterKellyPct = 0;
+      }
+      return match;
+    }
+
+    const cached = getCachedFixtureOdds(fId, nowMs);
+    if (!cached) {
+      if (match.aiPick) {
+        match.aiPick.isSimulatedOdds = true;
+        match.aiPick.expectedValue = 0;
+        match.aiPick.quarterKellyPct = 0;
+      }
+      return match;
+    }
+
+    match.realOdds = cached;
+
+    if (!cached.isExpired) {
+      // Valós bukmékeri odds érvényes! Frissítjük a piaci oddsokat
+      if (cached.bestOdds.home?.odd) match.odds.home = cached.bestOdds.home.odd;
+      if (cached.bestOdds.draw?.odd) match.odds.draw = cached.bestOdds.draw.odd;
+      if (cached.bestOdds.away?.odd) match.odds.away = cached.bestOdds.away.odd;
+      if (cached.bestOdds.over25?.odd) match.odds.over25 = cached.bestOdds.over25.odd;
+      if (cached.bestOdds.under25?.odd) match.odds.under25 = cached.bestOdds.under25.odd;
+      if (cached.bestOdds.bttsYes?.odd) match.odds.bttsYes = cached.bestOdds.bttsYes.odd;
+
+      const ttlStatus = getOddsTtlStatus(cached, nowMs);
+
+      // Újraszámoljuk az aiPick-et valós oddsszal (isSimulatedOdds: false)
+      const { aiPick, quantAnalysis } = buildMatchQuantAndPick({
+        homeTeamName: match.homeTeam.name,
+        awayTeamName: match.awayTeam.name,
+        homeXg: match.homeTeam.xgAvg || 1.45,
+        awayXg: match.awayTeam.xgAvg || 1.15,
+        probabilities: match.probabilities,
+        odds: {
+          home: match.odds.home,
+          draw: match.odds.draw,
+          away: match.odds.away,
+          bttsYes: match.odds.bttsYes,
+          over25: match.odds.over25,
+          under25: match.odds.under25 ?? Math.max(1.35, Math.round(((1 / (Math.max(10, 100 - match.probabilities.over25) / 100)) / 1.05) * 100) / 100),
+        },
+        dataQuality: match.quantAnalysis?.dataQuality || 'B',
+        leagueLabel: match.leagueName,
+        isSimulatedOdds: false,
+        dixonColesRatings: match.quantAnalysis?.dixonColesRatings,
+      });
+
+      if (aiPick) {
+        aiPick.bookmakerName = ttlStatus.bookmakerName;
+        aiPick.oddsExpiresAt = ttlStatus.expiresAt;
+        aiPick.ttlMinutes = ttlStatus.remainingMinutes;
+        aiPick.isOddsExpired = false;
+        match.aiPick = aiPick;
+      }
+      if (quantAnalysis) {
+        match.quantAnalysis = {
+          ...match.quantAnalysis,
+          ...quantAnalysis,
+        };
+      }
+    } else {
+      // Lejárt az odds -> letiltjuk a Value/Kelly kijelzést
+      if (match.aiPick) {
+        match.aiPick.isSimulatedOdds = true;
+        match.aiPick.isOddsExpired = true;
+        match.aiPick.ttlMinutes = 0;
+        match.aiPick.expectedValue = 0;
+        match.aiPick.quarterKellyPct = 0;
+      }
+      if (match.quantAnalysis) {
+        match.quantAnalysis.quarterKellyPct = 0;
+      }
+    }
+
+    return match;
+  });
 }

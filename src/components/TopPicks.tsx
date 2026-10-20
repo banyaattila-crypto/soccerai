@@ -30,6 +30,11 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
   const impliedProb = Math.round((1 / pick.odds) * 100);
   const edge = pick.probability - impliedProb;
   const verdict = pick.robustnessVerdict || match.quantAnalysis?.robustnessVerdict || 'ROBUSZTUS';
+  const isSimulated = pick.isSimulatedOdds !== false;
+  const isExpired = pick.isOddsExpired ?? false;
+  const bookmakerName = pick.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker;
+  const ttlMinutes = pick.ttlMinutes ?? match.realOdds?.ttlMinutes;
+  const isRealActive = !isSimulated && !isExpired;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -75,15 +80,33 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span className="text-emerald-400 font-bold">{match.kickoffTime}</span>
             </span>
 
-            <span
-              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border shrink-0 ${
-                idx === 0
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
-                  : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-              }`}
-            >
-              #{idx + 1} TOP TIPP
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {isRealActive && bookmakerName ? (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-blue-500/15 text-blue-300 border-blue-500/30 flex items-center gap-1">
+                  <span>🏢 {bookmakerName}</span>
+                  {ttlMinutes !== undefined && (
+                    <span className="text-[9px] text-blue-400 font-mono">⏳ {ttlMinutes}p</span>
+                  )}
+                </span>
+              ) : isExpired ? (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-red-500/15 text-red-300 border-red-500/30">
+                  🔴 Lejárt
+                </span>
+              ) : (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-slate-800/80 text-slate-400 border-slate-700">
+                  🧪 Szimulált
+                </span>
+              )}
+              <span
+                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border shrink-0 ${
+                  idx === 0
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                    : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                }`}
+              >
+                #{idx + 1} TOP TIPP
+              </span>
+            </div>
           </div>
 
           {/* Csapatok logókkal (3D Mélység kiemelés) */}
@@ -145,12 +168,14 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
             </div>
             <div className="text-right shrink-0">
               <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">
-                {pick.odds >= 1.50 ? '🎯 Érték Szorzó' : 'Becsült Odds'}
+                {isRealActive ? '🎯 Bukméker Odds' : isExpired ? '🔴 Lejárt Odds' : '🧪 Szimulált Odds'}
               </span>
               <span
                 className={`text-base font-black px-2.5 py-0.5 rounded-lg border ${
-                  pick.odds >= 1.50
+                  isRealActive
                     ? 'text-emerald-300 bg-emerald-950/60 border-emerald-500/40 shadow-sm shadow-emerald-900/30'
+                    : isExpired
+                    ? 'text-red-300 bg-red-950/40 border-red-500/30 line-through opacity-80'
                     : 'text-amber-300 bg-amber-950/40 border-amber-500/30'
                 }`}
               >
@@ -173,12 +198,16 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
             </div>
             <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
               <span>Implikált esély: {impliedProb}%</span>
-              <span className="text-emerald-400 font-semibold">
-                {match.aiPick?.isSimulatedOdds ?? true
-                  ? `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`
-                  : edge > 0
-                  ? `Piaci előny: +${edge}%`
-                  : `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`}
+              <span className={isRealActive && edge > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}>
+                {isRealActive
+                  ? (pick.expectedValue > 0
+                    ? `Piaci előny (+EV): +${pick.expectedValue}%`
+                    : edge > 0
+                    ? `Piaci előny: +${edge}%`
+                    : `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`)
+                  : isExpired
+                  ? 'Lejárt ár (Value letiltva)'
+                  : 'Szimulált ár (Value letiltva)'}
               </span>
             </div>
           </div>
@@ -202,9 +231,11 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                 Minőség: <strong className="text-slate-200">{match.quantAnalysis.dataQuality}</strong>
               </span>
               <span className="text-slate-300 font-mono font-bold">
-                {pick.quarterKellyPct && pick.quarterKellyPct > 0
-                  ? `Kelly: ${pick.quarterKellyPct}%`
-                  : 'Szimulált ár'}
+                {isRealActive && pick.quarterKellyPct && pick.quarterKellyPct > 0
+                  ? `¼-Kelly: ${pick.quarterKellyPct}%`
+                  : isExpired
+                  ? 'Kelly: Letiltva (lejárt)'
+                  : 'Kelly: Letiltva (szimulált)'}
               </span>
             </div>
           )}
@@ -421,6 +452,12 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     market: pick.market,
                     odds: pick.odds,
                     probability: pick.probability,
+                    quarterKellyPct: pick.quarterKellyPct,
+                    isRealOdds: !pick.isSimulatedOdds && !pick.isOddsExpired,
+                    isSimulatedOdds: pick.isSimulatedOdds !== false,
+                    bookmakerName: pick.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker,
+                    oddsExpiresAt: pick.oddsExpiresAt,
+                    isExpired: pick.isOddsExpired,
                   })
                 }
                 onSelectMatch={() => onSelectMatch(match)}
@@ -481,6 +518,8 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        const isSim = p.isSimulatedOdds !== false;
+                        const isExp = p.isOddsExpired ?? false;
                         onAddToBetSlip({
                           matchId: m.id,
                           matchTitle: `${m.homeTeam.name} - ${m.awayTeam.name}`,
@@ -488,6 +527,12 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                           market: p.market,
                           odds: p.odds,
                           probability: p.probability,
+                          quarterKellyPct: p.quarterKellyPct,
+                          isRealOdds: !isSim && !isExp,
+                          isSimulatedOdds: isSim,
+                          bookmakerName: p.bookmakerName || m.realOdds?.bestOdds.home?.bookmaker,
+                          oddsExpiresAt: p.oddsExpiresAt,
+                          isExpired: isExp,
                         });
                       }}
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold shrink-0 border transition-all cursor-pointer ${

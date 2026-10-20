@@ -1,6 +1,7 @@
 import { Match, PickMarket } from '../types/football';
 import { calculateExpectedValue, quarterKelly } from './predictionEngine';
 import { getRelativeDateStr } from '../utils/dateUtils';
+import { isOddsExpired, getOddsTtlStatus } from './apiSportsClient';
 
 export type ScannerPreset =
   | 'all'
@@ -23,10 +24,13 @@ export interface ScannedOpportunity {
   category: '1X2' | 'GOALS' | 'BTTS' | 'HALF_TIME' | 'COMBO';
   probability: number; // 0..100 %
   odds: number;
-  expectedValue: number; // pl. +12.5%
-  quarterKellyPct: number; // pl. 2.4%
+  expectedValue: number; // pl. +12.5% ha valós és érvényes; szimulált/lejárt esetén SZIGORÚAN 0
+  quarterKellyPct: number; // pl. 2.4% ha valós és érvényes; szimulált/lejárt esetén SZIGORÚAN 0
   isRealOdds: boolean;
   bookmakerName?: string;
+  expiresAt?: string;
+  ttlMinutes?: number;
+  isExpired?: boolean;
   robustnessVerdict: 'ROBUSZTUS' | 'valószínű' | 'bizonytalan' | 'ELVETVE';
   reasoning?: string;
 }
@@ -51,6 +55,7 @@ export interface ScannerFilterOptions {
   leagueId?: string; // 'ALL' vagy konkrét id
   dayFilter?: 'all' | 'today' | 'tomorrow' | 'yesterday';
   statusFilter?: 'open_only' | 'all' | 'finished';
+  onlyRealOdds?: boolean; // ÚJ: Szűrés kizárólag érvényes valós bukméker oddsokra
   sortBy?: ScannerSortBy;
   searchQuery?: string;
 }
@@ -58,20 +63,40 @@ export interface ScannerFilterOptions {
 /**
  * Kinyeri az összes fogadási lehetőséget a mérkőzésekből,
  * figyelembe véve a valós Pinnacle/Bet365 bukmékeri szorzókat ha elérhetők.
+ * Szimulált vagy lejárt odds esetén a Value (+EV%) és Kelly tét szigorúan letiltva (0).
  */
 export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpportunity[] {
   const opportunities: ScannedOpportunity[] = [];
+  const nowMs = Date.now();
 
   for (const m of matches) {
     const p = m.probabilities;
     const real = m.realOdds;
+    const realExpired = isOddsExpired(real, nowMs);
+    const ttlStatus = getOddsTtlStatus(real, nowMs);
     const quant = m.quantAnalysis;
     const verdict = quant?.robustnessVerdict ?? 'valószínű';
 
+    // Segédfüggvény a valós EV és Kelly kiszámításához
+    const resolveMetrics = (isRealAvailable: boolean, prob: number, odd: number) => {
+      const isEffectiveReal = isRealAvailable && !realExpired;
+      const expectedValue = isEffectiveReal ? calculateExpectedValue(prob, odd) : 0;
+      const quarterKellyPct = isEffectiveReal ? quarterKelly(prob, odd) : 0;
+      return {
+        isRealOdds: isRealAvailable,
+        isExpired: isRealAvailable ? realExpired : false,
+        expiresAt: isRealAvailable ? ttlStatus.expiresAt : undefined,
+        ttlMinutes: isRealAvailable ? ttlStatus.remainingMinutes : undefined,
+        expectedValue,
+        quarterKellyPct,
+      };
+    };
+
     // 1. Hazai Győzelem (1)
+    const hasRealHome = Boolean(real?.bestOdds.home?.odd);
     const homeOdd = real?.bestOdds.home?.odd ?? m.odds.home;
-    const homeSource = real?.bestOdds.home?.bookmaker ?? (real ? 'Pinnacle' : undefined);
-    const homeEv = calculateExpectedValue(p.homeWin, homeOdd);
+    const homeSource = real?.bestOdds.home?.bookmaker ?? (hasRealHome ? ttlStatus.bookmakerName : undefined);
+    const mHome = resolveMetrics(hasRealHome, p.homeWin, homeOdd);
     opportunities.push({
       id: `${m.id}_1`,
       match: m,
@@ -80,18 +105,26 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: '1X2',
       probability: p.homeWin,
       odds: homeOdd,
-      expectedValue: homeEv,
-      quarterKellyPct: quarterKelly(p.homeWin, homeOdd),
-      isRealOdds: Boolean(real?.bestOdds.home?.odd),
+      expectedValue: mHome.expectedValue,
+      quarterKellyPct: mHome.quarterKellyPct,
+      isRealOdds: mHome.isRealOdds,
+      isExpired: mHome.isExpired,
+      expiresAt: mHome.expiresAt,
+      ttlMinutes: mHome.ttlMinutes,
       bookmakerName: homeSource,
       robustnessVerdict: verdict,
-      reasoning: `Modell esély: ${p.homeWin}%, bukmékeri szorzó: ${homeOdd.toFixed(2)}.`,
+      reasoning: mHome.isRealOdds
+        ? (mHome.isExpired
+          ? `Lejárt ${homeSource || 'bukmékeri'} odds (TTL túllépve). Frissítés szükséges.`
+          : `Valós ${homeSource || 'bukmékeri'} odds (${homeOdd.toFixed(2)}), modell esély: ${p.homeWin}%.`)
+        : `Szimulált árképzés (${homeOdd.toFixed(2)}), Value és Kelly letiltva.`,
     });
 
     // 2. Döntetlen (X)
+    const hasRealDraw = Boolean(real?.bestOdds.draw?.odd);
     const drawOdd = real?.bestOdds.draw?.odd ?? m.odds.draw;
-    const drawSource = real?.bestOdds.draw?.bookmaker;
-    const drawEv = calculateExpectedValue(p.draw, drawOdd);
+    const drawSource = real?.bestOdds.draw?.bookmaker ?? (hasRealDraw ? ttlStatus.bookmakerName : undefined);
+    const mDraw = resolveMetrics(hasRealDraw, p.draw, drawOdd);
     opportunities.push({
       id: `${m.id}_X`,
       match: m,
@@ -100,18 +133,26 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: '1X2',
       probability: p.draw,
       odds: drawOdd,
-      expectedValue: drawEv,
-      quarterKellyPct: quarterKelly(p.draw, drawOdd),
-      isRealOdds: Boolean(real?.bestOdds.draw?.odd),
+      expectedValue: mDraw.expectedValue,
+      quarterKellyPct: mDraw.quarterKellyPct,
+      isRealOdds: mDraw.isRealOdds,
+      isExpired: mDraw.isExpired,
+      expiresAt: mDraw.expiresAt,
+      ttlMinutes: mDraw.ttlMinutes,
       bookmakerName: drawSource,
       robustnessVerdict: verdict,
-      reasoning: `Döntetlen valószínűség: ${p.draw}%, szorzó: ${drawOdd.toFixed(2)}.`,
+      reasoning: mDraw.isRealOdds
+        ? (mDraw.isExpired
+          ? `Lejárt ${drawSource || 'bukmékeri'} odds (TTL túllépve). Frissítés szükséges.`
+          : `Valós ${drawSource || 'bukmékeri'} odds (${drawOdd.toFixed(2)}), döntetlen esély: ${p.draw}%.`)
+        : `Szimulált árképzés (${drawOdd.toFixed(2)}), Value és Kelly letiltva.`,
     });
 
     // 3. Vendég Győzelem (2)
+    const hasRealAway = Boolean(real?.bestOdds.away?.odd);
     const awayOdd = real?.bestOdds.away?.odd ?? m.odds.away;
-    const awaySource = real?.bestOdds.away?.bookmaker;
-    const awayEv = calculateExpectedValue(p.awayWin, awayOdd);
+    const awaySource = real?.bestOdds.away?.bookmaker ?? (hasRealAway ? ttlStatus.bookmakerName : undefined);
+    const mAway = resolveMetrics(hasRealAway, p.awayWin, awayOdd);
     opportunities.push({
       id: `${m.id}_2`,
       match: m,
@@ -120,18 +161,26 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: '1X2',
       probability: p.awayWin,
       odds: awayOdd,
-      expectedValue: awayEv,
-      quarterKellyPct: quarterKelly(p.awayWin, awayOdd),
-      isRealOdds: Boolean(real?.bestOdds.away?.odd),
+      expectedValue: mAway.expectedValue,
+      quarterKellyPct: mAway.quarterKellyPct,
+      isRealOdds: mAway.isRealOdds,
+      isExpired: mAway.isExpired,
+      expiresAt: mAway.expiresAt,
+      ttlMinutes: mAway.ttlMinutes,
       bookmakerName: awaySource,
       robustnessVerdict: verdict,
-      reasoning: `Modell esély: ${p.awayWin}%, bukmékeri szorzó: ${awayOdd.toFixed(2)}.`,
+      reasoning: mAway.isRealOdds
+        ? (mAway.isExpired
+          ? `Lejárt ${awaySource || 'bukmékeri'} odds (TTL túllépve). Frissítés szükséges.`
+          : `Valós ${awaySource || 'bukmékeri'} odds (${awayOdd.toFixed(2)}), modell esély: ${p.awayWin}%.`)
+        : `Szimulált árképzés (${awayOdd.toFixed(2)}), Value és Kelly letiltva.`,
     });
 
     // 4. 2.5 Gól Felett (Over 2.5)
+    const hasRealO25 = Boolean(real?.bestOdds.over25?.odd);
     const o25Odd = real?.bestOdds.over25?.odd ?? m.odds.over25;
-    const o25Source = real?.bestOdds.over25?.bookmaker;
-    const o25Ev = calculateExpectedValue(p.over25, o25Odd);
+    const o25Source = real?.bestOdds.over25?.bookmaker ?? (hasRealO25 ? ttlStatus.bookmakerName : undefined);
+    const mO25 = resolveMetrics(hasRealO25, p.over25, o25Odd);
     opportunities.push({
       id: `${m.id}_OVER_25`,
       match: m,
@@ -140,20 +189,28 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: 'GOALS',
       probability: p.over25,
       odds: o25Odd,
-      expectedValue: o25Ev,
-      quarterKellyPct: quarterKelly(p.over25, o25Odd),
-      isRealOdds: Boolean(real?.bestOdds.over25?.odd),
+      expectedValue: mO25.expectedValue,
+      quarterKellyPct: mO25.quarterKellyPct,
+      isRealOdds: mO25.isRealOdds,
+      isExpired: mO25.isExpired,
+      expiresAt: mO25.expiresAt,
+      ttlMinutes: mO25.ttlMinutes,
       bookmakerName: o25Source,
       robustnessVerdict: verdict,
-      reasoning: `Gólvárakozás: ${p.over25}% Over 2.5 valószínűség.`,
+      reasoning: mO25.isRealOdds
+        ? (mO25.isExpired
+          ? `Lejárt bukmékeri Over 2.5 odds. Frissítés szükséges.`
+          : `Valós piaci Over 2.5 szorzó: ${o25Odd.toFixed(2)} (${p.over25}% esély).`)
+        : `Szimulált Over 2.5 ár, Value és Kelly letiltva.`,
     });
 
     // 5. 2.5 Gól Alatt (Under 2.5)
     const under25Prob = Math.max(1, 100 - p.over25);
+    const hasRealU25 = Boolean(real?.bestOdds.under25?.odd);
     const u25Odd = real?.bestOdds.under25?.odd ??
       Math.max(1.25, Math.round(((1 / (under25Prob / 100)) / 1.05) * 100) / 100);
-    const u25Source = real?.bestOdds.under25?.bookmaker;
-    const u25Ev = calculateExpectedValue(under25Prob, u25Odd);
+    const u25Source = real?.bestOdds.under25?.bookmaker ?? (hasRealU25 ? ttlStatus.bookmakerName : undefined);
+    const mU25 = resolveMetrics(hasRealU25, under25Prob, u25Odd);
     opportunities.push({
       id: `${m.id}_UNDER_25`,
       match: m,
@@ -162,18 +219,26 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: 'GOALS',
       probability: under25Prob,
       odds: u25Odd,
-      expectedValue: u25Ev,
-      quarterKellyPct: quarterKelly(under25Prob, u25Odd),
-      isRealOdds: Boolean(real?.bestOdds.under25?.odd),
+      expectedValue: mU25.expectedValue,
+      quarterKellyPct: mU25.quarterKellyPct,
+      isRealOdds: mU25.isRealOdds,
+      isExpired: mU25.isExpired,
+      expiresAt: mU25.expiresAt,
+      ttlMinutes: mU25.ttlMinutes,
       bookmakerName: u25Source,
       robustnessVerdict: verdict,
-      reasoning: `Under 2.5 esély: ${under25Prob}%.`,
+      reasoning: mU25.isRealOdds
+        ? (mU25.isExpired
+          ? `Lejárt bukmékeri Under 2.5 odds. Frissítés szükséges.`
+          : `Valós piaci Under 2.5 szorzó: ${u25Odd.toFixed(2)} (${under25Prob}% esély).`)
+        : `Szimulált Under 2.5 ár, Value és Kelly letiltva.`,
     });
 
     // 6. Mindkét Csapat Szerez Gólt (BTTS Igen)
+    const hasRealBtts = Boolean(real?.bestOdds.bttsYes?.odd);
     const bttsOdd = real?.bestOdds.bttsYes?.odd ?? m.odds.bttsYes;
-    const bttsSource = real?.bestOdds.bttsYes?.bookmaker;
-    const bttsEv = calculateExpectedValue(p.bttsYes, bttsOdd);
+    const bttsSource = real?.bestOdds.bttsYes?.bookmaker ?? (hasRealBtts ? ttlStatus.bookmakerName : undefined);
+    const mBtts = resolveMetrics(hasRealBtts, p.bttsYes, bttsOdd);
     opportunities.push({
       id: `${m.id}_BTTS_YES`,
       match: m,
@@ -182,17 +247,23 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: 'BTTS',
       probability: p.bttsYes,
       odds: bttsOdd,
-      expectedValue: bttsEv,
-      quarterKellyPct: quarterKelly(p.bttsYes, bttsOdd),
-      isRealOdds: Boolean(real?.bestOdds.bttsYes?.odd),
+      expectedValue: mBtts.expectedValue,
+      quarterKellyPct: mBtts.quarterKellyPct,
+      isRealOdds: mBtts.isRealOdds,
+      isExpired: mBtts.isExpired,
+      expiresAt: mBtts.expiresAt,
+      ttlMinutes: mBtts.ttlMinutes,
       bookmakerName: bttsSource,
       robustnessVerdict: verdict,
-      reasoning: `BTTS közös gól esély: ${p.bttsYes}%.`,
+      reasoning: mBtts.isRealOdds
+        ? (mBtts.isExpired
+          ? `Lejárt bukmékeri BTTS odds. Frissítés szükséges.`
+          : `Valós piaci BTTS szorzó: ${bttsOdd.toFixed(2)} (${p.bttsYes}% esély).`)
+        : `Szimulált BTTS ár, Value és Kelly letiltva.`,
     });
 
-    // 7. Első Félidő 0.5 Felett
+    // 7. Első Félidő 0.5 Felett (Mindig szimulált piaci modell)
     const fhOdd = Math.max(1.25, Math.round(((1 / (p.fhOver05 / 100)) / 1.05) * 100) / 100);
-    const fhEv = calculateExpectedValue(p.fhOver05, fhOdd);
     opportunities.push({
       id: `${m.id}_FH_OVER_05`,
       match: m,
@@ -201,18 +272,18 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
       category: 'HALF_TIME',
       probability: p.fhOver05,
       odds: fhOdd,
-      expectedValue: fhEv,
-      quarterKellyPct: quarterKelly(p.fhOver05, fhOdd),
+      expectedValue: 0, // Szimulált árra szigorúan 0
+      quarterKellyPct: 0, // Szimulált árra szigorúan 0
       isRealOdds: false,
+      isExpired: false,
       robustnessVerdict: verdict,
-      reasoning: `Korai gól esély az 1. félidőben: ${p.fhOver05}%.`,
+      reasoning: `Szimulált 1. félidős gólpiac (modell esély: ${p.fhOver05}%), Value és Kelly letiltva.`,
     });
 
     // 8. Kiemelt Kombinált (BTTS & Over 2.5) ha a valószínűség legalább 40%
     const bttsOverProb = p.bttsAndOver25 ?? Math.round((p.bttsYes * p.over25) / 100);
     if (bttsOverProb >= 40) {
       const comboOdd = Math.max(1.65, Math.round(((1 / (bttsOverProb / 100)) / 1.05) * 100) / 100);
-      const comboEv = calculateExpectedValue(bttsOverProb, comboOdd);
       opportunities.push({
         id: `${m.id}_BTTS_OVER25`,
         match: m,
@@ -221,11 +292,12 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
         category: 'COMBO',
         probability: bttsOverProb,
         odds: comboOdd,
-        expectedValue: comboEv,
-        quarterKellyPct: quarterKelly(bttsOverProb, comboOdd),
+        expectedValue: 0, // Szimulált árra szigorúan 0
+        quarterKellyPct: 0, // Szimulált árra szigorúan 0
         isRealOdds: false,
+        isExpired: false,
         robustnessVerdict: verdict,
-        reasoning: `Közös Dixon-Coles gólmátrix esély: ${bttsOverProb}%.`,
+        reasoning: `Dixon-Coles kombinált gólmátrix becslés (${bttsOverProb}%), Value és Kelly letiltva.`,
       });
     }
   }
@@ -247,6 +319,7 @@ export function filterAndSortOpportunities(
     leagueId = 'ALL',
     dayFilter = 'all',
     statusFilter = 'open_only',
+    onlyRealOdds = false,
     sortBy = 'ev',
     searchQuery = '',
   } = options;
@@ -257,6 +330,11 @@ export function filterAndSortOpportunities(
       return false;
     }
     if (statusFilter === 'finished' && item.match.status !== 'FINISHED') {
+      return false;
+    }
+
+    // Kizárólag valós, nem lejárt bukmékeri odds szűrés
+    if (onlyRealOdds && (!item.isRealOdds || item.isExpired)) {
       return false;
     }
 
@@ -290,14 +368,15 @@ export function filterAndSortOpportunities(
     // 5. Presetek szerinti szűrés
     switch (preset) {
       case 'best_ev':
-        return item.expectedValue > 0;
+        // Kizárólag valós, le nem járt bukmékeri szorzó esetén értelmezhető a pozitív várható érték (+EV)!
+        return item.isRealOdds && !item.isExpired && item.expectedValue > 0;
       case 'ai_picks':
         return item.match.aiPick?.market === item.market;
       case 'value_sweetspot':
         return (
           item.odds >= 1.55 &&
           item.odds <= 2.45 &&
-          (item.expectedValue > 0 || item.probability >= 48)
+          ((item.isRealOdds && !item.isExpired && item.expectedValue > 0) || item.probability >= 50)
         );
       case 'over_25':
         return item.market === 'OVER_25';
@@ -314,7 +393,7 @@ export function filterAndSortOpportunities(
       case 'half_time':
         return item.market === 'FH_OVER_05' && item.probability >= 68;
       case 'underdogs':
-        return item.odds >= 2.5 && item.expectedValue >= 2.0;
+        return item.odds >= 2.5 && item.isRealOdds && !item.isExpired && item.expectedValue >= 1.0;
       case 'all':
       default:
         return true;

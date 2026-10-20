@@ -48,6 +48,14 @@ describe('scannerService - Kvantitatív Értékkereső & Radar', () => {
         bttsYes: 1.75,
         over25: 1.7,
       },
+      realOdds: {
+        fixtureId: 101,
+        updatedAt: '12:00',
+        bookmakers: [{ name: 'Pinnacle', home: 1.85 }],
+        bestOdds: {
+          home: { odd: 1.85, bookmaker: 'Pinnacle' },
+        },
+      },
       aiPick: {
         market: '1',
         marketLabel: 'Arsenal Győzelem (1)',
@@ -114,10 +122,19 @@ describe('scannerService - Kvantitatív Értékkereső & Radar', () => {
     const opps = extractOpportunitiesFromMatches(dummyMatches);
 
     expect(opps.length).toBeGreaterThan(10);
+    // Valós bukmékeri odds (m1_1 Pinnacle)
     const m1Home = opps.find((o) => o.id === 'm1_1');
     expect(m1Home).toBeDefined();
+    expect(m1Home?.isRealOdds).toBe(true);
     expect(m1Home?.expectedValue).toBeCloseTo(14.7, 1);
     expect(m1Home?.quarterKellyPct).toBeGreaterThan(0);
+
+    // Szimulált árképzésű mérkőzés (m2_1): szigorúan 0 EV és Kelly!
+    const m2Home = opps.find((o) => o.id === 'm2_1');
+    expect(m2Home).toBeDefined();
+    expect(m2Home?.isRealOdds).toBe(false);
+    expect(m2Home?.expectedValue).toBe(0);
+    expect(m2Home?.quarterKellyPct).toBe(0);
   });
 
   it('szűri és rangsorolja a lehetőségeket a presetek alapján', () => {

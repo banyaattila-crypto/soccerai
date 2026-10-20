@@ -174,8 +174,27 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                     <span className="text-xs font-medium text-amber-300">
                       {item.marketLabel}
                     </span>
+                    {item.isRealOdds && item.bookmakerName ? (
+                      <span className="text-[10px] font-mono text-blue-300 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20 inline-block mt-0.5">
+                        🏢 {item.bookmakerName}
+                      </span>
+                    ) : item.isExpired ? (
+                      <span className="text-[10px] font-mono text-red-300 bg-red-500/10 px-1.5 py-0.2 rounded border border-red-500/20 inline-block mt-0.5">
+                        🔴 Lejárt bukméker odds
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.2 rounded border border-slate-700 inline-block mt-0.5">
+                        🧪 Szimulált ár
+                      </span>
+                    )}
                   </div>
-                  <span className="text-sm font-extrabold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700 shrink-0">
+                  <span
+                    className={`text-sm font-extrabold px-2 py-0.5 rounded border shrink-0 ${
+                      item.isExpired
+                        ? 'text-red-300 bg-red-950/40 border-red-500/30 line-through opacity-80'
+                        : 'text-white bg-slate-800 border-slate-700'
+                    }`}
+                  >
                     {item.odds.toFixed(2)}
                   </span>
                 </div>
@@ -185,9 +204,17 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                     Modell esély:{' '}
                     <strong className="text-emerald-400 font-bold">{item.probability}%</strong>
                   </span>
-                  {item.quarterKellyPct && item.quarterKellyPct > 0 && (
+                  {item.isRealOdds && !item.isExpired && item.quarterKellyPct && item.quarterKellyPct > 0 ? (
                     <span className="text-[10px] text-amber-400/90 font-mono">
                       ¼-Kelly: ~{item.quarterKellyPct}%
+                    </span>
+                  ) : item.isExpired ? (
+                    <span className="text-[10px] text-red-400/80 font-mono">
+                      Kelly: letiltva (lejárt)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      Kelly: letiltva (szimulált ár)
                     </span>
                   )}
                 </div>

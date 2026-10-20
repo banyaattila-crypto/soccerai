@@ -48,6 +48,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
   const [minProb, setMinProb] = useState<number>(50);
   const [minOdds, setMinOdds] = useState<number>(1.40);
+  const [onlyRealOdds, setOnlyRealOdds] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<ScannerSortBy>('ev');
 
   // Összes lehetőség kinyerése
@@ -64,10 +65,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       leagueId: selectedLeague,
       dayFilter,
       statusFilter,
+      onlyRealOdds,
       searchQuery,
       sortBy,
     });
-  }, [allOpportunities, activePreset, minProb, minOdds, selectedLeague, dayFilter, statusFilter, searchQuery, sortBy]);
+  }, [allOpportunities, activePreset, minProb, minOdds, selectedLeague, dayFilter, statusFilter, onlyRealOdds, searchQuery, sortBy]);
 
   // Ligák radar statisztikái
   const leagueRadarStats = useMemo(() => {
@@ -349,6 +351,23 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                 <option value="time">Rendezés: Kezdési Időpont</option>
               </select>
             </div>
+
+            {/* Valós bukméker odds szűrő toggle */}
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => setOnlyRealOdds((prev) => !prev)}
+                className={`w-full py-1.5 px-2.5 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  onlyRealOdds
+                    ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/20'
+                    : 'bg-slate-950/80 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
+                title="Csak a Pinnacle és Bet365 valós, érvényes oddsaival rendelkező meccsek"
+              >
+                <span>🏢 Csak Valós Oddsok</span>
+                {onlyRealOdds && <span className="text-[9px] bg-blue-800 px-1 py-0.2 rounded">AKTÍV</span>}
+              </button>
+            </div>
           </div>
 
           {/* Találati Kártyák */}
@@ -381,9 +400,22 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                           <Clock className="w-3 h-3 text-slate-500" />
                           <span>{opp.match.kickoffTime}</span>
                         </span>
-                        {opp.isRealOdds && opp.bookmakerName && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                            {opp.bookmakerName}
+                        {opp.isRealOdds ? (
+                          opp.isExpired ? (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/15 text-red-300 border border-red-500/30">
+                              🔴 Lejárt odds
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                              <span>🏢 {opp.bookmakerName || 'Bukméker'}</span>
+                              {opp.ttlMinutes !== undefined && (
+                                <span className="text-blue-400 font-mono">⏳ {opp.ttlMinutes}p</span>
+                              )}
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                            🧪 Szimulált ár
                           </span>
                         )}
                       </div>
@@ -430,19 +462,38 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                         </span>
                       </div>
 
-                      {/* Várható érték (+EV) */}
-                      <div
-                        className={`p-2 rounded-lg border text-center min-w-[70px] ${
-                          isPositiveEv
-                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        <span className="text-[9px] uppercase block font-bold">Várható Él</span>
-                        <span className="text-xs font-black font-mono">
-                          {opp.expectedValue > 0 ? `+${opp.expectedValue}%` : `${opp.expectedValue}%`}
-                        </span>
-                      </div>
+                      {/* Várható érték (+EV) és Kelly */}
+                      {opp.isRealOdds && !opp.isExpired ? (
+                        <div
+                          className={`p-2 rounded-lg border text-center min-w-[75px] ${
+                            isPositiveEv
+                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                              : 'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}
+                        >
+                          <span className="text-[9px] uppercase block font-bold">Várható Él</span>
+                          <span className="text-xs font-black font-mono">
+                            {opp.expectedValue > 0 ? `+${opp.expectedValue}%` : `${opp.expectedValue}%`}
+                          </span>
+                          {opp.quarterKellyPct > 0 && (
+                            <span className="text-[8px] text-amber-300 block font-mono">
+                              ¼-K: {opp.quarterKellyPct}%
+                            </span>
+                          )}
+                        </div>
+                      ) : opp.isExpired ? (
+                        <div className="p-2 rounded-lg bg-red-950/30 border border-red-800/40 text-red-400 text-center min-w-[75px]">
+                          <span className="text-[9px] uppercase block font-bold">Lejárt</span>
+                          <span className="text-[10px] font-black font-mono text-red-300">Letiltva</span>
+                          <span className="text-[8px] text-red-400/80 block">Frissítés kell</span>
+                        </div>
+                      ) : (
+                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 text-center min-w-[75px]">
+                          <span className="text-[9px] uppercase block font-bold text-slate-500">Érték (+EV)</span>
+                          <span className="text-[10px] font-bold font-mono text-slate-400">Letiltva</span>
+                          <span className="text-[8px] text-slate-500 block">Szimulált ár</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Jobb oldal: Akció gombok */}
@@ -465,6 +516,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                             odds: opp.odds,
                             probability: opp.probability,
                             quarterKellyPct: opp.quarterKellyPct,
+                            isRealOdds: opp.isRealOdds && !opp.isExpired,
+                            isSimulatedOdds: !opp.isRealOdds,
+                            bookmakerName: opp.bookmakerName,
+                            oddsExpiresAt: opp.expiresAt,
+                            isExpired: opp.isExpired,
                           });
                         }}
                         className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${

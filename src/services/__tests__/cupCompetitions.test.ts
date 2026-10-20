@@ -128,6 +128,15 @@ describe('Cup Competitions Support (UCL, UEL, UECL)', () => {
         bttsYes: 1.55,
         over25: 1.50,
       },
+      realOdds: {
+        fixtureId: 999,
+        updatedAt: '12:00',
+        bookmakers: [{ name: 'Pinnacle', home: 2.15, over25: 1.50 }],
+        bestOdds: {
+          home: { odd: 2.15, bookmaker: 'Pinnacle' },
+          over25: { odd: 1.50, bookmaker: 'Pinnacle' },
+        },
+      },
     };
 
     it('should extract scanner opportunities and detect positive expected values in UCL match', () => {

@@ -16,7 +16,13 @@ import {
   Swords,
   Grid3X3,
 } from 'lucide-react';
-import { resolveApiSportsFixtureId, fetchFixtureOdds } from '../services/apiSportsClient';
+import {
+  resolveApiSportsFixtureId,
+  fetchFixtureOdds,
+  getCachedFixtureOdds,
+  isOddsExpired,
+  getOddsTtlStatus,
+} from '../services/apiSportsClient';
 import { ScoreLabH2HCard } from './ScoreLabH2HCard';
 import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
 
@@ -52,18 +58,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     }
 
     // 1. Gyorsítótár ellenőrzése
-    const cacheKey = `soccerai_odds_cache_${fId}`;
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const { timestamp, data } = JSON.parse(cached);
-        if (Date.now() - timestamp < 60 * 60 * 1000 && data) {
-          setRealOdds(data);
-          return;
-        }
-      }
-    } catch {
-      // cache olvasási hiba esetén folytatjuk
+    const cached = getCachedFixtureOdds(fId);
+    if (cached) {
+      setRealOdds(cached);
+      return;
     }
 
     // 2. Automatikus háttérbetöltés
@@ -93,6 +91,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
   // Valós bukmékeri oddsok kezelése (Pinnacle & Bet365)
   const fixtureId = resolveApiSportsFixtureId(match);
+  const ttlStatus = getOddsTtlStatus(realOdds);
+  const isRealOddsActive = ttlStatus.isReal && !ttlStatus.isExpired;
 
   const handleRefreshOdds = async () => {
     if (!fixtureId || loadingOdds) return;
@@ -388,9 +388,17 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                 <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
                   <span className="text-[10px] text-slate-400 block uppercase font-bold">Negyed-Kelly Tét</span>
-                  <span className="text-sm font-black text-amber-300">{match.quantAnalysis.quarterKellyPct}%</span>
+                  <span className="text-sm font-black text-amber-300">
+                    {isRealOddsActive && match.quantAnalysis.quarterKellyPct > 0
+                      ? `${match.quantAnalysis.quarterKellyPct}%`
+                      : '0.0%'}
+                  </span>
                   <span className="text-[9px] text-slate-500 block">
-                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Valós odds szükséges' : 'Max. tőkeallokáció'}
+                    {isRealOddsActive
+                      ? 'Max. tőkeallokáció'
+                      : ttlStatus.isExpired
+                      ? 'Letiltva (Lejárt odds)'
+                      : 'Letiltva (Szimulált ár)'}
                   </span>
                 </div>
               </div>
@@ -477,6 +485,17 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 {realOdds?.updatedAt && (
                   <span className="text-[10px] text-slate-400 hidden sm:inline">
                     Frissítve: {realOdds.updatedAt}
+                  </span>
+                )}
+                {ttlStatus.isReal && (
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                      ttlStatus.isExpired
+                        ? 'bg-red-500/15 text-red-300 border-red-500/30'
+                        : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+                    }`}
+                  >
+                    {ttlStatus.isExpired ? '🔴 Lejárt odds (60p TTL)' : `⏳ ${ttlStatus.remainingMinutes}p hátra`}
                   </span>
                 )}
                 {fixtureId ? (
@@ -608,7 +627,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     source?: string
                   ) => {
                     const hasOdd = odd !== undefined && odd > 1;
-                    const isPositive = ev !== undefined && ev !== null && ev > 0;
+                    const isPositive = isRealOddsActive && ev !== undefined && ev !== null && ev > 0;
 
                     return (
                       <div className="grid grid-cols-12 items-center py-1.5 px-2.5 rounded-lg bg-slate-950/50 hover:bg-slate-950/80 transition-colors border border-slate-800/60 text-xs">
@@ -625,7 +644,13 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
                         <div className="col-span-3 text-center">
                           {hasOdd ? (
-                            <span className="font-extrabold text-amber-300 font-mono bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            <span
+                              className={`font-extrabold font-mono px-2 py-0.5 rounded border ${
+                                !isRealOddsActive && ttlStatus.isExpired
+                                  ? 'text-red-300 bg-red-950/30 border-red-500/20 line-through'
+                                  : 'text-amber-300 bg-amber-500/10 border-amber-500/20'
+                              }`}
+                            >
                               {odd.toFixed(2)}
                             </span>
                           ) : (
@@ -634,7 +659,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                         </div>
 
                         <div className="col-span-2 text-right">
-                          {hasOdd && ev !== null && ev !== undefined ? (
+                          {hasOdd && isRealOddsActive && ev !== null && ev !== undefined ? (
                             <span
                               className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded border ${
                                 isPositive
@@ -643,6 +668,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                               }`}
                             >
                               {ev > 0 ? `+${ev}%` : `${ev}%`}
+                            </span>
+                          ) : hasOdd && !isRealOddsActive ? (
+                            <span className="text-slate-500 text-[10px] italic">
+                              {ttlStatus.isExpired ? 'Lejárt' : 'Letiltva'}
                             </span>
                           ) : (
                             <span className="text-slate-600 text-[10px]">-</span>
@@ -786,6 +815,12 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 market: defaultPick.market,
                 odds: defaultPick.odds,
                 probability: defaultPick.probability,
+                quarterKellyPct: isRealOddsActive ? match.quantAnalysis?.quarterKellyPct : 0,
+                isRealOdds: isRealOddsActive,
+                isSimulatedOdds: !isRealOddsActive,
+                bookmakerName: ttlStatus.bookmakerName,
+                oddsExpiresAt: ttlStatus.expiresAt,
+                isExpired: ttlStatus.isExpired,
               });
             }}
             className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${

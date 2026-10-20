@@ -558,7 +558,9 @@ export function buildMatchQuantAndPick(params: {
     rob: ReturnType<typeof robustnessGridTest>,
     market: PickMarket
   ): { ev: number; qk: number; isTop: boolean; rankScore: number } => {
-    const ev = calculateExpectedValue(prob, candidateOdds);
+    // Szimulált ár esetén a Value (+EV%) és Kelly tét szigorúan tiltott / 0, mivel nem képvisel valós piaci arbitrázst!
+    const rawEv = calculateExpectedValue(prob, candidateOdds);
+    const ev = isSimulatedOdds ? 0 : rawEv;
     const qk = isSimulatedOdds ? 0 : quarterKelly(prob, candidateOdds);
 
     if (rob.verdict === 'ELVETVE') {
@@ -837,10 +839,10 @@ export function buildMatchQuantAndPick(params: {
         probability: best.probability,
         odds: best.odds,
         confidence: best.confidence,
-        expectedValue: best.expectedValue,
+        expectedValue: isSimulatedOdds ? 0 : best.expectedValue,
         isTopPick: best.isTopPick,
         robustnessVerdict: best.robustnessVerdict,
-        quarterKellyPct: best.quarterKellyPct,
+        quarterKellyPct: isSimulatedOdds ? 0 : best.quarterKellyPct,
         reasoning: best.reasoning,
         isSimulatedOdds,
       }
@@ -852,7 +854,7 @@ export function buildMatchQuantAndPick(params: {
     minEdge: activeRob.minEdge,
     medianEdge: activeRob.medianEdge,
     posPct: activeRob.posPct,
-    quarterKellyPct: best ? best.quarterKellyPct : 0,
+    quarterKellyPct: isSimulatedOdds ? 0 : (best ? best.quarterKellyPct : 0),
     shinMargin: shinRes.margin,
     shinProbs: {
       home: Math.round(shinRes.probs[0] * 100),

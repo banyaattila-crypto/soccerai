@@ -3,6 +3,23 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.19.0] - 2026-10-20
+
+### Hozzáadva & Valós Odds Integráció (Added & Real Odds Integration)
+- **Valós Bukméker Oddsok (Pinnacle & Bet365) és Lejárat (TTL) Bekötése:**
+  - **Minden Ajánlási Nézet Lefedve:** A valós bukmékeri szorzók közvetlenül bekötve a `TopPicks` (3D kártya és szekunder szignálok), `ScannerView` (lehetőségek és szűrők), `StatsGrid` (rács cellák és szelvény gombok), `BetSlipDrawer` (szelvény és tétnapló), valamint a `MatchDetailModal` (részletes elemző nézet) felületekbe.
+  - **60 Perces Lejárati Idő (TTL) & Frissesség:** A gyorsítótárazott oddsok pontos lejárati idővel (`expiresAt`), hátralévő percekkel (`ttlMinutes`) és lejárati flaggel (`isExpired`) rendelkeznek. A felületeken valós idejű lejárati pill (`🏢 Pinnacle ⏳ 45p`) jelzi a piaci adat korát.
+  - **Lejárt Odds Kezelés:** Ha a bukmékeri odds lejár (>= 60 perc), a rendszer automatikusan megjelöli (`🔴 Lejárt odds`), a szorzót áthúzva jelzi, és azonnal zárolja a piaci él számítást az újrafrissítésig.
+- **Szimulált Árak Védelme & Value/Kelly Letiltása:**
+  - **Szigorú Value (+EV%) és Kelly Zárolás:** Szimulált árképzés esetén (`isSimulatedOdds === true`, hiányzó bukmékeri szorzó vagy lejárt odds) a Value (+EV%) és a Negyed-Kelly tét kijelzése szigorúan **le van tiltva és 0.0%-ra állítva**.
+  - **Megtévesztés Kizárása:** Megszűnt az önigazoló arbitrázs illúziója (amikor a modell a saját szintetikus árrésével számolt ki pozitív EV-t). A szimulált tippeken és lehetőségeken egyértelmű jelölés látható: `🧪 Szimulált ár (Value / Kelly letiltva)`.
+- **Scanner Valós Odds Szűrés & Preset Szigorítás:**
+  - **„Csak Valós Oddsok” Kapcsoló:** Új szűrőgomb a Scanner vezérlősávjában, amely egyetlen kattintással kizárja az összes szimulált vagy lejárt piacot.
+  - **Megbízható `best_ev` Preset:** A „Legjobb Érték (+EV)” preset immár kizárólag érvényes, nem lejárt, valós bukmékeri oddsokból származó pozitív éleket listáz.
+- **11 Új Dedikált Regressziós Teszt (`src/services/__tests__/realOddsExpirationRegression.test.ts`):**
+  - Teszteli a 60 perces lejárati TTL számítást, a lejárat detektálást, az `attachCachedRealOddsToMatches` viselkedését, a `predictionEngine` szimulált ár zárolását, valamint a `scannerService` szűrési garanciáit.
+  - A teljes tesztkészlet **123/123 sikeres teszttel** (100% pass) fut le.
+
 ## [1.18.0] - 2026-10-20
 
 ### Hozzáadva & Matematikai Egységesítés (Added & Model Unification)

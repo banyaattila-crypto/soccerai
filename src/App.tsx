@@ -2,7 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { MOCK_MATCHES, LEAGUES } from './data/mockMatches';
 import { fetchLiveMatches } from './services/footballDataApi';
-import { fetchApiSportsMatches, API_SPORTS_DEFAULT_KEY } from './services/apiSportsClient';
+import {
+  fetchApiSportsMatches,
+  API_SPORTS_DEFAULT_KEY,
+  attachCachedRealOddsToMatches,
+} from './services/apiSportsClient';
 import { Header, AppTab } from './components/Header';
 import { HeroKpi } from './components/HeroKpi';
 import { TopPicks } from './components/TopPicks';
@@ -155,16 +159,18 @@ export function App() {
         });
 
         if (combined.length > 0) {
-          setMatches(combined);
+          // Valós gyorsítótárazott bukmékeri oddsok és lejárati idők hozzácsatolása
+          const enhanced = attachCachedRealOddsToMatches(combined);
+          setMatches(enhanced);
           setIsDemoMode(false);
           setApiErrorNotice(null);
           
           // 1. Kezdés előtti predikciók megváltoztathatatlan rögzítése az audit naplóba
-          recordPreMatchPredictions(combined);
+          recordPreMatchPredictions(enhanced);
           // 2. Korábban rögzített auditált predikciók lezárása valós befejezett meccsekkel
-          settleAuditPredictions(combined);
+          settleAuditPredictions(enhanced);
           // 3. Tartós előzmények
-          persistFinishedMatchesToHistory(combined);
+          persistFinishedMatchesToHistory(enhanced);
           const secText = liveSecondary.length > 0
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} egyéb európai & másodosztályú liga)`
             : '';
