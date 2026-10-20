@@ -6,6 +6,7 @@ export type ScannerPreset =
   | 'all'
   | 'best_ev'
   | 'ai_picks'
+  | 'value_sweetspot'
   | 'over_25'
   | 'btts'
   | 'favorites'
@@ -292,12 +293,24 @@ export function filterAndSortOpportunities(
         return item.expectedValue > 0;
       case 'ai_picks':
         return item.match.aiPick?.market === item.market;
+      case 'value_sweetspot':
+        return (
+          item.odds >= 1.55 &&
+          item.odds <= 2.45 &&
+          (item.expectedValue > 0 || item.probability >= 48)
+        );
       case 'over_25':
         return item.market === 'OVER_25';
       case 'btts':
         return item.market === 'BTTS_YES';
       case 'favorites':
-        return (item.market === '1' && item.probability >= 58) || (item.market === '2' && item.probability >= 55);
+        // Csak a valódi, játszható favoritok (kizárva az 1.10 - 1.35 mini-oddsokat)
+        return (
+          ((item.market === '1' && item.probability >= 52) ||
+            (item.market === '2' && item.probability >= 50)) &&
+          item.odds >= 1.45 &&
+          item.odds <= 2.25
+        );
       case 'half_time':
         return item.market === 'FH_OVER_05' && item.probability >= 68;
       case 'underdogs':

@@ -3,6 +3,20 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.16.5] - 2026-10-20
+
+### Hozzáadva & Javítva (Added & Fixed)
+- **Kvantitatív Érték-Index és Játszható Szorzók (1.50+ Sweet Spot, `src/services/predictionEngine.ts`):**
+  - **Megszűnt a használhatatlan mini-oddsok (< 1.40) automatikus ajánlása:** Korábban a tisztán valószínűség alapú pontozás miatt az óriásfavoritok 1.12–1.25-ös szorzói lettek a mérkőzések „Top Tippjei”.
+  - **Új Érték-Index Formula:** Az 1.40 alatti szorzók erős pontlevonást kapnak (-40 .. -65 pont), míg a sportfogadás kvantitatív édes-pontja (**1.55 – 2.45**) +32 pontos kiemelt értékelést és +EV bónuszt kap.
+  - **Intelligens Piacválasztás Favoritoknál:** Ha egy favorit sima győzelme csak 1.15-öt fizet, az AI automatikusan a valós értékkel bíró alternatív piacokat (pl. Over 2.5 gól, BTTS & Over 2.5) jelöli ki ajánlott tippnek.
+  - **TopPicks Szorzósáv Gyorsválasztó (`src/components/TopPicks.tsx`):** Dedikált szűrő a Nap Top 3 Kiemelt Tippjénél (`🎯 Érték Szorzók 1.50+`, `🌐 Összes Szorzó`, `🛡️ Alacsony Szorzók < 1.50`). A kártyákon fényes zöld szorzó-jelvény mutatja a játszható értékpiacokat.
+  - **Scanner Szorzósáv Szűrő (`src/components/ScannerView.tsx` & `scannerService.ts`):** Új `🎯 Érték Sáv (1.55 - 2.45)` preset és beépített `Min. Odds` választó (1.01+, 1.40+, 1.55+, 1.75+, 2.00+).
+- **Nagyobb és Folyamatosan Forgó 3D Labda (`src/components/Logo.tsx`, `Header.tsx`):**
+  - **Nagyobb, tiszta megjelenés:** A fejlécben a méret 38px-ről **46px-re nőtt**, a belső renderelési sugár a doboz **97%-át** kitölti, így a fotorealisztikus textúra és a FIFA 2026 embléma kiválóan látható.
+  - **Folyamatos, megállásmentes rotáció:** A forgási szög és állapot perzisztens `useRef`-be került, így az egér mozgatása és a hover állapot NEM nullázza le a pozíciót, a labda sosem akad meg.
+  - **Optimális forgási sebesség:** ~16 másodperces lágy, nyugodt és elegáns 3D fordulat, ami jól észrevehetően és folyamatosan forog.
+
 ## [1.16.4] - 2026-10-20
 
 ### Javítva & Fotorealisztikus 3D Grafika (Fixed & Photorealistic Graphics)

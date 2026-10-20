@@ -421,6 +421,67 @@ export function buildMatchQuantAndPick(params: {
     probabilities.bttsAndOver25 ??
     Math.round((probabilities.bttsYes * probabilities.over25) / 100);
 
+  /**
+   * Kvantitatív Fogadói Érték-Index (Betting Value Index)
+   * Megoldja a problémát: az alacsony, használhatatlan mini-oddsok (< 1.40) elkerülése,
+   * és a fogadói édes-pont (Sweet Spot: 1.55 – 2.40) előtérbe helyezése.
+   */
+  const evaluateCandidate = (
+    prob: number,
+    candidateOdds: number,
+    rob: ReturnType<typeof robustnessGridTest>,
+    market: PickMarket
+  ): { ev: number; qk: number; isTop: boolean; rankScore: number } => {
+    const ev = calculateExpectedValue(prob, candidateOdds);
+    const qk = isSimulatedOdds ? 0 : quarterKelly(prob, candidateOdds);
+
+    if (rob.verdict === 'ELVETVE') {
+      return { ev, qk, isTop: false, rankScore: -999 };
+    }
+
+    // A) Odds használhatósági & játszhatósági súlyozás
+    let oddsScore = 0;
+    if (candidateOdds < 1.30) {
+      oddsScore = -65; // Használhatatlan mini-odds (pl. 1.15, 1.20)
+    } else if (candidateOdds < 1.40) {
+      oddsScore = -40; // Túl alacsony, aszimmetrikus kockázatú
+    } else if (candidateOdds < 1.50) {
+      oddsScore = -10; // Határeset
+    } else if (candidateOdds >= 1.55 && candidateOdds <= 2.35) {
+      oddsScore = 32; // SWEET SPOT: Ideális fogadási értéksáv!
+    } else if (candidateOdds > 2.35 && candidateOdds <= 2.85) {
+      oddsScore = 22; // Kiváló értéket adó magasabb szorzó
+    } else if (candidateOdds > 2.85 && candidateOdds <= 3.50) {
+      oddsScore = 12;
+    } else {
+      oddsScore = 2;
+    }
+
+    // B) Várható Érték (+EV) súly: A valós matematikai előnyt erősítjük
+    const evBonus = ev > 0 ? Math.min(30, ev * 1.6) : ev * 0.9;
+
+    // C) Modell alapesély (skálázva, max 42 pont)
+    const probScore = (prob / 100) * 42;
+
+    // D) Robusztussági bónusz (λ-rács teszt)
+    const robBonus = rob.verdict === 'ROBUSZTUS' ? 14 : rob.verdict === 'valószínű' ? 7 : 0;
+
+    // E) Piac-specifikus értékpreferencia (gólkombók és over piacok jobb értéket hordoznak)
+    const marketBonus =
+      market === 'BTTS_AND_OVER25' ? 10 : market === 'OVER_25' || market === 'BTTS_YES' ? 5 : 0;
+
+    const rankScore = Math.round((probScore + oddsScore + evBonus + robBonus + marketBonus) * 10) / 10;
+
+    // Csak akkor minősülhet 'isTopPick'-nek, ha a szorzó valóban JÁTSZHATÓ (>= 1.48)!
+    const isTop =
+      (rob.verdict === 'ROBUSZTUS' || rob.verdict === 'valószínű') &&
+      candidateOdds >= 1.48 &&
+      rankScore >= 50 &&
+      prob >= 46;
+
+    return { ev, qk, isTop, rankScore };
+  };
+
   // 1. Kombinált: BTTS & 2.5 gól felett (egzakt mátrix valószínűségből)
   if (combinedProb >= 48 && probabilities.bttsYes >= 58 && probabilities.over25 >= 58) {
     const combinedOdds = Math.max(
@@ -435,9 +496,12 @@ export function buildMatchQuantAndPick(params: {
       'BTTS_AND_OVER25'
     );
     if (rob.verdict !== 'ELVETVE') {
-      const ev = calculateExpectedValue(combinedProb, combinedOdds);
-      const qk = isSimulatedOdds ? 0 : quarterKelly(combinedProb, combinedOdds);
-      const isTop = rob.verdict === 'ROBUSZTUS' || (rob.verdict === 'valószínű' && combinedProb >= 53);
+      const { ev, qk, isTop, rankScore } = evaluateCandidate(
+        combinedProb,
+        combinedOdds,
+        rob,
+        'BTTS_AND_OVER25'
+      );
       candidates.push({
         market: 'BTTS_AND_OVER25',
         marketLabel: 'BTTS & 2.5 gól felett',
@@ -449,7 +513,7 @@ export function buildMatchQuantAndPick(params: {
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
         reasoning: `Gólmátrix közös esély: ${combinedProb}% (${homeXg.toFixed(1)} vs ${awayXg.toFixed(1)} xG, λ-rács: ${rob.verdict}, ${rob.posPct}% stabilitás).`,
-        rankScore: combinedProb + (rob.verdict === 'ROBUSZTUS' ? 12 : 6),
+        rankScore,
         robStats: rob,
       });
     }
@@ -465,11 +529,12 @@ export function buildMatchQuantAndPick(params: {
       'BTTS_YES'
     );
     if (rob.verdict !== 'ELVETVE') {
-      const ev = calculateExpectedValue(probabilities.bttsYes, odds.bttsYes);
-      const qk = isSimulatedOdds ? 0 : quarterKelly(probabilities.bttsYes, odds.bttsYes);
-      const isTop =
-        rob.verdict === 'ROBUSZTUS' ||
-        (rob.verdict === 'valószínű' && probabilities.bttsYes >= 62);
+      const { ev, qk, isTop, rankScore } = evaluateCandidate(
+        probabilities.bttsYes,
+        odds.bttsYes,
+        rob,
+        'BTTS_YES'
+      );
       candidates.push({
         market: 'BTTS_YES',
         marketLabel: 'Mindkét csapat szerez gólt (BTTS)',
@@ -481,14 +546,14 @@ export function buildMatchQuantAndPick(params: {
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
         reasoning: `Piacfüggő λ-rács teszt (BTTS): ${rob.verdict} (${rob.posPct}% stabilitás). Becsült xG: ${homeXg.toFixed(1)} vs ${awayXg.toFixed(1)}.`,
-        rankScore: probabilities.bttsYes + (rob.verdict === 'ROBUSZTUS' ? 9 : 4),
+        rankScore,
         robStats: rob,
       });
     }
   }
 
   // 3. Hazai győzelem (1)
-  if (probabilities.homeWin >= 55) {
+  if (probabilities.homeWin >= 52) {
     const rob = robustnessGridTest(
       homeXg,
       awayXg,
@@ -497,11 +562,12 @@ export function buildMatchQuantAndPick(params: {
       '1'
     );
     if (rob.verdict !== 'ELVETVE') {
-      const ev = calculateExpectedValue(probabilities.homeWin, odds.home);
-      const qk = isSimulatedOdds ? 0 : quarterKelly(probabilities.homeWin, odds.home);
-      const isTop =
-        rob.verdict === 'ROBUSZTUS' ||
-        (rob.verdict === 'valószínű' && probabilities.homeWin >= 62);
+      const { ev, qk, isTop, rankScore } = evaluateCandidate(
+        probabilities.homeWin,
+        odds.home,
+        rob,
+        '1'
+      );
       candidates.push({
         market: '1',
         marketLabel: `${homeTeamName} Győzelem (1)`,
@@ -512,15 +578,18 @@ export function buildMatchQuantAndPick(params: {
         isTopPick: isTop,
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
-        reasoning: `Piacfüggő λ-rács teszt (1): ${rob.verdict} (${rob.posPct}% stabilitás). Hazai modell esély: ${probabilities.homeWin}%.`,
-        rankScore: probabilities.homeWin + (rob.verdict === 'ROBUSZTUS' ? 10 : 5),
+        reasoning:
+          odds.home < 1.40
+            ? `Hazai dominancia (${probabilities.homeWin}%), de a szorzó alacsony (@${odds.home.toFixed(2)}).`
+            : `Piacfüggő λ-rács teszt (1): ${rob.verdict} (${rob.posPct}% stabilitás). Hazai modell esély: ${probabilities.homeWin}%.`,
+        rankScore,
         robStats: rob,
       });
     }
   }
 
   // 4. Vendég győzelem (2)
-  if (probabilities.awayWin >= 54) {
+  if (probabilities.awayWin >= 50) {
     const rob = robustnessGridTest(
       homeXg,
       awayXg,
@@ -529,11 +598,12 @@ export function buildMatchQuantAndPick(params: {
       '2'
     );
     if (rob.verdict !== 'ELVETVE') {
-      const ev = calculateExpectedValue(probabilities.awayWin, odds.away);
-      const qk = isSimulatedOdds ? 0 : quarterKelly(probabilities.awayWin, odds.away);
-      const isTop =
-        rob.verdict === 'ROBUSZTUS' ||
-        (rob.verdict === 'valószínű' && probabilities.awayWin >= 60);
+      const { ev, qk, isTop, rankScore } = evaluateCandidate(
+        probabilities.awayWin,
+        odds.away,
+        rob,
+        '2'
+      );
       candidates.push({
         market: '2',
         marketLabel: `${awayTeamName} Győzelem (2)`,
@@ -544,15 +614,18 @@ export function buildMatchQuantAndPick(params: {
         isTopPick: isTop,
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
-        reasoning: `Piacfüggő λ-rács teszt (2): ${rob.verdict} (${rob.posPct}% stabilitás). Vendég modell esély: ${probabilities.awayWin}%.`,
-        rankScore: probabilities.awayWin + (rob.verdict === 'ROBUSZTUS' ? 10 : 5),
+        reasoning:
+          odds.away < 1.40
+            ? `Vendég favorit (${probabilities.awayWin}%), de a szorzó alacsony (@${odds.away.toFixed(2)}).`
+            : `Piacfüggő λ-rács teszt (2): ${rob.verdict} (${rob.posPct}% stabilitás). Vendég modell esély: ${probabilities.awayWin}%.`,
+        rankScore,
         robStats: rob,
       });
     }
   }
 
   // 5. 2.5 gól felett (OVER_25)
-  if (probabilities.over25 >= 56) {
+  if (probabilities.over25 >= 55) {
     const rob = robustnessGridTest(
       homeXg,
       awayXg,
@@ -561,11 +634,12 @@ export function buildMatchQuantAndPick(params: {
       'OVER_25'
     );
     if (rob.verdict !== 'ELVETVE') {
-      const ev = calculateExpectedValue(probabilities.over25, odds.over25);
-      const qk = isSimulatedOdds ? 0 : quarterKelly(probabilities.over25, odds.over25);
-      const isTop =
-        rob.verdict === 'ROBUSZTUS' ||
-        (rob.verdict === 'valószínű' && probabilities.over25 >= 62);
+      const { ev, qk, isTop, rankScore } = evaluateCandidate(
+        probabilities.over25,
+        odds.over25,
+        rob,
+        'OVER_25'
+      );
       candidates.push({
         market: 'OVER_25',
         marketLabel: '2.5 gól felett',
@@ -577,14 +651,14 @@ export function buildMatchQuantAndPick(params: {
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
         reasoning: `Piacfüggő λ-rács teszt (Over 2.5): ${rob.verdict} (${rob.posPct}% stabilitás). Várható össz-gól: ${(homeXg + awayXg).toFixed(1)} xG.`,
-        rankScore: probabilities.over25 + (rob.verdict === 'ROBUSZTUS' ? 9 : 4),
+        rankScore,
         robStats: rob,
       });
     }
   }
 
   // 6. 2.5 gól alatt (UNDER_25)
-  if (probabilities.over25 <= 44) {
+  if (probabilities.over25 <= 45) {
     const underProb = 100 - probabilities.over25;
     const rob = robustnessGridTest(
       homeXg,
@@ -594,11 +668,12 @@ export function buildMatchQuantAndPick(params: {
       'UNDER_25'
     );
     if (rob.verdict !== 'ELVETVE') {
-      const ev = calculateExpectedValue(underProb, odds.under25);
-      const qk = isSimulatedOdds ? 0 : quarterKelly(underProb, odds.under25);
-      const isTop =
-        rob.verdict === 'ROBUSZTUS' ||
-        (rob.verdict === 'valószínű' && underProb >= 62);
+      const { ev, qk, isTop, rankScore } = evaluateCandidate(
+        underProb,
+        odds.under25,
+        rob,
+        'UNDER_25'
+      );
       candidates.push({
         market: 'UNDER_25',
         marketLabel: '2.5 gól alatt',
@@ -610,7 +685,7 @@ export function buildMatchQuantAndPick(params: {
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
         reasoning: `Piacfüggő λ-rács teszt (Under 2.5): ${rob.verdict} (${rob.posPct}% stabilitás). Alacsony várható gólszám (${(homeXg + awayXg).toFixed(1)} xG).`,
-        rankScore: underProb + (rob.verdict === 'ROBUSZTUS' ? 9 : 4),
+        rankScore,
         robStats: rob,
       });
     }

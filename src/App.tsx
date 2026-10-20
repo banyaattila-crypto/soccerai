@@ -568,7 +568,7 @@ export function App() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-3 md:col-span-2">
               <div className="flex items-center gap-2.5">
-                <Logo size={32} />
+                <Logo size={40} />
                 <span className="font-extrabold text-white text-base tracking-tight">
                   Soccer<span className="text-amber-400">AI</span>
                 </span>

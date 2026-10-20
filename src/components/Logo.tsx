@@ -17,24 +17,63 @@ interface LutPixel {
   alpha: number;   // Él-simításos átlátszatlanság [0..255]
 }
 
+const TW = 1024;
+const TH = 512;
+
+// Globális gyorsítótár a 4-nézetes Trionda Pro meccslabda textúrához
+let cachedTexData: Uint32Array | null = null;
+let isTexLoading = false;
+const texLoadedCallbacks: Array<(data: Uint32Array) => void> = [];
+
+function loadTriondaTexture(cb: (data: Uint32Array) => void) {
+  if (cachedTexData) {
+    cb(cachedTexData);
+    return;
+  }
+  texLoadedCallbacks.push(cb);
+  if (isTexLoading) return;
+  isTexLoading = true;
+
+  const textureImg = new Image();
+  textureImg.src = '/trionda_texture_4way.jpg';
+  textureImg.onload = () => {
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = TW;
+    offCanvas.height = TH;
+    const offCtx = offCanvas.getContext('2d');
+    if (offCtx) {
+      offCtx.drawImage(textureImg, 0, 0, TW, TH);
+      const imgData = offCtx.getImageData(0, 0, TW, TH);
+      cachedTexData = new Uint32Array(imgData.data.buffer);
+      texLoadedCallbacks.forEach((fn) => fn(cachedTexData!));
+      texLoadedCallbacks.length = 0;
+    }
+  };
+}
+
 /**
  * 2026 FIFA World Cup Official Match Ball: ADIDAS TRIONDA PRO
  * 100% Fotorealisztikus, 8K stúdió minőségű 3D gömbleképezés:
  * - Valódi adidas TRIONDA PRO hivatalos meccslabda 4 nézetes szintézis (0°, 90°, 180°, 270°)
  * - Autentikus poliuretán bőrfelület mikro-textúrával és aerodinamikai mélyvarrásokkal
- * - USA kobaltkék (csillagokkal), Mexikó smaragdzöld (azték motívummal), Kanada rubinpiros (juharlevéllel) és arany szegélyek
- * - Hivatalos FIFA WORLD CUP 2026 trófea embléma, adidas 3-bar logo és FIFA Connected Ball Technology pecsét
+ * - Folyamatos, soha meg nem álló, lágy és elegáns 3D rotáció (~16 mp / teljes kör)
+ * - Nagyobb, jól látható méret és tiszta 97%-os keretkitöltés
  * - Kétszeres bilineáris textúra-szűrés a borotvaéles, aliasing-mentes forgásért
- * - Méltóságteljes, nyugodt, ultralassú 3D rotáció (~60 mp / teljes fordulat)
  */
 export const Logo: React.FC<LogoProps> = ({
   className = '',
-  size = 42,
+  size = 46,
   interactive = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [isSuperSpinning, setIsSuperSpinning] = useState(false);
+  const isHoveredRef = useRef(false);
+  const isSuperSpinningRef = useRef(false);
+  const rotationAngleRef = useRef(0);
+
+  useEffect(() => {
+    isHoveredRef.current = isHovered;
+  }, [isHovered]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -49,13 +88,10 @@ export const Logo: React.FC<LogoProps> = ({
     canvas.width = pixelSize;
     canvas.height = pixelSize;
 
-    // A labda optimális kitöltése: a doboz 92%-át kitölti (tiszta, nagy és részletgazdag)
-    const R = Math.round(pixelSize * 0.46);
+    // A labda optimális mérete: a teljes doboz 97%-át kitölti (tiszta, nagy és látványos)
+    const R = Math.round(pixelSize * 0.485);
     const centerX = pixelSize / 2;
     const centerY = pixelSize / 2;
-
-    const TW = 1024;
-    const TH = 512;
 
     // 12 fokos enyhe, természetes forgástengely-dőlés
     const tilt = (12 * Math.PI) / 180;
@@ -136,26 +172,16 @@ export const Logo: React.FC<LogoProps> = ({
     const outData = new Uint32Array(outputImgData.data.buffer);
     const nPixels = lut.length;
 
-    let texData: Uint32Array | null = null;
     let animId: number;
-    let rotationAngle = 0;
     let lastTime = performance.now();
     let isTabVisible = true;
+    let localTexData: Uint32Array | null = cachedTexData;
 
-    // Hivatalos 4-nézetes fotorealisztikus Trionda Pro meccslabda textúra
-    const textureImg = new Image();
-    textureImg.src = '/trionda_texture_4way.jpg';
-    textureImg.onload = () => {
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = TW;
-      offCanvas.height = TH;
-      const offCtx = offCanvas.getContext('2d');
-      if (offCtx) {
-        offCtx.drawImage(textureImg, 0, 0, TW, TH);
-        const imgData = offCtx.getImageData(0, 0, TW, TH);
-        texData = new Uint32Array(imgData.data.buffer);
-      }
-    };
+    if (!localTexData) {
+      loadTriondaTexture((data) => {
+        localTexData = data;
+      });
+    }
 
     const handleVisibility = () => {
       isTabVisible = !document.hidden;
@@ -173,19 +199,22 @@ export const Logo: React.FC<LogoProps> = ({
       const dt = Math.min(64, now - lastTime);
       lastTime = now;
 
-      // FORGÁSI SEBESSÉG: Nyugodt, méltóságteljes (~63 mp / teljes 360° fordulat)
-      let speed = 0.00010;
-      if (isSuperSpinning) speed = 0.0022;
-      else if (isHovered) speed = 0.00022;
+      // FORGÁSI SEBESSÉG: Nyugodt, folyamatos és lágy (~16 mp / teljes 360° fordulat)
+      // Nem túl gyors, de folyamatosan és jól láthatóan forog, soha nem áll meg!
+      let speed = 0.00039;
+      if (isSuperSpinningRef.current) speed = 0.0035;
+      else if (isHoveredRef.current) speed = 0.00075;
 
-      rotationAngle += speed * dt;
-      if (rotationAngle > 1000) rotationAngle = 0;
+      rotationAngleRef.current += speed * dt;
+      if (rotationAngleRef.current > 1000) rotationAngleRef.current = 0;
 
-      const rotationShift = (rotationAngle / (2 * Math.PI)) % 1.0;
+      const rotationShift = (rotationAngleRef.current / (2 * Math.PI)) % 1.0;
 
       ctx.clearRect(0, 0, pixelSize, pixelSize);
 
-      if (texData) {
+      const activeTex = localTexData || cachedTexData;
+
+      if (activeTex) {
         outData.fill(0);
 
         for (let i = 0; i < nPixels; i++) {
@@ -205,10 +234,10 @@ export const Logo: React.FC<LogoProps> = ({
           const row1 = v1 * TW;
 
           // Bilineáris 4-pontos mintavételezés a borotvaéles, aliasing-mentes minőségért
-          const c00 = texData[row0 + u0];
-          const c10 = texData[row0 + u1];
-          const c01 = texData[row1 + u0];
-          const c11 = texData[row1 + u1];
+          const c00 = activeTex[row0 + u0];
+          const c10 = activeTex[row0 + u1];
+          const c01 = activeTex[row0 + u0];
+          const c11 = activeTex[row1 + u1];
 
           const w00 = (1 - fu) * (1 - fv);
           const w10 = fu * (1 - fv);
@@ -261,12 +290,14 @@ export const Logo: React.FC<LogoProps> = ({
       cancelAnimationFrame(animId);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [size, isHovered, isSuperSpinning]);
+  }, [size]); // CSAK size változásakor épül újra a LUT, hover állapot NEM szakítja meg!
 
   const handleClick = () => {
     if (!interactive) return;
-    setIsSuperSpinning(true);
-    setTimeout(() => setIsSuperSpinning(false), 1200);
+    isSuperSpinningRef.current = true;
+    setTimeout(() => {
+      isSuperSpinningRef.current = false;
+    }, 1200);
   };
 
   return (
@@ -274,9 +305,9 @@ export const Logo: React.FC<LogoProps> = ({
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      title="FIFA 2026 Világbajnokság hivatalos meccslabda: adidas TRIONDA PRO • 3D forgatás"
+      title="FIFA 2026 Világbajnokság hivatalos meccslabda: adidas TRIONDA PRO • 3D folyamatos forgás"
       className={`relative inline-flex items-center justify-center select-none cursor-pointer transition-transform duration-300 ${
-        isHovered ? 'scale-108' : 'scale-100'
+        isHovered ? 'scale-106' : 'scale-100'
       } ${className}`}
       style={{
         width: size,
@@ -290,7 +321,7 @@ export const Logo: React.FC<LogoProps> = ({
           height: size,
           display: 'block',
         }}
-        className="rounded-full drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
+        className="rounded-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.55)]"
       />
     </div>
   );

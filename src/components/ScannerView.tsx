@@ -47,6 +47,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
   const [minProb, setMinProb] = useState<number>(50);
+  const [minOdds, setMinOdds] = useState<number>(1.40);
   const [sortBy, setSortBy] = useState<ScannerSortBy>('ev');
 
   // Összes lehetőség kinyerése
@@ -59,13 +60,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     return filterAndSortOpportunities(allOpportunities, {
       preset: activePreset,
       minProb,
+      minOdds,
       leagueId: selectedLeague,
       dayFilter,
       statusFilter,
       searchQuery,
       sortBy,
     });
-  }, [allOpportunities, activePreset, minProb, selectedLeague, dayFilter, statusFilter, searchQuery, sortBy]);
+  }, [allOpportunities, activePreset, minProb, minOdds, selectedLeague, dayFilter, statusFilter, searchQuery, sortBy]);
 
   // Ligák radar statisztikái
   const leagueRadarStats = useMemo(() => {
@@ -94,10 +96,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
   const presets: { id: ScannerPreset; label: string; icon: React.ReactNode }[] = [
     { id: 'best_ev', label: '💎 +EV Értéktippek', icon: <Zap className="w-3.5 h-3.5" /> },
+    { id: 'value_sweetspot', label: '🎯 Érték Sáv (1.55 - 2.45)', icon: <Zap className="w-3.5 h-3.5" /> },
     { id: 'ai_picks', label: '🎯 Kiemelt MI Tippek', icon: <Sparkles className="w-3.5 h-3.5" /> },
     { id: 'over_25', label: '⚽ Over 2.5 Gólradar', icon: <Flame className="w-3.5 h-3.5" /> },
     { id: 'btts', label: '🥅 Mindkét Csapat Lő', icon: <TrendingUp className="w-3.5 h-3.5" /> },
-    { id: 'favorites', label: '🛡️ Erős Favoritok', icon: <Trophy className="w-3.5 h-3.5" /> },
+    { id: 'favorites', label: '🛡️ Játszható Favoritok (1.45+)', icon: <Trophy className="w-3.5 h-3.5" /> },
     { id: 'half_time', label: '⚡ 1.F > 0.5 Gól', icon: <Layers className="w-3.5 h-3.5" /> },
     { id: 'underdogs', label: '💣 Értékes Meglepetések', icon: <ShieldAlert className="w-3.5 h-3.5" /> },
     { id: 'all', label: 'Összes Lehetőség', icon: <Filter className="w-3.5 h-3.5" /> },
@@ -266,7 +269,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
           </div>
 
           {/* Szűrő és Rendezősáv */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 text-xs">
             {/* Keresés */}
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -292,6 +295,22 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                     {l.flag} {l.name}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            {/* Min. Szorzó Szűrő */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-400 whitespace-nowrap">Min. Odds:</span>
+              <select
+                value={minOdds}
+                onChange={(e) => setMinOdds(Number(e.target.value))}
+                className="w-full bg-slate-950/90 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/60 font-semibold"
+              >
+                <option value={1.01}>Minden odds (1.01+)</option>
+                <option value={1.40}>Játszható odds (1.40+)</option>
+                <option value={1.55}>🎯 Érték Sáv (1.55+)</option>
+                <option value={1.75}>🔥 Magas Érték (1.75+)</option>
+                <option value={2.00}>💎 Duplázó (2.00+)</option>
               </select>
             </div>
 

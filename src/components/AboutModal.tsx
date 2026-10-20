@@ -34,7 +34,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           
           {/* Logo & Verzió kártya */}
           <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900/60 border border-amber-500/30">
-            <Logo size={52} className="shrink-0" />
+            <Logo size={60} className="shrink-0" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black text-white tracking-tight">

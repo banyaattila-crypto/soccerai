@@ -8,6 +8,7 @@ import {
   calculateExpectedValue,
   robustnessGridTest,
   lambdaInversionReport,
+  buildMatchQuantAndPick,
 } from '../predictionEngine';
 
 describe('predictionEngine - Matematikai és Kvantitatív Motor', () => {
@@ -161,6 +162,78 @@ describe('predictionEngine - Matematikai és Kvantitatív Motor', () => {
       expect(rep.marketLambda).toBeGreaterThan(1.5);
       expect(rep.marketLambda).toBeLessThan(4.0);
       expect(typeof rep.verdict).toBe('string');
+    });
+  });
+
+  describe('Kvantitatív Érték-Index és Játszható Odds Választás (buildMatchQuantAndPick)', () => {
+    it('óriásfavorit esetén a használhatatlan mini-odds (pl. 1.15) helyett a játszható értékpiacot (pl. Over 2.5 @ 1.65) választja', () => {
+      const res = buildMatchQuantAndPick({
+        homeTeamName: 'Manchester City',
+        awayTeamName: 'Southampton',
+        homeXg: 2.8,
+        awayXg: 0.6,
+        probabilities: {
+          homeWin: 82, // Nagy favorit, de 1.15 mini-odds!
+          draw: 12,
+          awayWin: 6,
+          bttsYes: 55,
+          over15: 88,
+          over25: 72, // 72% esély @ 1.65 szorzó -> játszható Sweet Spot!
+          over35: 48,
+          fhOver05: 82,
+        },
+        odds: {
+          home: 1.15,
+          draw: 8.50,
+          away: 18.0,
+          bttsYes: 1.95,
+          over25: 1.65,
+          under25: 2.25,
+        },
+        dataQuality: 'A',
+        leagueLabel: 'Premier League',
+        isSimulatedOdds: false,
+      });
+
+      expect(res.aiPick).toBeDefined();
+      // Nem a használhatatlan 1.15-ös szorzót választotta!
+      expect(res.aiPick?.odds).toBeGreaterThanOrEqual(1.50);
+      expect(res.aiPick?.market).toBe('OVER_25');
+      expect(res.aiPick?.isTopPick).toBe(true);
+    });
+
+    it('alacsony odds (< 1.40) esetén soha nem jelöli meg a tippet isTopPick-ként', () => {
+      const res = buildMatchQuantAndPick({
+        homeTeamName: 'Real Madrid',
+        awayTeamName: 'Getafe',
+        homeXg: 2.5,
+        awayXg: 0.4,
+        probabilities: {
+          homeWin: 85,
+          draw: 10,
+          awayWin: 5,
+          bttsYes: 40,
+          over15: 80,
+          over25: 50,
+          over35: 30,
+          fhOver05: 75,
+        },
+        odds: {
+          home: 1.20,
+          draw: 7.00,
+          away: 15.0,
+          bttsYes: 2.30,
+          over25: 1.35, // még az over is alacsony
+          under25: 3.10,
+        },
+        dataQuality: 'A',
+        leagueLabel: 'La Liga',
+        isSimulatedOdds: false,
+      });
+
+      if (res.aiPick && res.aiPick.odds < 1.40) {
+        expect(res.aiPick.isTopPick).toBe(false);
+      }
     });
   });
 });

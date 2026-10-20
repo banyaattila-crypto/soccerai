@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.16.4';
-export const APP_RELEASE_NAME = 'Fotorealisztikus 8K adidas TRIONDA PRO FIFA 2026 3D Meccslabda';
+export const APP_VERSION = '1.16.5';
+export const APP_RELEASE_NAME = 'Játszható Érték-Szorzók (1.50+) & Nagyobb Folyamatos 3D Labda';
 export const APP_RELEASE_DATE = '2026-10-20';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,9 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Fotorealisztikus 8K adidas TRIONDA PRO: 4-nézetes ortogonális stúdiófotó-szintézis (0°, 90°, 180°, 270°), valódi poliuretán bőrfelülettel és mikro-textúrával',
-    'Hivatalos FIFA 2026 & adidas Elemek: Eredeti FIFA World Cup 2026 arany trófeás embléma, adidas 3-bar logo és FIFA Connected Ball Technology pecsét',
-    '3 Rendező Ország Hiteles Hullámai: USA kobaltkék (csillagokkal), Mexikó smaragdzöld (azték motívummal), Kanada rubinpiros (juharlevéllel) és elegáns arany szegélyek',
-    'Kétszeres Bilineáris Textúra-szűrés: 100% sima, borotvaéles, aliasing- és vibrálásmentes renderelés 60 FPS-sel',
-    'Ultralassú, Nyugodt 3D Rotáció: Méltóságteljes ~60 másodperces fordulat, arcade díszgyűrűk nélkül, tiszta prémium megjelenéssel',
+    'Kvantitatív Érték-Index (Játszható 1.50+ Szorzók): Megszűnt a használhatatlan mini-oddsok (< 1.40) automatikus ajánlása; a modell a fogadói édes-pontot (Sweet Spot: 1.55 – 2.45) részesíti előnyben',
+    'Intelligens Piacválasztás Favoritoknál: Ha egy óriásfavorit győzelme csak 1.15-öt fizet, az AI automatikusan a valós értékkel bíró gólpiacokat (Over 2.5, BTTS) javasolja',
+    'TopPicks & Scanner Szorzósáv Gyorsválasztó: Dedikált gombok a Top 3 tippnél és a Scannerben (🎯 Érték Szorzók 1.50+, 🌐 Összes szorzó, 🛡️ Alacsony kockázat)',
+    'Nagyobb, Folyamatosan Forgó 3D Meccslabda: 46px méret, 97%-os tiszta felületkitöltés, és megállásmentes, lágy, észrevehető ~16 másodperces 3D rotáció',
   ],
 };

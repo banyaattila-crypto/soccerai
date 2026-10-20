@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="h-15 sm:h-16 flex items-center justify-between gap-2">
           {/* Bal oldal: 3D WOW Focilabda Logó & Cím */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <Logo size={38} className="shrink-0" />
+            <Logo size={46} className="shrink-0" />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-amber-300 bg-clip-text text-transparent truncate">
