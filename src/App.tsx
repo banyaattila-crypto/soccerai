@@ -45,9 +45,24 @@ import {
 const DEFAULT_API_KEY = '';
 
 import { persistFinishedMatchesToHistory } from './services/historyService';
+import {
+  recordPreMatchPredictions,
+  settleAuditPredictions,
+  getAuditLog,
+} from './services/predictionAuditService';
 
 export function App() {
-  const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
+  const [matches, setMatches] = useState<Match[]>(() => {
+    try {
+      const savedDs = localStorage.getItem('focitipp_datasource');
+      if (savedDs === 'builtin') {
+        return MOCK_MATCHES;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   // Alapértelmezett fül: Napi Top Tippek ('picks')
   const [activeTab, setActiveTab] = useState<AppTab>('picks');
   const [dayFilter, setDayFilter] = useState<DayFilter>('today');
@@ -143,6 +158,12 @@ export function App() {
           setMatches(combined);
           setIsDemoMode(false);
           setApiErrorNotice(null);
+          
+          // 1. Kezdés előtti predikciók megváltoztathatatlan rögzítése az audit naplóba
+          recordPreMatchPredictions(combined);
+          // 2. Korábban rögzített auditált predikciók lezárása valós befejezett meccsekkel
+          settleAuditPredictions(combined);
+          // 3. Tartós előzmények
           persistFinishedMatchesToHistory(combined);
           const secText = liveSecondary.length > 0
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} egyéb európai & másodosztályú liga)`
@@ -321,36 +342,24 @@ export function App() {
 
   const yesterdayDateStr = useMemo(() => getRelativeDateStr(-1), []);
   const yesterdayStat = useMemo(() => {
-    const finishedYesterday = matches.filter(
-      (m) =>
-        (m.kickoffDate === yesterdayDateStr || m.status === 'FINISHED') &&
-        typeof m.homeScore === 'number' &&
-        typeof m.awayScore === 'number' &&
-        m.aiPick
+    // Szigorú integritási ellenőrzés:
+    // Kizárólag a hitelesített audit naplóban szereplő, kezdés előtt rögzített és tegnap lezárt meccsek számítanak!
+    // A régi/nem auditált vagy demó meccsek ROI-ját és találatát nem tekintjük igazolt eredménynek.
+    const auditLog = getAuditLog();
+    const verifiedSettledYesterday = auditLog.filter(
+      (r) =>
+        r.provenance === 'VERIFIED_PRE_MATCH' &&
+        r.settled &&
+        r.kickoffDate === yesterdayDateStr
     );
-    if (finishedYesterday.length === 0) return null;
-    let won = 0;
-    finishedYesterday.forEach((m) => {
-      if (
-        m.aiPick &&
-        evaluatePickWon(
-          m.homeScore,
-          m.awayScore,
-          m.aiPick.market,
-          m.aiPick.marketLabel,
-          m.homeHalfTimeScore,
-          m.awayHalfTimeScore
-        ) === true
-      ) {
-        won++;
-      }
-    });
+    if (verifiedSettledYesterday.length === 0) return null;
+    const won = verifiedSettledYesterday.filter((r) => r.status === 'WON').length;
     return {
       won,
-      total: finishedYesterday.length,
-      winRate: Math.round((won / finishedYesterday.length) * 100),
+      total: verifiedSettledYesterday.length,
+      winRate: Math.round((won / verifiedSettledYesterday.length) * 100),
     };
-  }, [matches, yesterdayDateStr]);
+  }, [yesterdayDateStr, matches]);
 
   const liveMatchCount = useMemo(
     () => matches.filter((m) => m.status === 'LIVE').length,

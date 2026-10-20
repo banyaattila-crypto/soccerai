@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.16.5`** (SemVer 2.0.0)  
-**Kiadás neve:** *Játszható Érték-Szorzók (1.50+) & Nagyobb Folyamatos 3D Labda*  
+**Aktuális verzió:** 🏷️ **`v1.17.0`** (SemVer 2.0.0)  
+**Kiadás neve:** *Pre-Match Megmásíthatatlan Predikciónapló & Szigorú Provenance Rendszer*  
 **Dátum:** 2026. október 20.  
-**Állapot:** ✅ **v1.16.5 Verzió Elkészült & Verifikálva (57/57 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.17.0 Verzió Elkészült & Verifikálva (64/64 Teszt Sikeres, 0 Hiba, 0 Figyelmeztetés, Szigorú TypeScript)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,17 +16,27 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.16.5`** kiadás újdonságai és fejlesztései:
-1. **Kvantitatív Érték-Index és Játszható Odds Sáv (1.50+ Sweet Spot, `predictionEngine.ts`):**
-   - Megszűnt az 1.10–1.35-ös használhatatlan mini-szorzók preferálása; a modell bünteti a mini-oddsokat és a sportfogadási édes-pontot (**1.55 – 2.45**) részesíti előnyben.
-   - Ha egy favorit győzelme csak 1.15-öt fizet, az AI automatikusan a valós értékkel bíró alternatív piacokat (Over 2.5, BTTS & Over) választja ki.
-   - A `TopPicks` fejlécében megjelent az azonnali szorzósáv-választó (`🎯 Érték Szorzók 1.50+`, `🌐 Összes Szorzó`, `🛡️ Alacsony Szorzók < 1.50`).
-   - A `Scanner`-ben új `🎯 Érték Sáv (1.55 - 2.45)` preset és dedikált `Min. Odds` szűrő érhető el.
-2. **Nagyobb, Folyamatosan Forgó 3D Hivatalos Meccslabda (`Logo.tsx`, `Header.tsx`):**
-   - A fejléc labda mérete **46px-re nőtt**, a belső renderelés 97%-ra skálázódik.
-   - A forgás folyamatos és akadásmentes (perzisztens `useRef`), a sebesség ~16 másodperc / kör, ami jól látható, megnyugtató és méltóságteljes.
+A **`v1.17.0`** kiadás újdonságai és fejlesztései:
+1. **Kezdés Előtti Megmásíthatatlan Predikciónapló (`predictionAuditService.ts`):**
+   - **Szigorú Pre-Kickoff Rögzítés:** Csak olyan meccsek predikciója kerülhet a hitelesített naplóba, amelyek még nem kezdődtek el (`UPCOMING`) és a hivatalos kezdés a jövőben van. Kezdés utáni vagy utólagos tippnaplózás szigorúan elutasítva.
+   - **Megmásíthatatlan (Write-Once / Append-Only):** A naplóba rögzített előrejelzés (piac, odds, valószínűség) fagyasztott, azt a későbbi szinkronizációk nem írhatják felül.
+   - **Integritási Aláírás:** Determinisztikus ellenőrző hash (`audit-<hex>`) készül minden bejegyzéshez.
+   - **Eredmény Kiértékelés:** A lefújást követően a valós API végeredmény alapján automatikusan lezárásra kerül a pre-match tipp (`WON` / `LOST` / `VOID`).
+   - **Audit JSON Export:** A teljes napló vágólapra másolható vagy letölthető.
+2. **Provenance Rendszer & Régi ROI-k Kizárása (`ResultsView.tsx`):**
+   - **Mock Fallback Teljes Eltávolítása:** Megszűnt a korábbi beépített mock meccsekre való fallback; fiktív adatokból nem képezhető hivatalos találat vagy ROI.
+   - **Két Elkülönített Eredmény Nézet:**
+     - *Hitelesített Pre-Match Napló:* Csak a kezdés előtt naplózott és valós meccsek eredményei számítanak a hivatalos KPI mutatókba (Találati Arány, Hitelesített ROI %, Nettó Profit).
+     - *Nem auditált külső archívum:* Külön lapon jeleníti meg a kezdés után/utólag beérkezett régebbi meccseket, egyértelmű figyelmeztetéssel, hogy nem képezik a hivatalos ROI részét.
+3. **Kezdeti Állapot Tisztítása (`App.tsx`, `HeroKpi.tsx`):**
+   - A mérkőzések állapota üres tömbbel (`[]`) indul az API mód esetén, elkerülve a mock meccsek felvillanását.
+   - A fejléc tegnapi találati statisztikája szigorúan a hitelesített audit naplóból számolódik (ha nincs tegnapi lezárt auditált meccs, az `Audit: Pre-Match Napló` pajzs-jelzés jelenik meg).
+4. **Tesztlefedettség:** 7 új dedikált egységteszt (`predictionAuditService.test.ts`), összesen **64/64 sikeres teszt**.
 
 ### Korábbi Fő Verziók Eredményei:
+
+* **v1.16.5 — Játszható Érték-Szorzók (1.50+ Sweet Spot) & Nagyobb 3D Labda:**
+  - Kvantitatív érték-index formulák, mini-oddsok (< 1.40) büntetése, 1.55–2.45 édes-pont preferálása, 46px folyamatosan forgó labda.
 
 * **v1.16.4 — Fotorealisztikus 8K adidas TRIONDA PRO FIFA 2026 3D Meccslabda:**
   - 4-nézetes stúdiófotó-szintézis (0°, 90°, 180°, 270°), bilineáris textúra-szűrés, letisztult prémium megjelenés.

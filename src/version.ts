@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.16.5';
-export const APP_RELEASE_NAME = 'Játszható Érték-Szorzók (1.50+) & Nagyobb Folyamatos 3D Labda';
+export const APP_VERSION = '1.17.0';
+export const APP_RELEASE_NAME = 'Pre-Match Megmásíthatatlan Predikciónapló & Provenance Rendszer';
 export const APP_RELEASE_DATE = '2026-10-20';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';

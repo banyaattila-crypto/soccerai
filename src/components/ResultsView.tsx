@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Match } from '../types/football';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Match, PredictionAuditRecord } from '../types/football';
 import {
   CheckCircle2,
   XCircle,
@@ -9,21 +9,22 @@ import {
   Zap,
   Filter,
   Flame,
-  BarChart3,
-  Check,
-  Archive,
   Calendar,
   Clock,
+  Lock,
+  Download,
+  AlertTriangle,
+  Info,
+  Check,
 } from 'lucide-react';
-import { MOCK_MATCHES } from '../data/mockMatches';
-import { getArchivedFinishedMatches } from '../services/historyService';
 import { getRelativeDateStr } from '../utils/dateUtils';
-
-interface ResultsViewProps {
-  matches: Match[];
-  onSelectMatch: (match: Match) => void;
-}
-
+import {
+  getAuditLog,
+  getVerifiedAuditStats,
+  exportAuditLogAsJson,
+  AUDIT_BASE_STAKE,
+} from '../services/predictionAuditService';
+import { getArchivedFinishedMatches } from '../services/historyService';
 import {
   evaluatePickWon,
   getMarketCategory,
@@ -32,112 +33,75 @@ import {
 
 export { evaluatePickWon, getMarketCategory, type MarketCategory };
 
-export type StatusFilter = 'ALL' | 'WON' | 'LOST';
+export type StatusFilter = 'ALL' | 'WON' | 'LOST' | 'PENDING';
+export type ProvenanceViewTab = 'verified' | 'unverified';
 
+interface ResultsViewProps {
+  matches: Match[];
+  onSelectMatch: (match: Match) => void;
+}
 
 export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch }) => {
+  const [provenanceTab, setProvenanceTab] = useState<ProvenanceViewTab>('verified');
   const [activeMarket, setActiveMarket] = useState<MarketCategory>('ALL');
   const [activeStatus, setActiveStatus] = useState<StatusFilter>('ALL');
   const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
   const [periodFilter, setPeriodFilter] = useState<'ALL' | 'TODAY' | 'YESTERDAY' | 'WEEK'>('ALL');
+  const [auditLogUpdateKey, setAuditLogUpdateKey] = useState<number>(0);
+  const [copiedJson, setCopiedJson] = useState<boolean>(false);
 
   const todayStr = useMemo(() => getRelativeDateStr(0), []);
   const yesterdayStr = useMemo(() => getRelativeDateStr(-1), []);
 
-  // Alaptét a virtuális ROI és nyereségszámításhoz (10 000 Ft egységtét)
-  const BASE_STAKE = 10000;
+  // Reakció az audit napló frissüléseire
+  useEffect(() => {
+    const handler = () => setAuditLogUpdateKey((prev) => prev + 1);
+    window.addEventListener('focitipp_audit_log_updated', handler);
+    return () => window.removeEventListener('focitipp_audit_log_updated', handler);
+  }, []);
 
-  // 1. Befejezett meccsek kinyerése és összefésülése a tartós helyi archívummal (sosem vesznek el)
-  const isMockFallback = useMemo(() => {
+  // 1. Audit napló betöltése a megmásíthatatlan tárolóból
+  const auditRecords = useMemo(() => {
+    return getAuditLog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auditLogUpdateKey, matches]);
+
+  // Hitelesített pre-match rekordok szűrése
+  const verifiedRecords = useMemo(() => {
+    return auditRecords.filter((r) => r.provenance === 'VERIFIED_PRE_MATCH');
+  }, [auditRecords]);
+
+  // 2. Hitelesített hivatalos statisztikák kiszámítása (KIZÁRÓLAG lezárt pre-match meccsekből!)
+  const verifiedStats = useMemo(() => {
+    return getVerifiedAuditStats(auditRecords, AUDIT_BASE_STAKE);
+  }, [auditRecords]);
+
+  // 3. Nem auditált meccsek (utólagos API vagy régi archívum meccsek)
+  const unverifiedFinishedMatches = useMemo(() => {
     const liveFinished = matches.filter((m) => m.status === 'FINISHED');
-    const archived = getArchivedFinishedMatches();
-    return liveFinished.length === 0 && archived.length === 0;
-  }, [matches]);
-
-  const finishedMatches = useMemo(() => {
-    const fromProps = matches.filter((m) => m.status === 'FINISHED');
     const archived = getArchivedFinishedMatches();
     const map = new Map<string, Match>();
 
-    // Korábbi lementett meccsek
-    archived.forEach((m) => map.set(m.id, m));
-    // Aktuális friss lezárt meccsek
-    fromProps.forEach((m) => map.set(m.id, m));
+    // Az auditált meccsek ID-jai, hogy ne szerepeljenek duplán
+    const verifiedIds = new Set(verifiedRecords.map((r) => r.matchId));
 
-    if (map.size > 0) {
-      return Array.from(map.values()).sort((a, b) => {
-        const dateA = `${a.kickoffDate}T${a.kickoffTime || '00:00'}`;
-        const dateB = `${b.kickoffDate}T${b.kickoffTime || '00:00'}`;
-        return dateB.localeCompare(dateA); // legfrissebb felül
-      });
-    }
-
-    return MOCK_MATCHES.filter((m) => m.status === 'FINISHED');
-  }, [matches]);
-
-  // 2. Minden lezárt meccs dinamikus kiértékelése és piacosítása
-  const evaluatedAll = useMemo(() => {
-    return finishedMatches.map((match) => {
-      const pick = match.aiPick;
-      const isWon = pick
-        ? evaluatePickWon(
-            match.homeScore,
-            match.awayScore,
-            pick.market,
-            pick.marketLabel,
-            match.homeHalfTimeScore,
-            match.awayHalfTimeScore
-          )
-        : null;
-      const category = getMarketCategory(pick?.market, pick?.marketLabel);
-      const odds = pick?.odds || 1.5;
-      const profit = isWon === true ? Math.round((odds - 1) * BASE_STAKE) : isWon === false ? -BASE_STAKE : 0;
-      const returnAmount = isWon === true ? Math.round(odds * BASE_STAKE) : 0;
-
-      return {
-        match,
-        pick,
-        isWon,
-        category,
-        odds,
-        profit,
-        returnAmount,
-      };
+    archived.forEach((m) => {
+      if (!verifiedIds.has(m.id)) map.set(m.id, m);
     });
-  }, [finishedMatches]);
+    liveFinished.forEach((m) => {
+      if (!verifiedIds.has(m.id)) map.set(m.id, m);
+    });
 
-  // 3. Globális KPI mutatók kiszámítása
-  const globalStats = useMemo(() => {
-    const withPicks = evaluatedAll.filter((item) => item.isWon !== null);
-    const totalCount = withPicks.length;
-    const wonCount = withPicks.filter((item) => item.isWon === true).length;
-    const winRate = totalCount > 0 ? (wonCount / totalCount) * 100 : 0;
+    return Array.from(map.values()).sort((a, b) => {
+      const dateA = `${a.kickoffDate}T${a.kickoffTime || '00:00'}`;
+      const dateB = `${b.kickoffDate}T${b.kickoffTime || '00:00'}`;
+      return dateB.localeCompare(dateA);
+    });
+  }, [matches, verifiedRecords]);
 
-    const totalStaked = totalCount * BASE_STAKE;
-    const totalReturned = withPicks.reduce((acc, curr) => acc + curr.returnAmount, 0);
-    const netProfit = totalReturned - totalStaked;
-    const roi = totalStaked > 0 ? (netProfit / totalStaked) * 100 : 0;
-
-    const winningOdds = withPicks.filter((item) => item.isWon === true).map((item) => item.odds);
-    const avgWinningOdds =
-      winningOdds.length > 0
-        ? winningOdds.reduce((a, b) => a + b, 0) / winningOdds.length
-        : 0;
-
-    return {
-      totalCount,
-      wonCount,
-      winRate,
-      totalStaked,
-      totalReturned,
-      netProfit,
-      roi,
-      avgWinningOdds,
-    };
-  }, [evaluatedAll]);
-
-  // 4. Piaci kategóriánkénti statisztikák az interaktív kártyákhoz
-  const marketBreakdown = useMemo(() => {
+  // 4. Hitelesített piaci bontás
+  const verifiedMarketBreakdown = useMemo(() => {
+    const settled = verifiedRecords.filter((r) => r.settled && r.status !== 'VOID');
     const categories: { id: MarketCategory; label: string; icon: typeof Zap; color: string }[] = [
       { id: 'COMBINED', label: 'BTTS & 2.5 Felett', icon: Zap, color: 'text-amber-400' },
       { id: 'BTTS', label: 'Mindkét Csapat Lő', icon: Flame, color: 'text-orange-400' },
@@ -147,12 +111,21 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
     ];
 
     return categories.map((cat) => {
-      const items = evaluatedAll.filter((i) => i.category === cat.id && i.isWon !== null);
+      const items = settled.filter((r) => {
+        const m = r.pick.market;
+        if (cat.id === '1X2') return ['1', 'X', '2', 'HOME_WIN', 'DRAW', 'AWAY_WIN'].includes(m);
+        if (cat.id === 'BTTS') return ['BTTS', 'BTTS_YES'].includes(m);
+        if (cat.id === 'OVER_25') return m === 'OVER_25';
+        if (cat.id === 'UNDER_25') return m === 'UNDER_25';
+        if (cat.id === 'COMBINED') return m === 'BTTS_AND_OVER25';
+        return false;
+      });
+
       const total = items.length;
-      const won = items.filter((i) => i.isWon === true).length;
+      const won = items.filter((i) => i.status === 'WON').length;
       const winRate = total > 0 ? Math.round((won / total) * 1000) / 10 : 0;
       const profit = items.reduce((acc, curr) => acc + curr.profit, 0);
-      const roi = total > 0 ? Math.round((profit / (total * BASE_STAKE)) * 1000) / 10 : 0;
+      const roi = total > 0 ? Math.round((profit / (total * AUDIT_BASE_STAKE)) * 1000) / 10 : 0;
 
       return {
         ...cat,
@@ -163,519 +136,553 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
         roi,
       };
     });
-  }, [evaluatedAll]);
+  }, [verifiedRecords]);
 
-  // 5. Elérhető ligák listája a szűrőhöz
-  const distinctLeagues = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; flag: string }>();
-    evaluatedAll.forEach(({ match }) => {
-      if (!map.has(match.leagueId)) {
-        map.set(match.leagueId, {
-          id: match.leagueId,
-          name: match.leagueName,
-          flag: match.leagueFlag,
+  // 5. Elérhető ligák az audit naplóból
+  const distinctAuditLeagues = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; flag?: string }>();
+    verifiedRecords.forEach((r) => {
+      if (!map.has(r.leagueId)) {
+        map.set(r.leagueId, {
+          id: r.leagueId,
+          name: r.leagueName,
+          flag: r.leagueFlag,
         });
       }
     });
     return Array.from(map.values());
-  }, [evaluatedAll]);
+  }, [verifiedRecords]);
 
-  // 6. Szűrt meccsek listája
-  const filteredList = useMemo(() => {
-    return evaluatedAll.filter((item) => {
-      // Időszak szűrő (Múltbeli eredmények tartós megőrzése és szűrése)
-      if (periodFilter === 'TODAY' && item.match.kickoffDate !== todayStr) return false;
-      if (periodFilter === 'YESTERDAY' && item.match.kickoffDate !== yesterdayStr) return false;
+  // 6. Szűrt audit lista
+  const filteredAuditRecords = useMemo(() => {
+    return verifiedRecords.filter((r) => {
+      if (periodFilter === 'TODAY' && r.kickoffDate !== todayStr) return false;
+      if (periodFilter === 'YESTERDAY' && r.kickoffDate !== yesterdayStr) return false;
       if (periodFilter === 'WEEK') {
-        const d = new Date(item.match.kickoffDate).getTime();
+        const d = new Date(r.kickoffDate).getTime();
         const now = Date.now();
         if (Number.isNaN(d) || now - d > 7 * 24 * 60 * 60 * 1000) return false;
       }
-      // Piac szűrő
-      if (activeMarket !== 'ALL' && item.category !== activeMarket) {
-        return false;
+      if (activeMarket !== 'ALL') {
+        const cat = getMarketCategory(r.pick.market, r.pick.marketLabel);
+        if (cat !== activeMarket) return false;
       }
-      // Státusz szűrő
-      if (activeStatus === 'WON' && item.isWon !== true) return false;
-      if (activeStatus === 'LOST' && item.isWon !== false) return false;
-      // Liga szűrő
-      if (selectedLeague !== 'ALL' && item.match.leagueId !== selectedLeague) {
-        return false;
-      }
+      if (activeStatus === 'WON' && r.status !== 'WON') return false;
+      if (activeStatus === 'LOST' && r.status !== 'LOST') return false;
+      if (activeStatus === 'PENDING' && r.settled) return false;
+      if (selectedLeague !== 'ALL' && r.leagueId !== selectedLeague) return false;
       return true;
     });
-  }, [evaluatedAll, activeMarket, activeStatus, selectedLeague, periodFilter, todayStr, yesterdayStr]);
+  }, [verifiedRecords, periodFilter, activeMarket, activeStatus, selectedLeague, todayStr, yesterdayStr]);
+
+  // JSON export letöltése
+  const handleExportJson = () => {
+    const jsonStr = exportAuditLogAsJson();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `soccerai-audit-log-${todayStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // JSON másolása vágólapra
+  const handleCopyJson = () => {
+    const jsonStr = exportAuditLogAsJson();
+    navigator.clipboard.writeText(jsonStr);
+    setCopiedJson(true);
+    setTimeout(() => setCopiedJson(false), 2000);
+  };
 
   return (
     <div className="py-8 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        
-        {/* Demó adat figyelmeztető sáv, ha nincs élő lezárt meccs */}
-        {isMockFallback && (
-          <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-between gap-2">
-            <span>
-              ⚠️ Demó adat (mintaarchívum): Az alábbi eredmények és ROI mutatók beépített minta-mérkőzéseken és szimulált szorzókon alapulnak.
-            </span>
-          </div>
-        )}
 
-        {/* 1. Fejléc & Fő KPI Vezérlőpult */}
+        {/* Fő fejléc és Provenance Módváltó */}
         <div className="p-6 rounded-2xl bg-mesh-card border border-slate-800 shadow-xl space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                <Award className="w-3.5 h-3.5" />
-                <span>Szimulált Modell Teljesítmény &amp; Becsült ROI Archívum</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Pre-Match Predikciónapló &amp; Hitelesített Eredmények</span>
               </div>
               <h2 className="text-2xl font-black text-white tracking-tight">
-                Legutóbbi Találatok &amp; Piac-specifikus Eredmények
+                Auditált Eredmények &amp; Ellenőrizhető Megtérülés
               </h2>
               <p className="text-xs sm:text-sm text-slate-300">
-                A Dixon–Coles modell által adott előrejelzések végeredményei és szimulált szorzókkal (5% árrés) becsült megtérülése.
+                Minden előrejelzés szigorúan a kezdőrúgás <strong>előtt</strong> rögzítésre kerül a megmásíthatatlan naplóba. Utólagos tippbeillesztés nem lehetséges.
               </p>
-              <div className="flex items-center gap-2 pt-1 text-xs text-slate-400">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">
-                  <Archive className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Tartós helyi archívum: <strong className="text-white">{finishedMatches.length} lezárt mérkőzés</strong></span>
-                </span>
-                <span className="text-[11px] text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-1.5 font-mono">
-                  <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
-                  Egységtét: 10 000 Ft / tipp
-                </span>
-              </div>
             </div>
 
-            {/* Időszak Szűrő Tabok */}
-            <div className="flex items-center gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800 self-start md:self-auto text-xs">
+            <div className="flex items-center gap-2 self-start md:self-center shrink-0">
               <button
-                onClick={() => setPeriodFilter('ALL')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  periodFilter === 'ALL'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                onClick={handleCopyJson}
+                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Audit napló másolása JSON formátumban"
               >
-                Összes ({finishedMatches.length})
+                {copiedJson ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Lock className="w-3.5 h-3.5 text-amber-400" />}
+                <span>{copiedJson ? 'Másolva!' : 'Audit JSON'}</span>
               </button>
               <button
-                onClick={() => setPeriodFilter('TODAY')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  periodFilter === 'TODAY'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                onClick={handleExportJson}
+                className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-bold border border-emerald-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Audit napló letöltése"
               >
-                Ma
-              </button>
-              <button
-                onClick={() => setPeriodFilter('YESTERDAY')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  periodFilter === 'YESTERDAY'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Tegnap
-              </button>
-              <button
-                onClick={() => setPeriodFilter('WEEK')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  periodFilter === 'WEEK'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                7 nap
+                <Download className="w-3.5 h-3.5" />
+                <span>Napló Letöltése</span>
               </button>
             </div>
           </div>
 
-          {/* Fő statisztikai kártyák sora */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Nyerési arány */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Találati Arány (Win Rate)
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-2xl sm:text-3xl font-black text-emerald-400">
-                  {globalStats.winRate.toFixed(1)}%
-                </span>
-                <span className="text-xs text-slate-400 font-mono">
-                  ({globalStats.wonCount}/{globalStats.totalCount})
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                Kiértékelt modell-előrejelzések
-              </span>
-            </div>
-
-            {/* Virtuális ROI */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Szimulált ROI (Becsült)
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span
-                  className={`text-2xl sm:text-3xl font-black ${
-                    globalStats.roi >= 0 ? 'text-emerald-400' : 'text-red-400'
-                  }`}
-                >
-                  {globalStats.roi >= 0 ? `+${globalStats.roi.toFixed(1)}%` : `${globalStats.roi.toFixed(1)}%`}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                Becsült szorzókkal számított hozam
-              </span>
-            </div>
-
-            {/* Nettó Profit */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Szimulált Egyenleg Hatás
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span
-                  className={`text-2xl sm:text-3xl font-black font-mono ${
-                    globalStats.netProfit >= 0 ? 'text-amber-400' : 'text-red-400'
-                  }`}
-                >
-                  {globalStats.netProfit >= 0
-                    ? `+${globalStats.netProfit.toLocaleString('hu-HU')} Ft`
-                    : `${globalStats.netProfit.toLocaleString('hu-HU')} Ft`}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                {(globalStats.totalStaked / 1000).toFixed(0)}e Ft virtuális össztétre
-              </span>
-            </div>
-
-            {/* Átlagos nyertes szorzó */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Átlagos Becsült Odds
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
-                  @{globalStats.avgWinningOdds.toFixed(2)}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                Szimulált piaci szorzó (5% árrés)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Interaktív Piaci Teljesítmény Sáv (Market Breakdown Cards) */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
-            <span className="uppercase tracking-wider text-[11px] font-bold text-slate-300">
-              Piaci Sikerteljesítmény Bontás (Kattints a szűréshez)
-            </span>
-            <span className="text-[10px] text-slate-500 hidden sm:inline">
-              Kattints a kívánt piacra a részletes mérkőzések listázásához
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            {marketBreakdown.map((mb) => {
-              const Icon = mb.icon;
-              const isSelected = activeMarket === mb.id;
-
-              return (
-                <button
-                  key={mb.id}
-                  onClick={() => setActiveMarket(isSelected ? 'ALL' : mb.id)}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-gradient-to-br from-blue-900/40 via-slate-900 to-slate-950 border-amber-400 shadow-md shadow-amber-500/10 scale-[1.02]'
-                      : 'bg-mesh-dark hover:border-slate-700 border-slate-800 text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full mb-1.5">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-                      <Icon className={`w-3.5 h-3.5 ${mb.color}`} />
-                      <span className="truncate">{mb.label}</span>
-                    </span>
-                    {isSelected && (
-                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-lg font-black text-white">{mb.winRate}%</span>
-                      <span className="text-[11px] font-mono text-slate-400">
-                        {mb.won}/{mb.total} nyert
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800/80">
-                      <span className="text-slate-500">Virtuális ROI:</span>
-                      <span
-                        className={`font-mono font-bold ${
-                          mb.roi >= 0 ? 'text-emerald-400' : 'text-red-400'
-                        }`}
-                      >
-                        {mb.roi >= 0 ? `+${mb.roi}%` : `${mb.roi}%`}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 3. Szűrősáv (Piac, Eredmény státusz, Bajnokság) */}
-        <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-          {/* Bal: Piac chipek */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-            <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 mr-1">
-              <Filter className="w-3 h-3 text-amber-400" />
-              Piac:
-            </span>
-
-            {[
-              { id: 'ALL', label: 'Összes Piac' },
-              { id: 'COMBINED', label: 'BTTS & 2.5+' },
-              { id: 'BTTS', label: 'BTTS' },
-              { id: 'OVER_25', label: '2.5 Felett' },
-              { id: '1X2', label: '1X2' },
-              { id: 'UNDER_25', label: '2.5 Alatt' },
-            ].map((chip) => (
-              <button
-                key={chip.id}
-                onClick={() => setActiveMarket(chip.id as MarketCategory)}
-                className={`px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap transition-all ${
-                  activeMarket === chip.id
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm shadow-amber-500/20'
-                    : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300'
-                }`}
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Jobb: Státusz és Liga szűrő */}
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            {/* Státusz fülválasztó */}
-            <div className="flex items-center p-0.5 rounded-lg bg-slate-950 border border-slate-800">
-              <button
-                onClick={() => setActiveStatus('ALL')}
-                className={`px-2 py-0.5 rounded-md font-semibold ${
-                  activeStatus === 'ALL' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Mind ({evaluatedAll.length})
-              </button>
-              <button
-                onClick={() => setActiveStatus('WON')}
-                className={`px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 ${
-                  activeStatus === 'WON'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-400 hover:text-emerald-300'
-                }`}
-              >
-                <Check className="w-3 h-3" />
-                Nyert ({globalStats.wonCount})
-              </button>
-              <button
-                onClick={() => setActiveStatus('LOST')}
-                className={`px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 ${
-                  activeStatus === 'LOST'
-                    ? 'bg-red-600 text-white'
-                    : 'text-slate-400 hover:text-red-300'
-                }`}
-              >
-                Vesztes ({globalStats.totalCount - globalStats.wonCount})
-              </button>
-            </div>
-
-            {/* Liga választó legördülő */}
-            {distinctLeagues.length > 1 && (
-              <select
-                value={selectedLeague}
-                onChange={(e) => setSelectedLeague(e.target.value)}
-                className="bg-slate-950 border border-slate-800 text-slate-300 px-2.5 py-1 rounded-lg text-xs font-semibold focus:outline-none focus:border-amber-400 cursor-pointer"
-              >
-                <option value="ALL">Minden bajnokság</option>
-                {distinctLeagues.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.flag} {l.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
-
-        {/* 4. Eredmény kártyák listája */}
-        {filteredList.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-mesh-card border border-slate-800 space-y-3">
-            <Filter className="w-8 h-8 text-slate-600 mx-auto" />
-            <h3 className="text-base font-bold text-white">Nincs a szűrésnek megfelelő lezárt mérkőzés</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Próbálj más piacot vagy ligát választani, vagy állítsd vissza a szűrőket az összes mérkőzés megtekintéséhez.
-            </p>
+          {/* Fülválasztó: Hitelesített Pre-Match vs Nem Auditált Előzmények */}
+          <div className="flex border-b border-slate-800 gap-2">
             <button
-              onClick={() => {
-                setActiveMarket('ALL');
-                setActiveStatus('ALL');
-                setSelectedLeague('ALL');
-              }}
-              className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-colors"
+              onClick={() => setProvenanceTab('verified')}
+              className={`pb-3 px-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                provenanceTab === 'verified'
+                  ? 'border-emerald-500 text-emerald-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
             >
-              Szűrők visszaállítása
+              <ShieldCheck className="w-4 h-4" />
+              <span>Hitelesített Pre-Match Napló ({verifiedRecords.length})</span>
+            </button>
+            <button
+              onClick={() => setProvenanceTab('unverified')}
+              className={`pb-3 px-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                provenanceTab === 'unverified'
+                  ? 'border-amber-500 text-amber-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4" />
+              <span>Nem auditált külső archívum ({unverifiedFinishedMatches.length})</span>
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredList.map(({ match, pick, isWon, profit, category }) => {
-              const isProfitPos = profit > 0;
 
-              return (
-                <div
-                  key={match.id}
-                  onClick={() => onSelectMatch(match)}
-                  className="p-5 rounded-2xl bg-mesh-card border border-slate-800 hover:border-slate-700 cursor-pointer transition-all space-y-3.5 shadow-lg group hover:shadow-amber-500/5"
-                >
-                  {/* Fejléc: Liga, Dátum+Időpont és Piaci kategória címke */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span className="flex items-center gap-1.5 font-semibold text-slate-300 truncate">
-                        <span>{match.leagueFlag}</span>
-                        <span className="truncate">{match.leagueName}</span>
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/80">
-                          {category}
-                        </span>
-                        <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded text-[10px]">
-                          LEZÁRULT
-                        </span>
-                      </div>
-                    </div>
+          {/* HITELTESÍTETT NÉZET: FŐ KPI MUTATÓK */}
+          {provenanceTab === 'verified' && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-2">
+              {/* Találati Arány */}
+              <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
+                <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  Hitelesített Találati Arány
+                </span>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-400">
+                    {verifiedStats.settledCount > 0 ? `${verifiedStats.winRate}%` : '—'}
+                  </span>
+                  {verifiedStats.settledCount > 0 && (
+                    <span className="text-xs text-slate-400 font-mono">
+                      ({verifiedStats.wonCount}/{verifiedStats.settledCount})
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  {verifiedStats.pendingCount > 0
+                    ? `${verifiedStats.pendingCount} mérkőzés kezdésre/lefújásra vár`
+                    : 'Kizárólag lezárt pre-match tippekből'}
+                </span>
+              </div>
 
-                    {/* Lejátszás időpontja: dátum + kezdési időpont */}
-                    {(match.kickoffDate || match.kickoffTime) && (
-                      <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-                        {match.kickoffDate && (
-                          <span className="inline-flex items-center gap-1 text-slate-300">
-                            <Calendar className="w-3 h-3 text-amber-400/90 shrink-0" />
-                            <span>{match.kickoffDate}</span>
-                          </span>
-                        )}
-                        {match.kickoffDate && match.kickoffTime && (
-                          <span className="text-slate-600">&bull;</span>
-                        )}
-                        {match.kickoffTime && (
-                          <span className="inline-flex items-center gap-1 text-slate-400">
-                            <Clock className="w-3 h-3 text-slate-500 shrink-0" />
-                            <span>{match.kickoffTime}</span>
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              {/* Hitelesített ROI */}
+              <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
+                <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400 flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                  Hitelesített ROI %
+                </span>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span
+                    className={`text-2xl sm:text-3xl font-black ${
+                      verifiedStats.settledCount === 0
+                        ? 'text-slate-500'
+                        : verifiedStats.roi >= 0
+                        ? 'text-emerald-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {verifiedStats.settledCount > 0
+                      ? `${verifiedStats.roi >= 0 ? '+' : ''}${verifiedStats.roi}%`
+                      : '—'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  A régi ROI adatok nem minősülnek igazoltnak
+                </span>
+              </div>
 
-                  {/* Csapatok összecsapása és eredmény */}
-                  <div className="py-2.5 flex items-center justify-between border-y border-slate-800/80">
-                    <div className="space-y-1.5 min-w-0 pr-2">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={match.homeTeam.logo}
-                          alt=""
-                          className="w-5 h-5 object-contain shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <span className="text-sm font-bold text-white truncate">
-                          {match.homeTeam.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={match.awayTeam.logo}
-                          alt=""
-                          className="w-5 h-5 object-contain shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                        <span className="text-sm font-medium text-slate-300 truncate">
-                          {match.awayTeam.name}
-                        </span>
-                      </div>
-                    </div>
+              {/* Hitelesített Profit */}
+              <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
+                <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+                  Hitelesített Nettó Profit
+                </span>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span
+                    className={`text-2xl sm:text-3xl font-black font-mono ${
+                      verifiedStats.settledCount === 0
+                        ? 'text-slate-500'
+                        : verifiedStats.netProfit >= 0
+                        ? 'text-amber-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {verifiedStats.settledCount > 0
+                      ? `${verifiedStats.netProfit >= 0 ? '+' : ''}${verifiedStats.netProfit.toLocaleString('hu-HU')} Ft`
+                      : '—'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  {verifiedStats.settledCount > 0
+                    ? `${(verifiedStats.totalStaked / 1000).toFixed(0)}e Ft auditált össztétre`
+                    : '10 000 Ft egységtét alapon'}
+                </span>
+              </div>
 
-                    <div className="text-right font-mono font-black text-xl text-amber-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 shrink-0">
-                      <div>{match.homeScore}</div>
-                      <div>{match.awayScore}</div>
-                    </div>
-                  </div>
+              {/* Átlagos nyertes odds */}
+              <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
+                <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+                  Átlagos Nyertes Odds
+                </span>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
+                    {verifiedStats.avgWinningOdds > 0 ? `@${verifiedStats.avgWinningOdds.toFixed(2)}` : '—'}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  Kizárólag igazolt nyertes tippekből
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
-                  {/* MI Tipp és Valós Hozam doboz */}
-                  {pick && (
-                    <div className="space-y-1.5">
-                      <div
-                        className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
-                          isWon
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                            : 'bg-red-500/10 border-red-500/30 text-red-300'
+        {/* ============================================================== */}
+        {/* NÉZET 1: HITELESÍTETT PRE-MATCH PREDIKCIÓK */}
+        {/* ============================================================== */}
+        {provenanceTab === 'verified' && (
+          <div className="space-y-6">
+            {/* Piaci sikerteljesítmény bontás */}
+            {verifiedStats.settledCount > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+                  <span className="uppercase tracking-wider text-[11px] font-bold text-slate-300">
+                    Hitelesített Piaconkénti Teljesítmény (Kattints a szűréshez)
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                  {verifiedMarketBreakdown.map((mb) => {
+                    const Icon = mb.icon;
+                    const isSelected = activeMarket === mb.id;
+                    return (
+                      <button
+                        key={mb.id}
+                        onClick={() => setActiveMarket(isSelected ? 'ALL' : mb.id)}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-gradient-to-br from-blue-900/40 via-slate-900 to-slate-950 border-amber-400 shadow-md shadow-amber-500/10 scale-[1.02]'
+                            : 'bg-mesh-dark hover:border-slate-700 border-slate-800 text-slate-300'
                         }`}
                       >
-                        <div className="flex items-center gap-2 min-w-0 pr-2">
-                          {isWon ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-                          )}
-                          <div className="min-w-0">
-                            <span className="text-[10px] uppercase font-bold block opacity-80">
-                              {isWon ? 'NYERTES TIPP' : 'NEM JÖTT BE'}
+                        <div className="flex items-center justify-between w-full mb-1.5">
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                            <Icon className={`w-3.5 h-3.5 ${mb.color}`} />
+                            <span className="truncate">{mb.label}</span>
+                          </span>
+                          {isSelected && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-lg font-black text-white">{mb.total > 0 ? `${mb.winRate}%` : '—'}</span>
+                            <span className="text-[11px] font-mono text-slate-400">
+                              {mb.won}/{mb.total} nyert
                             </span>
-                            <span className="font-extrabold truncate block">
-                              {pick.marketLabel}
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800/80">
+                            <span className="text-slate-500">Audit ROI:</span>
+                            <span className={`font-mono font-bold ${mb.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {mb.total > 0 ? `${mb.roi >= 0 ? '+' : ''}${mb.roi}%` : '—'}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Szűrősáv */}
+            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 mr-1">
+                  <Filter className="w-3 h-3 text-amber-400" />
+                  Státusz:
+                </span>
+                {(['ALL', 'PENDING', 'WON', 'LOST'] as StatusFilter[]).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setActiveStatus(status)}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      activeStatus === status
+                        ? 'bg-amber-500 text-slate-950 font-bold'
+                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    {status === 'ALL' && 'Összes'}
+                    {status === 'PENDING' && '⏳ Kezdésre vár'}
+                    {status === 'WON' && '✓ Nyertes'}
+                    {status === 'LOST' && '✗ Vesztes'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {distinctAuditLeagues.length > 0 && (
+                  <select
+                    value={selectedLeague}
+                    onChange={(e) => setSelectedLeague(e.target.value)}
+                    className="bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    <option value="ALL">Minden bajnokság</option>
+                    {distinctAuditLeagues.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.flag || '⚽'} {l.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            {/* MECCS KÁRTYÁK LISTÁJA */}
+            {filteredAuditRecords.length === 0 ? (
+              <div className="p-10 text-center rounded-2xl bg-mesh-card border border-slate-800 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-white">
+                  {verifiedRecords.length === 0
+                    ? 'A Megmásíthatatlan Audit Napló Aktív'
+                    : 'Nincs a szűrőknek megfelelő auditált mérkőzés'}
+                </h3>
+                <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+                  {verifiedRecords.length === 0 ? (
+                    <>
+                      A rendszer kizárólag a <strong>kezdőrúgás előtt naplózott</strong> predikciókat fogadja el hitelesnek. A régi, utólagos vagy demó meccsek ROI-ját a hitelességi szabályzat kizárja. Amint egy élő meccs a jövőbeli kezdés előtt bekerül, a predikció azonnal fagyasztásra kerül!
+                    </>
+                  ) : (
+                    'Válassz másik szűrőt a rögzített audit bejegyzések megtekintéséhez.'
+                  )}
+                </p>
+                {verifiedStats.pendingCount > 0 && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-amber-300 font-semibold">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Jelenleg <strong>{verifiedStats.pendingCount} mérkőzés</strong> áll fagyasztott tippel kezdésre/lefújásra várva.</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAuditRecords.map((record) => {
+                  const isWon = record.status === 'WON';
+                  const isPending = !record.settled;
+                  const isLost = record.status === 'LOST';
+
+                  return (
+                    <div
+                      key={record.id}
+                      className="p-4 rounded-2xl bg-mesh-card border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-3"
+                    >
+                      {/* Fejléc: Liga + Audit Hash + Státusz címke */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5 text-slate-300 font-medium truncate max-w-[60%]">
+                            <span>{record.leagueFlag || '⚽'}</span>
+                            <span className="truncate">{record.leagueName}</span>
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {isPending ? (
+                              <span className="font-mono text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded text-[10px] flex items-center gap-1">
+                                <Clock className="w-2.5 h-2.5" /> FÜGGŐBEN
+                              </span>
+                            ) : isWon ? (
+                              <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] flex items-center gap-1">
+                                <CheckCircle2 className="w-2.5 h-2.5" /> NYERTES
+                              </span>
+                            ) : (
+                              <span className="font-mono text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded text-[10px] flex items-center gap-1">
+                                <XCircle className="w-2.5 h-2.5" /> VESZTES
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Audit pecsét: rögzítés időpontja + integrity hash */}
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-0.5">
+                          <span className="flex items-center gap-1 text-emerald-400/90 font-medium">
+                            <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span>Pre-Match: {record.kickoffDate} {record.kickoffTime}</span>
+                          </span>
+                          <span className="text-slate-500 truncate max-w-[110px]" title={`Audit Aláírás: ${record.auditHash}`}>
+                            {record.auditHash}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Csapatok és Eredmény */}
+                      <div className="py-2.5 flex items-center justify-between border-y border-slate-800/80">
+                        <div className="space-y-1.5 min-w-0 pr-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            {record.homeTeam.logo && (
+                              <img src={record.homeTeam.logo} alt="" className="w-4 h-4 object-contain shrink-0" />
+                            )}
+                            <span className="text-xs sm:text-sm font-bold text-white truncate">
+                              {record.homeTeam.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {record.awayTeam.logo && (
+                              <img src={record.awayTeam.logo} alt="" className="w-4 h-4 object-contain shrink-0" />
+                            )}
+                            <span className="text-xs sm:text-sm font-medium text-slate-300 truncate">
+                              {record.awayTeam.name}
                             </span>
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0">
-                          <span className="font-mono font-bold text-xs bg-slate-900 px-2 py-0.5 rounded text-white block">
-                            @{pick.odds.toFixed(2)}
+                        <div className="text-right font-mono font-black text-lg text-amber-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 shrink-0">
+                          {record.settled && typeof record.homeScore === 'number' ? (
+                            <>
+                              <div>{record.homeScore}</div>
+                              <div>{record.awayScore}</div>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500 font-sans">vs</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Rögzített Pre-Match MI Tipp Doboz */}
+                      <div className="space-y-1.5">
+                        <div
+                          className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
+                            isPending
+                              ? 'bg-slate-900/80 border-slate-800 text-slate-300'
+                              : isWon
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                              : 'bg-red-500/10 border-red-500/30 text-red-300'
+                          }`}
+                        >
+                          <div className="min-w-0 pr-2">
+                            <span className="text-[9px] uppercase font-bold block opacity-75">
+                              {isPending ? 'FAGYASZTOTT PRE-MATCH TIPP' : isWon ? 'HITELTESÍTETT TALÁLAT' : 'NEM JÖTT BE'}
+                            </span>
+                            <span className="font-extrabold truncate block text-white">
+                              {record.pick.marketLabel}
+                            </span>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-bold text-xs bg-slate-950 px-2 py-0.5 rounded text-white border border-slate-800 block">
+                              @{record.pick.odds.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Auditált profit vagy pending állapot */}
+                        <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
+                          <span>{isPending ? 'Státusz:' : 'Hitelesített egyenleg:'}</span>
+                          <span
+                            className={`font-mono font-bold ${
+                              isPending
+                                ? 'text-amber-400'
+                                : isWon
+                                ? 'text-emerald-400'
+                                : 'text-red-400'
+                            }`}
+                          >
+                            {isPending
+                              ? 'Kezdésre / Lefújásra vár'
+                              : isWon
+                              ? `+${record.profit.toLocaleString('hu-HU')} Ft`
+                              : `${record.profit.toLocaleString('hu-HU')} Ft`}
                           </span>
                         </div>
                       </div>
 
-                      {/* Virtuális profit sor */}
-                      <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
-                        <span>Virtuális egyenleg hatás:</span>
-                        <span
-                          className={`font-mono font-bold ${
-                            isProfitPos ? 'text-emerald-400' : 'text-red-400'
-                          }`}
-                        >
-                          {isProfitPos
-                            ? `+${profit.toLocaleString('hu-HU')} Ft`
-                            : `${profit.toLocaleString('hu-HU')} Ft`}
-                        </span>
+                      {/* Indoklás */}
+                      {record.pick.reasoning && (
+                        <p className="text-[11px] text-slate-400 italic line-clamp-2 pt-1 border-t border-slate-800/60">
+                          &bdquo;{record.pick.reasoning}&ldquo;
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* NÉZET 2: NEM AUDITÁLT KÜLSŐ ARCHÍVUM (TÁJÉKOZTATÓ JELLEGŰ) */}
+        {/* ============================================================== */}
+        {provenanceTab === 'unverified' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold text-amber-200">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>Tájékoztató jellegű előzmények – Nem minősülnek igazolt modell-teljesítménynek</span>
+              </div>
+              <p className="text-slate-300 leading-relaxed text-[11px]">
+                Az alábbi mérkőzések az API-ból vagy a böngésző korábbi mentéseiből származnak, és nem rendelkeznek kezdés előtti megmásíthatatlan audit naplóbejegyzéssel. A szigorú hitelességi irányelv értelmében <strong>ezek NEM számítanak bele a hivatalos megtérülési (ROI) és találati statisztikákba</strong>.
+              </p>
+            </div>
+
+            {unverifiedFinishedMatches.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl bg-mesh-card border border-slate-800 text-slate-400 text-xs">
+                Nincsenek külső nem auditált lezárt meccsek az archívumban.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {unverifiedFinishedMatches.map((match) => (
+                  <div
+                    key={match.id}
+                    onClick={() => onSelectMatch(match)}
+                    className="p-4 rounded-2xl bg-mesh-card border border-slate-800/80 hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between space-y-3 opacity-90 hover:opacity-100"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 flex items-center gap-1.5 truncate">
+                        <span>{match.leagueFlag}</span>
+                        <span className="truncate">{match.leagueName}</span>
+                      </span>
+                      <span className="text-[10px] font-mono uppercase bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400">
+                        {match.kickoffDate}
+                      </span>
+                    </div>
+
+                    <div className="py-2 flex items-center justify-between border-y border-slate-800/60">
+                      <div className="space-y-1 text-xs">
+                        <div className="font-bold text-white">{match.homeTeam.name}</div>
+                        <div className="text-slate-300">{match.awayTeam.name}</div>
+                      </div>
+                      <div className="font-mono font-bold text-base text-amber-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                        {match.homeScore} : {match.awayScore}
                       </div>
                     </div>
-                  )}
 
-                  {/* Rövid indoklás */}
-                  {pick?.reasoning && (
-                    <p className="text-[11px] text-slate-400 italic line-clamp-2 pt-1 border-t border-slate-800/60">
-                      &bdquo;{pick.reasoning}&ldquo;
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+                    {match.aiPick && (
+                      <div className="text-[11px] text-slate-400 flex items-center justify-between">
+                        <span>Tipp: <strong className="text-white">{match.aiPick.marketLabel}</strong></span>
+                        <span className="font-mono text-slate-300">@{match.aiPick.odds.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

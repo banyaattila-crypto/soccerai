@@ -3,6 +3,25 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.17.0] - 2026-10-20
+
+### Hozzáadva & Integritás (Added & Integrity Verification)
+- **Kezdés Előtti Megmásíthatatlan Predikciónapló (`src/services/predictionAuditService.ts`):**
+  - **Szigorú Pre-Kickoff rögzítés (`isMatchBeforeKickoff`):** Egy mérkőzés előrejelzése KIZÁRÓLAG akkor kerülhet be a hitelesített naplóba, ha a meccs még `UPCOMING` státuszú és a hivatalos kezdési időpont a jövőben van. A kezdés után vagy utólag beérkező mérkőzések hitelesítése elutasításra kerül.
+  - **Megmásíthatatlan napló (Write-Once / Append-Only):** A már rögzített mérkőzések tippet, valószínűségét és szorzóját semmilyen későbbi lekérés vagy frissítés NEM írhatja felül.
+  - **Determinisztikus Integritási Aláírás (`computeRecordHash`):** Minden predikcióhoz egyedi hash készül a rögzítés időpontja, a kezdés és a kiválasztott piac alapján.
+  - **Valós Eredmény Alapú Lezárás (`settleAuditPredictions`):** A lefújást követően a rendszer a lepecsételt pre-match tippet automatikusan összeveti a hivatalos API végeredménnyel, és kiszámolja a profitot (`WON` / `LOST` / `VOID`).
+  - **Audit JSON Export:** A teljes predikciónapló egy kattintással letölthető vagy vágólapra másolható az ellenőrizhetőséghez.
+- **Provenance Javítása & Régi ROI-k Kizárása (`src/components/ResultsView.tsx`):**
+  - **Teljes Mock Fallback Megszüntetés:** Eltávolításra került a korábbi `MOCK_MATCHES.filter(m => m.status === 'FINISHED')` fallback; kamu/minta adatokból nem képződhet hivatalos megtérülés vagy találati arány.
+  - **Két Elkülönített Eredmény Nézet:**
+    1. *Hitelesített Pre-Match Napló (Hivatalos):* Kizárólag a kezdés előtt naplózott és valós végeredménnyel lezárt meccsek számítanak bele a hivatalos KPI mutatókba (Találati Arány, Hitelesített ROI %, Nettó Profit).
+    2. *Nem auditált külső archívum (Tájékoztató jellegű):* Külön lapon jeleníti meg a kezdés után/utólag érkezett vagy korábbi archív meccseket egyértelmű figyelmeztető sávval, hogy ezek nem képezik a hivatalos ROI részét.
+- **Kezdő Állapot Tisztítása (`src/App.tsx`, `HeroKpi.tsx`):**
+  - A mérkőzéslista kezdeti állapota üres tömb (`[]`), így inicializáláskor sem villannak be vagy szivárognak át a mock meccsek.
+  - A fejléc KPI sáv tegnapi találati aránya szigorúan a hitelesített audit naplóból számolódik (ha nincs tegnapi lezárt auditált meccs, az `Audit: Pre-Match Napló` pajzs-jelzés látható).
+- **Egységtesztek Bővítése:** 7 új dedikált teszt a predikciónapló integritási szabályainak ellenőrzésére ([`predictionAuditService.test.ts`](file:///home/attila/projects/soccerai/src/services/__tests__/predictionAuditService.test.ts)), összesen **64/64 sikeres teszt**.
+
 ## [1.16.5] - 2026-10-20
 
 ### Hozzáadva & Javítva (Added & Fixed)

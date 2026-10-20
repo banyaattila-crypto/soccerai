@@ -98,6 +98,7 @@ export interface Match {
   leagueFlag: string;
   kickoffTime: string; // HH:mm
   kickoffDate: string; // YYYY-MM-DD
+  utcDate?: string; // Teljes ISO 8601 UTC időbélyeg (kezdési időpont auditáláshoz)
   status: MatchStatus;
   minute?: number;
   homeTeam: Team;
@@ -230,4 +231,79 @@ export interface BankrollSummary {
   avgOdds: number;
   avgStake: number;
 }
+
+// ==========================================
+// PREDICITON PROVENANCE & AUDIT LOG TÍPUSOK
+// ==========================================
+
+export type PredictionProvenance =
+  | 'VERIFIED_PRE_MATCH'    // Kezdőrúgás előtt naplózva, megváltoztathatatlan audit bejegyzés
+  | 'UNVERIFIED_HISTORICAL' // Kezdés után/utólag beérkezett vagy korábbi nem auditált mérkőzés
+  | 'DEMO_MOCK';             // Szimulációs demó mintaadat
+
+export interface PredictionAuditRecord {
+  id: string;               // pl. audit-m1234-1718000000
+  matchId: string;
+  loggedAt: string;         // ISO időpont, amikor a predikció fagyasztásra került
+  kickoffDate: string;      // YYYY-MM-DD
+  kickoffTime: string;      // HH:mm
+  kickoffTimestamp: number; // UTC vagy helyi epoch milliszekundum
+  utcDate?: string;
+  leagueId: string;
+  leagueName: string;
+  leagueCountry?: string;
+  leagueFlag?: string;
+  homeTeam: {
+    name: string;
+    logo?: string;
+    shortName?: string;
+  };
+  awayTeam: {
+    name: string;
+    logo?: string;
+    shortName?: string;
+  };
+  pick: {
+    market: PickMarket;
+    marketLabel: string;
+    probability: number;
+    odds: number;
+    confidence?: number;
+    expectedValue: number;
+    quarterKellyPct?: number;
+    isSimulatedOdds?: boolean;
+    reasoning?: string;
+  };
+  modelSnapshot?: {
+    probabilities?: MarketProbabilities;
+    robustnessVerdict?: string;
+    dataQuality?: 'A' | 'B' | 'C';
+  };
+  provenance: PredictionProvenance;
+  auditHash: string;        // Integritás ellenőrző aláírás
+  settled: boolean;         // Lezárult-e már a meccs
+  settledAt?: string;
+  homeScore?: number;
+  awayScore?: number;
+  homeHalfTimeScore?: number;
+  awayHalfTimeScore?: number;
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
+  profit: number;           // Forintban alaptéttel számolva (pl. 10 000 Ft alapon)
+  roi: number;              // % megtérülés az adott fogadásra
+}
+
+export interface VerifiedAuditStats {
+  totalAudited: number;
+  pendingCount: number;
+  settledCount: number;
+  wonCount: number;
+  lostCount: number;
+  winRate: number;          // %
+  totalStaked: number;      // Ft
+  totalReturned: number;    // Ft
+  netProfit: number;        // Ft
+  roi: number;              // %
+  avgWinningOdds: number;
+}
+
 

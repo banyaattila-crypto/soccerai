@@ -535,6 +535,7 @@ export async function fetchApiSportsMatches(
       leagueFlag: lConfig.flag,
       kickoffTime,
       kickoffDate,
+      utcDate: f.fixture.date,
       status,
       homeScore: f.goals.home ?? undefined,
       awayScore: f.goals.away ?? undefined,

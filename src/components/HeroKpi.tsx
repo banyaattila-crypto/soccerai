@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Award, Calendar, Layers, HelpCircle } from 'lucide-react';
+import { Sparkles, Award, Calendar, Layers, HelpCircle, ShieldCheck } from 'lucide-react';
 import { ThreeDBall } from './ThreeDBall';
 
 interface HeroKpiProps {
@@ -64,10 +64,13 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
                 </strong>
               </div>
             ) : (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mesh-dark border border-slate-800 text-xs whitespace-nowrap shrink-0">
-                <Award className="w-3.5 h-3.5 text-sky-400" />
-                <span className="text-slate-400">Modell:</span>
-                <strong className="text-sky-300 font-semibold">Dixon–Coles</strong>
+              <div
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-mesh-dark border border-slate-800 text-xs whitespace-nowrap shrink-0"
+                title="Kezdés előtt rögzített, megmásíthatatlan predikciónapló aktív"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-slate-400">Audit:</span>
+                <strong className="text-emerald-300 font-semibold">Pre-Match Napló</strong>
               </div>
             )}
           </div>

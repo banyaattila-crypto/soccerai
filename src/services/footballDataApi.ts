@@ -312,6 +312,7 @@ export async function fetchLiveMatches(
       leagueFlag: compInfo.flag,
       kickoffTime,
       kickoffDate,
+      utcDate: m.utcDate,
       status,
       homeTeam: {
         id: String(m.homeTeam.id),
