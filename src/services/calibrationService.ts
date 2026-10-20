@@ -383,18 +383,15 @@ export function computePerformanceMetrics(
     // Kiválasztott tipp a legnagyobb pozitív EV alapján (ha mind negatív, a legkisebb hátrányú)
     let chosenOutcome: '1' | 'X' | '2' = '1';
     let chosenOdds = oH;
-    let chosenModelProb = pH;
     let chosenFairMarketProb = m.marketFairProbabilities?.homeWin ? m.marketFairProbabilities.homeWin / 100 : 1 / oH;
 
     if (evD > evH && evD > evA) {
       chosenOutcome = 'X';
       chosenOdds = oD;
-      chosenModelProb = pD;
       chosenFairMarketProb = m.marketFairProbabilities?.draw ? m.marketFairProbabilities.draw / 100 : 1 / oD;
     } else if (evA > evH && evA > evD) {
       chosenOutcome = '2';
       chosenOdds = oA;
-      chosenModelProb = pA;
       chosenFairMarketProb = m.marketFairProbabilities?.awayWin ? m.marketFairProbabilities.awayWin / 100 : 1 / oA;
     }
 

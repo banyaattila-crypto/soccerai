@@ -57,13 +57,14 @@ async function main() {
   );
 
   let chromeExited = false;
-  chromeProcess.on('exit', (code) => {
+  chromeProcess.on('exit', () => {
     chromeExited = true;
   });
 
   // Várakozás a CDP elérhetőségére
   let versionInfo = null;
   for (let i = 0; i < 20; i++) {
+    if (chromeExited) break;
     await sleep(500);
     try {
       versionInfo = await fetchJson(`http://127.0.0.1:${CDP_PORT}/json/version`);

@@ -16,7 +16,6 @@ import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
-import { evaluatePickWon } from './services/betEvaluation';
 
 const MatchDetailModal = React.lazy(() =>
   import('./components/MatchDetailModal').then((m) => ({ default: m.MatchDetailModal }))

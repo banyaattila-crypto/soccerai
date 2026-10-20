@@ -3,6 +3,17 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.21.1] - 2026-10-20
+
+### Javítva & CI Pipeline Zöldítés (Fixed & CI Strict Linting)
+- **GitHub Actions CI Zöldítés (`.github/workflows/ci.yml`):**
+  - **Oxlint szigorú ellenőrzés javítása:** Megszüntetve mind a 19 linter figyelmeztetés (`npx oxlint --deny-warnings` 0 warning, 0 error).
+  - Nem használt importok eltávolítása tesztekből és komponensekből (`clearAuditLog`, `computeRecordHash`, `STORAGE_KEY_AUDIT_LOG`, `extractMarketsFromMatrix`, `vi`, `MIN_STATISTICAL_SAMPLE_SIZE`, `evaluatePickWon`, `TrendingUp`, `Info`, `isOddsExpired`, `PredictionAuditRecord`).
+  - `unicorn/no-new-array` refaktorálva: `Array.from({ length: n }, () => base)` a `src/services/predictionEngine.ts` fájlban.
+  - Böngészőteszt szkript (`scripts/verifyBrowser.mjs`) tiszta process exit kezelése.
+- **Eredmények Szűrősáv Bővítése (`src/components/ResultsView.tsx`):**
+  - Bekötésre került a vizuális időszakszűrő gombcsoport (Összes, Ma, Tegnap, 7 nap) a meglévő audit szűrő logikához.
+
 ## [1.21.0] - 2026-10-20
 
 ### Hozzáadva & Tudományos Kalibráció (Added & Scientific Calibration)

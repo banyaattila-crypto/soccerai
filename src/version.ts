@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.21.0';
-export const APP_RELEASE_NAME = 'Valós Böngészős Verifikáció, Időrendhelyes Kalibráció & Piaci Él Audit';
+export const APP_VERSION = '1.21.1';
+export const APP_RELEASE_NAME = 'CI Szigorú Linter & Oxlint Tisztítás (0 warning, 0 error)';
 export const APP_RELEASE_DATE = '2026-10-20';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';

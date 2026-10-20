@@ -5,10 +5,7 @@ import {
   settleAuditPredictions,
   getAuditLog,
   getVerifiedAuditStats,
-  clearAuditLog,
   isMatchBeforeKickoff,
-  computeRecordHash,
-  STORAGE_KEY_AUDIT_LOG,
 } from '../predictionAuditService';
 
 const storageMock = (() => {

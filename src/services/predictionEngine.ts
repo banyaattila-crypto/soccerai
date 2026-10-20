@@ -131,7 +131,7 @@ export function normalizeIntegerPercentages(probs: number[]): number[] {
   const total = probs.reduce((a, b) => a + b, 0);
   if (total <= 0) {
     const base = Math.floor(100 / n);
-    const res = new Array(n).fill(base);
+    const res = Array.from({ length: n }, () => base);
     res[0] += 100 - base * n;
     return res;
   }

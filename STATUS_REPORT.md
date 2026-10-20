@@ -1,10 +1,10 @@
 # 📊 SOCCERAI PRO &bull; PROJEKT STÁTUSZ JELENTÉS (STATUS REPORT)
 
 **Projekt azonosító:** `soccerai` (SoccerAI PRO)  
-**Aktuális verzió:** 🏷️ **`v1.21.0`** (SemVer 2.0.0)  
-**Kiadás neve:** *Valós Böngészős Verifikáció, Időrendhelyes Kalibráció & Piaci Él Audit*  
+**Aktuális verzió:** 🏷️ **`v1.21.1`** (SemVer 2.0.0)  
+**Kiadás neve:** *CI Szigorú Linter & Oxlint Tisztítás (0 warning, 0 error)*  
 **Dátum:** 2026. október 20.  
-**Állapot:** ✅ **v1.21.0 Verzió Elkészült & Verifikálva (145/145 Teszt Sikeres, Valós Headless Chromium CDP Teszt Zöld, 0 Hiba, Szigorú TypeScript)**  
+**Állapot:** ✅ **v1.21.1 Verzió Elkészült & Verifikálva (CI Zöld, 145/145 Teszt Sikeres, 0 Linter Hiba, Valós Headless Chromium CDP Zöld)**  
 **GitHub Repository:** [https://github.com/banyaattila-crypto/soccerai](https://github.com/banyaattila-crypto/soccerai)  
 **Vercel Live URL:** [https://soccerai-pro.vercel.app](https://soccerai-pro.vercel.app)  
 **Helyi szerver port:** `http://localhost:3000` (Vite 8 HMR)  
@@ -16,24 +16,19 @@
 
 A **SoccerAI PRO** egy független, professzionális, prémium sötét témájú magyar nyelvű kvantitatív sportelemző és futball-predikciós platform.
 
-A **`v1.21.0`** kiadás újdonságai és fejlesztései:
-1. **Valós Böngészős Verifikáció (Headless Chromium CDP Interfész):**
-   - **Automatizált böngészős ellenőrző szkript (`scripts/verifyBrowser.mjs`):** Valós headless Chromium folyamat indítása, CDP (Chrome DevTools Protocol) csatlakozás natív WebSocketen keresztül.
-   - **Interaktív modul-ellenőrzés:** Az összes lap (`TopPicks`, `StatsGrid`, `ScannerView`, `ResultsView`, `BankrollView`, `MethodologyView`), a Szelvényépítő Drawer (`BetSlipDrawer`), és a 3D meccslabda canvas végiglátogatása és renderelésének igazolása.
-   - **Kivétel- és hibafigyelés:** 0 kezeletlen futásidejű kivétel (uncaught exception), 0 konzolhiba.
-2. **Időrendhelyes (Chronological Walk-Forward) Mintavételezés (`calibrationService.ts`):**
-   - **Lookahead bias kizárása:** A mérkőzések szigorúan időbélyeg szerint növekvő sorrendbe rendezése; in-sample és out-of-sample szétválasztás temporális vágási időpont ($T_{\text{split}}$) mentén.
-   - Jövőbeli meccsek paraméterei és eredményei nem szivároghatnak át a múltbeli becslésekbe (nincs adatcsorgás).
-3. **Valószínűségi Kalibráció Mérése:**
-   - **Multi-class 1X2 Brier-pontszám & Brier Skill Score (BSS):** A predikciós motor pontosságának mérése a naiv egyenletes bázishoz (0.6667) viszonyítva.
-   - **Várható Kalibrációs Hiba (Expected Calibration Error - ECE) & Max Hiba (MCE):** Valószínűségi decilisek/kvintilisek szerinti súlyozott eltérés ($|\bar{p}_k - \bar{y}_k|$).
-   - **Megbízhatósági diagram (Reliability Table):** Megjeleníti az egyes esélykategóriákban a modell átlagos jóslatát és a valós kimenetelek találati arányát.
-4. **Szigorú Piaci Előny Hitelesítési Kapu (Edge Verification Gate):**
-   - **"Előtte ne állíts igazolt piaci előnyt":** A rendszer szigorúan megtiltja az „igazolt piaci előny” hangoztatását, amennyiben a mintaméret kisebb mint $N=250$, a kalibrációs hiba $ECE > 8.0\%$, vagy az elért többlethozam statisztikailag nem szignifikáns ($p \ge 0.05, Z \le 1.645$).
-   - **Terminológiai pontosság:** A felületeken a nyers piaci él helyett a „Becsült elméleti él (+EV)” megnevezés jelenik meg egyértelmű módszertani magyarázattal.
-   - **Új 6. Módszertani Panel (`MethodologyView.tsx`):** Részletes interaktív nézet a Brier score-ról, az ECE-ről, az out-of-sample ROI-ról, a hipotézistesztelésről és a megbízhatósági táblázatról.
-5. **10 Új Dedikált Regressziós Teszt (`calibrationService.test.ts`):**
-   - A teljes tesztkészlet immár **145/145 sikeres teszttel** (100% pass) fut le.
+A **`v1.21.1`** kiadás legfontosabb eredményei:
+1. **GitHub Actions CI Pipeline Teljes Zöldítése:**
+   - Megszüntetve az összes (19 db) Oxlint figyelmeztetés a szigorú `--deny-warnings` CI lépésben.
+   - Nem használt modul- és típusimportok kitakarítva a forráskódból és a tesztekből.
+   - `unicorn/no-new-array` refaktorálása safe `Array.from` implementációra.
+   - 0 hiba, 0 figyelmeztetés a teljes projekten (`npx oxlint --deny-warnings`).
+2. **Eredmények Lap Dátumszűrő Bővítése (`ResultsView.tsx`):**
+   - Vizuális időszakszűrő gombok hozzáadva az Audit szűrősávhoz.
+3. **Minden Automatizált és Böngészős Minőségbiztosítás Zöld:**
+   - 145/145 egységteszt és regressziós teszt zöld.
+   - `tsc -b` és `vite build` 0 hibával fordul.
+   - Titkos kulcs szivárgás ellenőrzés (secret scan) tiszta.
+   - Valós Chromium CDP automatizált böngészőteszt 0 hibával lefutott.
 
 ### Korábbi Fő Verziók Eredményei:
 

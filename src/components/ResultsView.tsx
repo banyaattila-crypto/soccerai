@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Match, PredictionAuditRecord } from '../types/football';
+import { Match } from '../types/football';
 import {
   CheckCircle2,
   XCircle,
@@ -15,7 +15,6 @@ import {
   Download,
   Upload,
   AlertTriangle,
-  Info,
   Check,
 } from 'lucide-react';
 import { getRelativeDateStr } from '../utils/dateUtils';
@@ -479,27 +478,56 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
 
             {/* Szűrősáv */}
             <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 mr-1">
-                  <Filter className="w-3 h-3 text-amber-400" />
-                  Státusz:
-                </span>
-                {(['ALL', 'PENDING', 'WON', 'LOST'] as StatusFilter[]).map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setActiveStatus(status)}
-                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                      activeStatus === status
-                        ? 'bg-amber-500 text-slate-950 font-bold'
-                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    {status === 'ALL' && 'Összes'}
-                    {status === 'PENDING' && '⏳ Kezdésre vár'}
-                    {status === 'WON' && '✓ Nyertes'}
-                    {status === 'LOST' && '✗ Vesztes'}
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 mr-1">
+                    <Filter className="w-3 h-3 text-amber-400" />
+                    Státusz:
+                  </span>
+                  {(['ALL', 'PENDING', 'WON', 'LOST'] as StatusFilter[]).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setActiveStatus(status)}
+                      className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                        activeStatus === status
+                          ? 'bg-amber-500 text-slate-950 font-bold'
+                          : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      {status === 'ALL' && 'Összes'}
+                      {status === 'PENDING' && '⏳ Kezdésre vár'}
+                      {status === 'WON' && '✓ Nyertes'}
+                      {status === 'LOST' && '✗ Vesztes'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1 mr-1">
+                    <Calendar className="w-3 h-3 text-amber-400" />
+                    Időszak:
+                  </span>
+                  {(
+                    [
+                      { id: 'ALL', label: 'Mind' },
+                      { id: 'TODAY', label: 'Ma' },
+                      { id: 'YESTERDAY', label: 'Tegnap' },
+                      { id: 'WEEK', label: '7 nap' },
+                    ] as const
+                  ).map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPeriodFilter(p.id)}
+                      className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                        periodFilter === p.id
+                          ? 'bg-blue-600 text-white font-bold'
+                          : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -552,7 +580,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 {filteredAuditRecords.map((record) => {
                   const isWon = record.status === 'WON';
                   const isPending = !record.settled;
-                  const isLost = record.status === 'LOST';
 
                   return (
                     <div

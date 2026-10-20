@@ -8,7 +8,6 @@ import {
   normalCdf,
   calculateOneSidedPValue,
   ChronologicalMatch,
-  MIN_STATISTICAL_SAMPLE_SIZE,
 } from '../calibrationService';
 
 describe('Időrendhelyes Particionálás & Walk-Forward Split (calibrationService)', () => {

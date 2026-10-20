@@ -8,9 +8,7 @@ import {
   Sparkles,
   BarChart3,
   AlertTriangle,
-  TrendingUp,
   CheckCircle,
-  Info,
 } from 'lucide-react';
 import { runChronologicalCalibrationAudit } from '../services/calibrationService';
 

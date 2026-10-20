@@ -4,7 +4,6 @@ import {
   factorial,
   dixonColesTau,
   calculateDixonColesMatrix,
-  extractMarketsFromMatrix,
   normalizeIntegerPercentages,
   computeDixonColesExpectedGoals,
   calculateMarketProbabilities,

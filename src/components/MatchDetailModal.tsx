@@ -20,7 +20,6 @@ import {
   resolveApiSportsFixtureId,
   fetchFixtureOdds,
   getCachedFixtureOdds,
-  isOddsExpired,
   getOddsTtlStatus,
 } from '../services/apiSportsClient';
 import { ScoreLabH2HCard } from './ScoreLabH2HCard';
