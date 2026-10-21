@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.23.0';
-export const APP_RELEASE_NAME = 'Moduláris Grid Architektúra, Típusbiztos EventBus & Serverless Biztonság';
+export const APP_VERSION = '1.23.1';
+export const APP_RELEASE_NAME = 'Szimulált vs. Bukméker Odds Oktató Bővítés & Anti-Fake Value Transzparencia';
 export const APP_RELEASE_DATE = '2026-10-21';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,9 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'StatsGrid Dekompozíció (1978 sor -> 1084 sor): MatchTable, MatchCardsList, MatchCompactList és types modulok szétválasztása a src/components/grid/ alá',
-    'Típusbiztos Reaktivitás & EventBus (src/utils/eventBus.ts): Eseményvezérelt kommunikáció és useEventBus hook nyers window.dispatchEvent helyett, transzparens visszafelé kompatibilis híddal',
-    '3D Canvas Logika Egységesítése (useSoccerBallCanvas.ts): Fotorealisztikus 3D Trionda meccslabda raycasting és bilineáris textúra-interpoláció megosztása a Logo és ThreeDBall között',
-    'Serverless Proxy Biztonság & Memóriakorlát (MAX_RATE_LIMIT_IPS = 1000): DoS-védelem és FIFO/LRU elévülés az api/matches.ts és api/apisports.ts végpontokon, szigorúan típusbiztos VercelRequest és VercelResponse szignatúrákkal',
+    'Módszertan Oktató Bővítés (7. fejezet): Új, részletes fejezet a MethodologyView-ban a 🧪 Szimulált Odds és a 🎯 Bukméker Odds összehasonlításáról és jelentőségéről',
+    'Anti-Fake Value Tőkévédelmi Etika: Transzparens dokumentáció arról, miért tiltja le a rendszer szigorúan a Value (+EV%) és Kelly tét kalkulációt szimulált árakon az öncsalás elkerülésére',
+    'Élő Piaci Odds-Feed Útmutató: Lépésről lépésre bemutatott Bet365 / Pinnacle élő bukmékeri oddsbetöltés és 30 perces TTL lejárati folyamat',
     '184 / 184 Zöld Egységteszt: 16 tesztfájl, 0 hiba és 0 figyelmeztetés az oxlint és TypeScript strict ellenőrzéseken',
   ],
 };

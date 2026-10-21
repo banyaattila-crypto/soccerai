@@ -9,6 +9,8 @@ import {
   BarChart3,
   AlertTriangle,
   CheckCircle,
+  FlaskConical,
+  Zap,
 } from 'lucide-react';
 import { runChronologicalCalibrationAudit } from '../services/calibrationService';
 
@@ -368,6 +370,140 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          {/* 7. Szimulált Odds vs. Bukméker Odds: Kockázatkezelés és Anti-Fake Value Etika */}
+          <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-4 md:col-span-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-sky-400 font-extrabold text-base">
+                <FlaskConical className="w-5 h-5 text-sky-400" />
+                <h4>7. 🧪 Szimulált Odds vs. 🎯 Bukméker Odds: Kockázatkezelés &amp; Anti-Fake Value Etika</h4>
+              </div>
+              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-bold">
+                Anti-Fake Value Védelem Aktív
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Gyakori kérdés a sportfogadók részéről: <em>„A Napi Top Tippekben mit jelent a Szimulált?! Akkor nem valós fogadható adatok?!!”</em>
+              <br className="hidden sm:inline" />
+              A válasz határozott: <strong>A mérkőzések, a csapatok, a kezdési időpontok és a modell által számolt valószínűségek 100%-ban valósak!</strong> A jelölés kizárólag a <strong>megjelenített szorzó (odds) forrására</strong> utal, és a SoccerAI PRO egyik legfontosabb beépített biztonsági és tőkévédelmi fékrendszere.
+            </p>
+
+            {/* Összehasonlító táblázat */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-xs font-bold text-white block">
+                Összehasonlítás: Szimulált vs. Valós Bukmékeri Odds
+              </span>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border border-slate-800 rounded-xl overflow-hidden">
+                  <thead className="bg-slate-900 text-slate-400 font-mono uppercase text-[10px]">
+                    <tr>
+                      <th className="p-2.5">Tulajdonság</th>
+                      <th className="p-2.5 text-amber-300">🧪 Szimulált Odds</th>
+                      <th className="p-2.5 text-emerald-400">🎯 Bukméker Odds (Valós)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80 bg-slate-950/40 text-[11px]">
+                    <tr className="hover:bg-slate-900/50">
+                      <td className="p-2.5 font-bold text-white">Mérkőzés &amp; Időpont</td>
+                      <td className="p-2.5 text-emerald-300">✓ Valós hivatalos meccs (API adatfolyam)</td>
+                      <td className="p-2.5 text-emerald-300">✓ Valós hivatalos meccs (API adatfolyam)</td>
+                    </tr>
+                    <tr className="hover:bg-slate-900/50">
+                      <td className="p-2.5 font-bold text-white">Modell Valószínűség (%)</td>
+                      <td className="p-2.5 text-emerald-300">✓ Valós Dixon–Coles bivariáns MI predikció</td>
+                      <td className="p-2.5 text-emerald-300">✓ Valós Dixon–Coles bivariáns MI predikció</td>
+                    </tr>
+                    <tr className="hover:bg-slate-900/50">
+                      <td className="p-2.5 font-bold text-white">Szorzó (Odds) forrása</td>
+                      <td className="p-2.5 text-amber-300">
+                        <strong>Matematikailag becsült ár</strong> (Fair odds + 5% bukmékeri árrés)
+                      </td>
+                      <td className="p-2.5 text-sky-300 font-bold">
+                        Hivatalos fogadóiroda (Bet365, Pinnacle, 1xBet stb.)
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-slate-900/50">
+                      <td className="p-2.5 font-bold text-white">Value (+EV%) &amp; Kelly-tét</td>
+                      <td className="p-2.5 text-red-400 font-mono font-bold">
+                        ⛔ Szigorúan letiltva (0% / 0 unit az öncsalás ellen)
+                      </td>
+                      <td className="p-2.5 text-emerald-400 font-mono font-bold">
+                        🟢 Élesítve (+EV% él és Negyed-Kelly tétméretezés)
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Részletes kifejtés: 2 kártya */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1 text-xs">
+              {/* Bal kártya: Miért van szükség rá */}
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                <div className="flex items-center gap-2 text-amber-300 font-bold">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Miért létezik a „Szimulált” státusz? (Anti-Fake Value Etika)</span>
+                </div>
+                <ul className="text-slate-300 space-y-1.5 list-disc list-inside text-[11px] leading-relaxed">
+                  <li>
+                    <strong>API források jellege:</strong> A hivatalos ligamenetrendeket szállító API (Football-Data.org) valós meccseket, formát és tabellát szolgáltat ingyenesen, de nem tartalmaz élő oddsokat. Az élő szorzókat az API-Sports biztosítja szigorú napi kvótával.
+                  </li>
+                  <li>
+                    <strong>Szigorú öncsalás-védelem:</strong> Ha a rendszer a saját maga által kiszámolt valószínűségből generált szorzóra számolna ki várható értéket (+EV%) és Kelly tétet, az <em>hamis arbitrázs</em> lenne (a saját szorzónkat hasonlítanánk össze a saját valószínűségünkkel!).
+                  </li>
+                  <li>
+                    <strong>Tőkévédelmi fék:</strong> Amíg nem érkezik meg a hiteles, független bukmékeri szorzó, a rendszer sportszerűen és láthatóan kiírja a <code className="text-amber-300 font-mono">🧪 Szimulált</code> jelölést, és szigorúan nullázza a Value és Kelly kalkulációt, megóvva a bankrollt a megtévesztő fogadási szignáloktól.
+                  </li>
+                </ul>
+              </div>
+
+              {/* Jobb kártya: Hogyan válnak valósággá */}
+              <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-300 font-bold">
+                  <Zap className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Hogyan válnak a tippek „🎯 Bukméker Odds”-szá?</span>
+                </div>
+                <ol className="text-slate-300 space-y-1.5 list-decimal list-inside text-[11px] leading-relaxed">
+                  <li>
+                    <strong>Kattints a mérkőzés kártyájára</strong> a listában vagy a Napi Top Tippekben.
+                  </li>
+                  <li>
+                    A felugró <strong>Mérkőzés Részletei</strong> ablakban a rendszer a háttérben azonnal lekéri a mérkőzés <strong>élő Bet365 / Pinnacle piaci szorzóit</strong> (30 perces intelligens cache-sel).
+                  </li>
+                  <li>
+                    Amint a valós odds megérkezik:
+                    <ul className="list-disc list-inside pl-4 text-slate-400 text-[10px] space-y-0.5 mt-0.5">
+                      <li>A badge azonnal átvált <code className="text-emerald-300 font-mono">🎯 Bukméker Odds</code>-ra az iroda nevével és érvényességi idejével (TTL).</li>
+                      <li>Azonnal kiszámításra kerül a valós piaci <strong className="text-emerald-400">+EV%</strong> és élesedik a <strong className="text-emerald-400">Negyed-Kelly</strong> ajánlott egységtét.</li>
+                      <li>A szelvényre kattintva a valódi fogadóirodai szorzó kerül át a szelvényépítőbe.</li>
+                    </ul>
+                  </li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Összegzés / FAQ banner */}
+            <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 text-[11px] text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Összegzés fogadóknak</span>
+                </div>
+                <p className="text-slate-400">
+                  A meccsek és a valószínűségek 100%-ban valósak. A tippek bátran megtehetők bármelyik fogadóirodánál; a mérkőzés részletes adatlapjának megnyitásával pedig az élő piaci szorzók és a valódi matematikai él azonnal láthatóvá válik.
+                </p>
+              </div>
+              <div className="shrink-0 flex items-center gap-2">
+                <button
+                  onClick={onGoToPicks}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-[10px] transition-all cursor-pointer whitespace-nowrap"
+                >
+                  🔥 Top Tippek Megtekintése →
+                </button>
               </div>
             </div>
           </div>
