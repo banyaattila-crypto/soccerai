@@ -509,21 +509,101 @@ export function importAuditLogFromJson(jsonStr: string): AuditImportResult {
         continue;
       }
 
-      // 4. Beszúrás vagy intelligens frissítés (ha meglévő pending, de importáltban lezárt eredmény van)
+      // 4. Elszámolás (Settlement) kötelező újraszámolása és integritási ellenőrzése
+      let sanitizedSettled = Boolean(r.settled);
+      let sanitizedStatus = r.status;
+      let sanitizedProfit = typeof r.profit === 'number' ? r.profit : 0;
+      let sanitizedRoi = typeof r.roi === 'number' ? r.roi : 0;
+      let sanitizedSettledAt = r.settledAt;
+
+      if (r.settled) {
+        if (
+          typeof r.homeScore !== 'number' ||
+          typeof r.awayScore !== 'number' ||
+          isNaN(r.homeScore) ||
+          isNaN(r.awayScore)
+        ) {
+          // Eredmény hiányában nem lehet lezárt -> PENDING állapotba állítjuk vissza
+          sanitizedSettled = false;
+          sanitizedStatus = 'PENDING';
+          sanitizedProfit = 0;
+          sanitizedRoi = 0;
+          sanitizedSettledAt = undefined;
+        } else {
+          // Kötelező újraszámolás a rögzített gólok és a hitelesített odds alapján
+          const isWon = evaluatePickWon(
+            r.homeScore,
+            r.awayScore,
+            r.pick.market,
+            r.pick.marketLabel,
+            r.homeHalfTimeScore,
+            r.awayHalfTimeScore
+          );
+
+          const expectedStatus: 'WON' | 'LOST' | 'VOID' =
+            isWon === true ? 'WON' : isWon === false ? 'LOST' : 'VOID';
+
+          const expectedProfit =
+            isWon === true
+              ? Math.round((r.pick.odds - 1) * AUDIT_BASE_STAKE)
+              : isWon === false
+              ? -AUDIT_BASE_STAKE
+              : 0;
+
+          const expectedRoi =
+            isWon === true
+              ? Math.round((r.pick.odds - 1) * 1000) / 10
+              : isWon === false
+              ? -100
+              : 0;
+
+          if (r.status !== expectedStatus || r.profit !== expectedProfit) {
+            console.warn(
+              `Audit elszámolási eltérés a ${r.id} rekordnál: importált [${r.status}, ${r.profit} Ft] -> újraszámolt hiteles érték [${expectedStatus}, ${expectedProfit} Ft].`
+            );
+          }
+
+          sanitizedSettled = true;
+          sanitizedStatus = expectedStatus;
+          sanitizedProfit = expectedProfit;
+          sanitizedRoi = expectedRoi;
+          sanitizedSettledAt = r.settledAt || new Date().toISOString();
+        }
+      } else {
+        sanitizedSettled = false;
+        sanitizedStatus = 'PENDING';
+        sanitizedProfit = 0;
+        sanitizedRoi = 0;
+      }
+
+      // 5. Beszúrás vagy intelligens frissítés (ha meglévő pending, de importáltban lezárt eredmény van)
       const existing = map.get(r.id);
       if (!existing) {
-        map.set(r.id, r);
+        map.set(r.id, {
+          ...r,
+          settled: sanitizedSettled,
+          settledAt: sanitizedSettledAt,
+          homeScore: sanitizedSettled ? r.homeScore : undefined,
+          awayScore: sanitizedSettled ? r.awayScore : undefined,
+          homeHalfTimeScore: sanitizedSettled ? r.homeHalfTimeScore : undefined,
+          awayHalfTimeScore: sanitizedSettled ? r.awayHalfTimeScore : undefined,
+          status: sanitizedStatus,
+          profit: sanitizedProfit,
+          roi: sanitizedRoi,
+        });
         importedCount++;
-      } else if (!existing.settled && r.settled) {
+      } else if (!existing.settled && sanitizedSettled) {
         map.set(r.id, {
           ...existing,
           settled: true,
-          settledAt: r.settledAt,
+          settledAt: sanitizedSettledAt,
           homeScore: r.homeScore,
           awayScore: r.awayScore,
-          status: r.status,
-          profit: r.profit,
-          roi: r.roi,
+          homeHalfTimeScore: r.homeHalfTimeScore,
+          awayHalfTimeScore: r.awayHalfTimeScore,
+          status: sanitizedStatus,
+          profit: sanitizedProfit,
+          roi: sanitizedRoi,
         });
         importedCount++;
       }

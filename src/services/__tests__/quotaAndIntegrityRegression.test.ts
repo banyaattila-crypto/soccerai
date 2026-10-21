@@ -12,6 +12,7 @@ import {
   computeRecordHash,
   saveAuditLog,
   getAuditLog,
+  AUDIT_BASE_STAKE,
 } from '../predictionAuditService';
 import { importBetsFromJson, getTrackedBets, saveTrackedBets, getInitialBankroll } from '../bankrollService';
 import { getItemInvalidReason } from '../../components/BetSlipDrawer';
@@ -269,6 +270,110 @@ describe('Audit Log Cryptographic Import & Tamper Resistance (predictionAuditSer
     expect(updatedLog[0].homeScore).toBe(2);
     expect(updatedLog[0].awayScore).toBe(1);
     expect(updatedLog[0].status).toBe('WON');
+  });
+
+  it('neutralizes forged settlement status and profit on import by re-evaluating actual match scores', () => {
+    const kickoffMs = Date.now() - 3600000;
+    const hash = computeRecordHash({
+      matchId: 'match-tamper-fraud',
+      kickoffTimestamp: kickoffMs,
+      loggedAt: '2026-10-21T10:00:00.000Z',
+      market: 'OVER_25',
+      probability: 60,
+      odds: 2.10,
+    });
+
+    // Csalási kísérlet: 0-0-s meccsre a felhasználó Over 2.5 tippet adott,
+    // és a JSON-ben status: 'WON' és profit: 500000-et hazudik
+    const forgedSettledRecord: PredictionAuditRecord = {
+      id: 'audit-match-tamper-fraud',
+      matchId: 'match-tamper-fraud',
+      leagueId: 'pl',
+      leagueName: 'Premier League',
+      homeTeam: { name: 'Man City' },
+      awayTeam: { name: 'Arsenal' },
+      kickoffDate: '2026-10-21',
+      kickoffTime: '15:00',
+      kickoffTimestamp: kickoffMs,
+      loggedAt: '2026-10-21T10:00:00.000Z',
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: hash, // Érvényes pre-match aláírás!
+      settled: true,
+      homeScore: 0,
+      awayScore: 0,
+      status: 'WON', // <-- CSALÁS
+      profit: 500000, // <-- CSALÁS
+      roi: 5000, // <-- CSALÁS
+      pick: {
+        market: 'OVER_25',
+        marketLabel: '2.5 gól felett',
+        odds: 2.10,
+        probability: 60,
+        expectedValue: 26.0,
+      },
+    };
+
+    const res = importAuditLogFromJson(JSON.stringify([forgedSettledRecord]));
+    expect(res.success).toBe(true);
+
+    const log = getAuditLog();
+    const imported = log.find((r) => r.id === 'audit-match-tamper-fraud');
+    expect(imported).toBeDefined();
+    // A rendszer felülbírálta a csalási kísérletet: a tényleges gólok (0-0) alapján a státusz LOST
+    expect(imported?.status).toBe('LOST');
+    // A profit szigorúan -10 000 Ft (AUDIT_BASE_STAKE), nem pedig az importált 500 000 Ft!
+    expect(imported?.profit).toBe(-AUDIT_BASE_STAKE);
+    expect(imported?.roi).toBe(-100);
+  });
+
+  it('reverts settled status to PENDING if imported record lacks valid numerical match scores', () => {
+    const kickoffMs = Date.now() - 3600000;
+    const hash = computeRecordHash({
+      matchId: 'match-no-scores',
+      kickoffTimestamp: kickoffMs,
+      loggedAt: '2026-10-21T10:00:00.000Z',
+      market: '1',
+      probability: 65,
+      odds: 1.80,
+    });
+
+    const invalidScoreRecord: PredictionAuditRecord = {
+      id: 'audit-match-no-scores',
+      matchId: 'match-no-scores',
+      leagueId: 'pl',
+      leagueName: 'Premier League',
+      homeTeam: { name: 'Chelsea' },
+      awayTeam: { name: 'Spurs' },
+      kickoffDate: '2026-10-21',
+      kickoffTime: '15:00',
+      kickoffTimestamp: kickoffMs,
+      loggedAt: '2026-10-21T10:00:00.000Z',
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: hash,
+      settled: true,
+      homeScore: undefined,
+      awayScore: undefined,
+      status: 'WON',
+      profit: 8000,
+      roi: 80,
+      pick: {
+        market: '1',
+        marketLabel: 'Chelsea (1)',
+        odds: 1.80,
+        probability: 65,
+        expectedValue: 17.0,
+      },
+    };
+
+    const res = importAuditLogFromJson(JSON.stringify([invalidScoreRecord]));
+    expect(res.success).toBe(true);
+
+    const log = getAuditLog();
+    const imported = log.find((r) => r.id === 'audit-match-no-scores');
+    expect(imported).toBeDefined();
+    expect(imported?.settled).toBe(false);
+    expect(imported?.status).toBe('PENDING');
+    expect(imported?.profit).toBe(0);
   });
 });
 
