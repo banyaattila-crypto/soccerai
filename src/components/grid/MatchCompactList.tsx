@@ -160,68 +160,68 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
 
             {/* Jobb oldal: 2 Dinamikus 3D Pill Mutató + Mini 1X2 Oszlop */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
-              {/* Két kiválasztott mutató 3D csík-diagrammal */}
+              {/* Két kiválasztott mutató 3D csík-diagrammal (Klasszikus Stadionzöld & Sportfogadási Arany) */}
               <div className="flex flex-col gap-1.5 w-[96px] sm:w-[124px] shrink-0">
-                {/* 1. Mutató 3D Pill - Élénk Smaragd-Türkiz-Cián Színátmenet */}
+                {/* 1. Mutató 3D Pill - Klasszikus Sport Fűzöld / Smaragd */}
                 <button
                   type="button"
                   onClick={(e) => onCellBet(e, match, label1, val1, odds1, metric1.market)}
                   className={`btn-pill-3d h-5.5 sm:h-6 rounded-lg relative overflow-hidden text-left border transition-all cursor-pointer ${
                     isBet1Selected
                       ? 'border-amber-400 bg-amber-950/80 shadow-[0_0_12px_rgba(245,158,11,0.6)] ring-1 ring-amber-400'
-                      : 'border-teal-500/60 hover:border-teal-400 bg-slate-950 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)]'
+                      : 'border-emerald-600/50 hover:border-emerald-400 bg-slate-950 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)]'
                   }`}
                   title={`${metric1.label}: ${val1}% @${odds1.toFixed(2)} - Kattints a szelvényhez adáshoz`}
                 >
-                  {/* 3D színátmenetes kitöltés és üvegfény */}
+                  {/* 3D stadionzöld színátmenet és üvegfény */}
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 shadow-[0_0_10px_rgba(45,212,191,0.55)] transition-all duration-500 rounded-l-md"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 shadow-[0_0_8px_rgba(16,185,129,0.35)] transition-all duration-500 rounded-l-md"
                     style={{ width: `${Math.min(100, Math.max(0, val1))}%` }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-white/10 to-transparent pointer-events-none rounded-l-md" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/5 to-transparent pointer-events-none rounded-l-md" />
                   </div>
                   {/* Felső 3D élfény tükröződés */}
-                  <div className="absolute top-0 inset-x-0 h-[1px] bg-white/40 z-20 pointer-events-none" />
+                  <div className="absolute top-0 inset-x-0 h-[1px] bg-white/35 z-20 pointer-events-none" />
                   <div className="absolute inset-0 flex items-center justify-between px-1.5 z-10 text-[8px] sm:text-[9px] font-bold">
                     <span className="text-white drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] truncate mr-0.5 font-extrabold">
                       {metric1.shortLabel}
                     </span>
                     <span className="font-mono font-black text-white drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] shrink-0">
                       {val1}%
-                      <span className="text-[7px] sm:text-[8px] text-teal-100 opacity-95 ml-0.5 hidden sm:inline font-mono">
+                      <span className="text-[7px] sm:text-[8px] text-emerald-200 opacity-95 ml-0.5 hidden sm:inline font-mono">
                         @{odds1.toFixed(2)}
                       </span>
                     </span>
                   </div>
                 </button>
 
-                {/* 2. Mutató 3D Pill - Élénk Borostyán-Rózsa-Lila Színátmenet */}
+                {/* 2. Mutató 3D Pill - Klasszikus Sportfogadási Arany / Borostyán */}
                 <button
                   type="button"
                   onClick={(e) => onCellBet(e, match, label2, val2, odds2, metric2.market)}
                   className={`btn-pill-3d h-5.5 sm:h-6 rounded-lg relative overflow-hidden text-left border transition-all cursor-pointer ${
                     isBet2Selected
                       ? 'border-amber-400 bg-amber-950/80 shadow-[0_0_12px_rgba(245,158,11,0.6)] ring-1 ring-amber-400'
-                      : 'border-pink-500/60 hover:border-pink-400 bg-slate-950 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)]'
+                      : 'border-amber-600/50 hover:border-amber-400 bg-slate-950 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)]'
                   }`}
                   title={`${metric2.label}: ${val2}% @${odds2.toFixed(2)} - Kattints a szelvényhez adáshoz`}
                 >
-                  {/* 3D színátmenetes kitöltés és üvegfény */}
+                  {/* 3D arany/borostyán színátmenet és üvegfény */}
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-rose-500 to-purple-600 shadow-[0_0_10px_rgba(244,63,94,0.55)] transition-all duration-500 rounded-l-md"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 shadow-[0_0_8px_rgba(245,158,11,0.35)] transition-all duration-500 rounded-l-md"
                     style={{ width: `${Math.min(100, Math.max(0, val2))}%` }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-white/10 to-transparent pointer-events-none rounded-l-md" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/5 to-transparent pointer-events-none rounded-l-md" />
                   </div>
                   {/* Felső 3D élfény tükröződés */}
-                  <div className="absolute top-0 inset-x-0 h-[1px] bg-white/40 z-20 pointer-events-none" />
+                  <div className="absolute top-0 inset-x-0 h-[1px] bg-white/35 z-20 pointer-events-none" />
                   <div className="absolute inset-0 flex items-center justify-between px-1.5 z-10 text-[8px] sm:text-[9px] font-bold">
                     <span className="text-white drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] truncate mr-0.5 font-extrabold">
                       {metric2.shortLabel}
                     </span>
                     <span className="font-mono font-black text-white drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.95)] shrink-0">
                       {val2}%
-                      <span className="text-[7px] sm:text-[8px] text-pink-100 opacity-95 ml-0.5 hidden sm:inline font-mono">
+                      <span className="text-[7px] sm:text-[8px] text-amber-200 opacity-95 ml-0.5 hidden sm:inline font-mono">
                         @{odds2.toFixed(2)}
                       </span>
                     </span>

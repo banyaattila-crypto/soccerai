@@ -3,6 +3,15 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.4] - 2026-10-21
+
+### Javítva & Letisztult Sport Arculat (Fixed & Clean Athletic Styling)
+- **Klasszikus Stadionzöld és Sportfogadási Arany Százaléksávok (`MatchCompactList.tsx`):**
+  - **Színek lecserélése a felhasználói visszajelzés alapján:** A türkiz, cián, rózsaszín és lila árnyalatok teljes eltávolítása a kompakt lista mutatóiból.
+  - **1. Mutató (Gólok / Fő piac):** Mély, férfias és elegáns stadion fűzöld és smaragd színátmenet (`from-emerald-600 via-emerald-500 to-green-500`) visszafogott zöld fénnyel.
+  - **2. Mutató (Másodlagos piac):** Nemes, meleg sportfogadási arany és borostyán gradiens (`from-amber-600 via-amber-500 to-yellow-500`) finom meleg fénnyel.
+  - **Harmónia az arculattal:** A két mutató mostantól 100%-ban illeszkedik a SoccerAI alapvető sport arculatához (zöld statisztikák / arany oddsok és prémium tippek).
+
 ## [1.24.3] - 2026-10-21
 
 ### Hozzáadva & Továbbfejlesztve (Added & Enhanced)
