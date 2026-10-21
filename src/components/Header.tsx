@@ -36,6 +36,52 @@ interface HeaderProps {
   onLockApp?: () => void;
 }
 
+interface NavItem {
+  tab: AppTab;
+  label: string;
+  shortLabel: string;
+  icon: React.ReactElement<{ className?: string }>;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    tab: 'picks',
+    label: 'Napi Top Tippek',
+    shortLabel: 'Top',
+    icon: <Flame className="w-3.5 h-3.5 shrink-0" />,
+  },
+  {
+    tab: 'grid',
+    label: 'Mérkőzés Rács',
+    shortLabel: 'Rács',
+    icon: <LayoutGrid className="w-3.5 h-3.5 shrink-0" />,
+  },
+  {
+    tab: 'scanner',
+    label: 'Scanner (+EV)',
+    shortLabel: 'Scan',
+    icon: <Radar className="w-3.5 h-3.5 shrink-0" />,
+  },
+  {
+    tab: 'results',
+    label: 'Eredmények & Audit',
+    shortLabel: 'Eredmény',
+    icon: <Trophy className="w-3.5 h-3.5 shrink-0" />,
+  },
+  {
+    tab: 'bankroll',
+    label: 'Tétnapló',
+    shortLabel: 'Bankroll',
+    icon: <Wallet className="w-3.5 h-3.5 shrink-0" />,
+  },
+  {
+    tab: 'methodology',
+    label: 'Módszertan',
+    shortLabel: 'Elmélet',
+    icon: <BookOpen className="w-3.5 h-3.5 shrink-0" />,
+  },
+];
+
 export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onOpenAbout,
@@ -52,6 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
   isPinEnabled,
   onLockApp,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
 
@@ -59,6 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
     // Ellenőrizzük, hogy standalone PWA módban fut-e az alkalmazás
     if (
       window.matchMedia('(display-mode: standalone)').matches ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.navigator as any).standalone === true
     ) {
       setIsStandalone(true);
@@ -83,133 +131,62 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-mesh-header backdrop-blur-md border-b border-slate-800/80 w-full overflow-hidden">
+    <header className="sticky top-0 z-40 bg-mesh-header backdrop-blur-md border-b border-slate-800/80 w-full">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        {/* Felső Fő Sáv */}
-        <div className="h-15 sm:h-16 flex items-center justify-between gap-2">
-          {/* Bal oldal: 3D WOW Focilabda Logó & Cím */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Logo size={46} className="shrink-0" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-amber-300 bg-clip-text text-transparent truncate">
+        
+        {/* 1. Emelet: Márka & Fő Műveletek (Soha nem ütközik a navigációval!) */}
+        <div className="h-14 sm:h-16 flex items-center justify-between gap-3">
+          
+          {/* Bal oldal: 3D Focilabda Logó, Név, Verzió & Státusz */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 shrink-0">
+            <Logo size={42} className="shrink-0" />
+            <div className="flex flex-col justify-center min-w-0">
+              <div className="flex items-center gap-1.5 flex-nowrap">
+                <span className="font-black text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-amber-300 bg-clip-text text-transparent shrink-0">
                   Soccer<span className="text-amber-400">AI</span>
                 </span>
-                <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+                <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
                   PRO
                 </span>
                 <button
+                  type="button"
                   onClick={onOpenAbout}
-                  className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 border border-slate-700 transition-all shrink-0 cursor-pointer"
+                  className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 border border-slate-700 transition-colors shrink-0 cursor-pointer"
                   title={`Verzió: v${APP_VERSION} (Kattints a névjegyhez)`}
                 >
                   v{APP_VERSION}
                 </button>
                 {isLiveApi ? (
                   <span
-                    className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0 hidden sm:inline"
-                    title="Élő API adatforrás (Football-Data / API-Sports)"
+                    className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0 hidden sm:inline-flex items-center gap-1"
+                    title="Élő API adatforrás (Football-Data.org / API-Sports)"
                   >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     ÉLŐ API
                   </span>
                 ) : (
                   <span
-                    className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0 hidden sm:inline"
+                    className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0 hidden sm:inline-block"
                     title="Szimulált vagy gyorsítótárazott minta adatok"
                   >
                     SZIMULÁLT
                   </span>
                 )}
               </div>
-              <p className="text-[10px] text-slate-400 font-medium truncate hidden sm:block">
+              <p className="text-[10px] text-slate-400 font-medium truncate hidden md:block">
                 Kvantitatív Futball Predikciók &amp; Valószínűségi Hőtérkép
               </p>
             </div>
           </div>
 
-          {/* Közép (asztali nézet): 5 Fókuszált Tab */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => setActiveTab('picks')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'picks'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5" />
-              <span>Napi Top Tippek</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('grid')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'grid'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Mérkőzés Rács</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('scanner')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'scanner'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <Radar className="w-3.5 h-3.5" />
-              <span>Scanner (+EV)</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('results')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'results'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <Trophy className="w-3.5 h-3.5" />
-              <span>Eredmények</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('bankroll')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'bankroll'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <Wallet className="w-3.5 h-3.5" />
-              <span>Tétnapló</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('methodology')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'methodology'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 font-extrabold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Módszertan</span>
-            </button>
-          </nav>
-
-          {/* Jobb oldal: Műveletek (Élő kapszula, Bankroll chip, Frissítés, Szelvény, Névjegy, Beállítások) */}
+          {/* Jobb oldal: Műveletek (Élő kapszula, Bankroll chip, Szelvény, Frissítés, PIN zár, Beállítások) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Élő Mérkőzés Pulzáló Kapszula */}
             {liveMatchCount !== undefined && liveMatchCount > 0 ? (
               <button
                 type="button"
                 onClick={onGoToLive}
-                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 transition-all cursor-pointer shadow-sm shadow-red-950/40 animate-pulse"
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 transition-all cursor-pointer shadow-sm shadow-red-950/40 animate-pulse shrink-0"
                 title={`${liveMatchCount} élő mérkőzés folyamatban! Kattints az élő meccsekhez.`}
               >
                 <span className="relative flex h-2 w-2">
@@ -223,21 +200,14 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 </span>
               </button>
-            ) : (
-              <span
-                className="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-500 text-[10px] font-semibold"
-                title="Jelenleg nincs folyamatban lévő élő mérkőzés"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-                <span>0 Élő</span>
-              </span>
-            )}
+            ) : null}
 
             {/* Live Bankroll Chip */}
             {currentBankroll !== undefined && (
               <button
+                type="button"
                 onClick={() => setActiveTab('bankroll')}
-                className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shrink-0 ${
                   activeTab === 'bankroll'
                     ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                     : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
@@ -249,11 +219,12 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* PWA Telepítés gomb vagy Natív PWA badge */}
+            {/* PWA Telepítés gomb */}
             {installPrompt && (
               <button
+                type="button"
                 onClick={handleInstallClick}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] shadow-md shadow-emerald-600/25 transition-all cursor-pointer animate-pulse"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] shadow-md shadow-emerald-600/25 transition-all cursor-pointer animate-pulse shrink-0"
                 title="SoccerAI telepítése natív alkalmazásként"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -262,17 +233,18 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {isStandalone && (
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+              <span className="hidden xl:inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
                 <Smartphone className="w-3 h-3" />
-                PWA Mód
+                PWA
               </span>
             )}
 
             {/* Frissítés gomb */}
             <button
+              type="button"
               onClick={onRefresh}
               disabled={isLoading}
-              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-slate-300 transition-colors disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-slate-300 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
               title="Mérkőzések frissítése most"
             >
               <RefreshCw
@@ -283,15 +255,16 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Szelvény számláló gomb */}
             <button
+              type="button"
               onClick={onOpenBetSlip}
-              className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+              className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 betSlipCount > 0
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-600/20'
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-600/25'
                   : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
               }`}
               title="Szelvényépítő megnyitása"
             >
-              <Ticket className="w-4 h-4 text-emerald-300" />
+              <Ticket className="w-3.5 h-3.5 text-emerald-300" />
               <span className="hidden sm:inline">Szelvény</span>
               {betSlipCount > 0 && (
                 <span className="flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white text-slate-950 text-[10px] sm:text-xs font-black">
@@ -300,31 +273,33 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Névjegy & Rendszerinfó */}
-            <button
-              onClick={onOpenAbout}
-              className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-300 border border-slate-800 transition-colors cursor-pointer"
-              title={`Névjegy & Rendszerinfó (v${APP_VERSION})`}
-            >
-              <Info className="w-4 h-4" />
-            </button>
-
             {/* Azonnali Zárolás Gomb (ha a 6-jegyű PIN aktív) */}
             {isPinEnabled && onLockApp && (
               <button
                 type="button"
                 onClick={onLockApp}
-                className="p-2 rounded-lg bg-slate-900 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 border border-slate-800 hover:border-amber-500/40 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-900 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 border border-slate-800 hover:border-amber-500/40 transition-colors cursor-pointer shrink-0"
                 title="Alkalmazás azonnali zárolása (6-jegyű PIN)"
               >
                 <Lock className="w-4 h-4" />
               </button>
             )}
 
+            {/* Névjegy & Rendszerinfó */}
+            <button
+              type="button"
+              onClick={onOpenAbout}
+              className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-300 border border-slate-800 transition-colors cursor-pointer shrink-0"
+              title={`Névjegy & Rendszerinfó (v${APP_VERSION})`}
+            >
+              <Info className="w-4 h-4" />
+            </button>
+
             {/* Beállítások */}
             <button
+              type="button"
               onClick={onOpenSettings}
-              className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 transition-colors cursor-pointer shrink-0"
               title="Beállítások & API kulcs"
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -332,82 +307,57 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Mobilon megjelenő másodlagos kompakt 6-oszlopos Tab-sáv */}
-        <div className="md:hidden pb-2 pt-0.5">
-          <nav className="grid grid-cols-6 gap-1 bg-slate-900/95 p-1 rounded-xl border border-slate-800/90 text-center">
-            <button
-              onClick={() => setActiveTab('picks')}
-              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
-                activeTab === 'picks'
-                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Flame className="w-3 h-3 shrink-0" />
-              <span className="truncate">Top</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('grid')}
-              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
-                activeTab === 'grid'
-                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="w-3 h-3 shrink-0" />
-              <span className="truncate">Rács</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('scanner')}
-              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
-                activeTab === 'scanner'
-                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Radar className="w-3 h-3 shrink-0" />
-              <span className="truncate">Scan</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('results')}
-              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
-                activeTab === 'results'
-                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Trophy className="w-3 h-3 shrink-0" />
-              <span className="truncate">Eredmény</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('bankroll')}
-              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
-                activeTab === 'bankroll'
-                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Wallet className="w-3 h-3 shrink-0" />
-              <span className="truncate">Bankroll</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('methodology')}
-              className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
-                activeTab === 'methodology'
-                  ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <BookOpen className="w-3 h-3 shrink-0" />
-              <span className="truncate">Módszer</span>
-            </button>
+        {/* 2. Emelet: Dedikált Fő Navigációs Sáv (Kényelmes, átlátható, tágas elrendezés) */}
+        <div className="pb-2 sm:pb-2.5 pt-0.5 border-t border-slate-800/50">
+          
+          {/* Asztali / Tablet nézet (>= md): Középre rendezett szalag */}
+          <nav className="hidden md:flex items-center justify-center">
+            <div className="inline-flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800/80 shadow-inner">
+              {NAV_ITEMS.map((item) => {
+                const isActive = activeTab === item.tab;
+                return (
+                  <button
+                    key={item.tab}
+                    type="button"
+                    onClick={() => setActiveTab(item.tab)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                      isActive
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 font-extrabold scale-[1.02]'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </nav>
+
+          {/* Mobilon megjelenő kompakt 6-oszlopos Tab-sáv (< md) */}
+          <nav className="grid grid-cols-6 gap-1 md:hidden bg-slate-900/90 p-1 rounded-xl border border-slate-800/80 text-center">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeTab === item.tab;
+              return (
+                <button
+                  key={item.tab}
+                  type="button"
+                  onClick={() => setActiveTab(item.tab)}
+                  className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {item.icon}
+                  <span className="truncate">{item.shortLabel}</span>
+                </button>
+              );
+            })}
+          </nav>
+
         </div>
+
       </div>
     </header>
   );
