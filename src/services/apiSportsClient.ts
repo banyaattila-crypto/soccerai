@@ -9,6 +9,7 @@ import {
   buildMatchQuantAndPick,
 } from './predictionEngine';
 import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
+import { normalizeTeamName } from '../utils/teamUtils';
 import {
   computeExpectedGoalsFromModel,
   loadLeagueModel,
@@ -644,18 +645,7 @@ export async function fetchApiSportsMatches(
   return matches;
 }
 
-/**
- * Normalizálja a csapatnevet diakritikus jelek és klub előtagok/utótagok nélkül a pontos párosításhoz.
- */
-export function normalizeTeamName(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/^(fc|afc|cf|sc|rc|ac|as|ss|bv|sv|vfb|vfl|rb|ud|ca)\s+/i, '')
-    .replace(/\s+(fc|cf|sc|afc|cd|sad)$/i, '')
-    .replace(/[^a-z0-9]/g, '');
-}
+export { normalizeTeamName };
 
 /**
  * Megkeresi egy meccshez tartozó API-Sports Fixture ID-t (ha van).

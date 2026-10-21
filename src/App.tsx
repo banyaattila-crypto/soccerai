@@ -16,6 +16,7 @@ import { Logo } from './components/Logo';
 import { APP_VERSION } from './version';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
+import { normalizeTeamName } from './utils/teamUtils';
 
 const MatchDetailModal = React.lazy(() =>
   import('./components/MatchDetailModal').then((m) => ({ default: m.MatchDetailModal }))
@@ -147,10 +148,13 @@ export function App() {
 
         const combinedRaw = [...liveMain, ...liveSecondary];
         // Deduplikáció (ha mindkét API szolgáltatná ugyanazt a meccset pl. Primeira Liga esetén)
+        // Teljes, egységes normalizeTeamName-t használunk .slice(0, 5) csonkolás nélkül,
+        // így az azonos előtagú csapatok (Man City / Man Utd, Real Madrid / Betis / Balompédica,
+        // Sheffield Utd / Wed, Bristol City / Rovers) soha nem ütköznek össze.
         const seen = new Set<string>();
         const combined = combinedRaw.filter((m) => {
-          const normHome = m.homeTeam.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
-          const normAway = m.awayTeam.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
+          const normHome = normalizeTeamName(m.homeTeam.name);
+          const normAway = normalizeTeamName(m.awayTeam.name);
           const key = `${m.kickoffDate}_${normHome}_${normAway}`;
           if (seen.has(key)) return false;
           seen.add(key);

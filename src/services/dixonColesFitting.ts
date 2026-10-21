@@ -12,6 +12,8 @@
  */
 
 import { dixonColesTau, computeDixonColesExpectedGoals } from './predictionEngine';
+import { normalizeTeamName } from '../utils/teamUtils';
+export { normalizeTeamName };
 
 export interface FinishedMatchResult {
   homeTeam: string;
@@ -48,20 +50,6 @@ export interface FittedDixonColesModel {
 
 const STORAGE_PREFIX = 'soccerai_dc_model_v1_';
 const MODEL_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 órás gyorsítótár
-
-/**
- * Szöveges csapatnév normalizálása (ékezetek, rövidítések, FC/CF levágása) a pontos illesztéshez
- */
-export function normalizeTeamName(rawName: string): string {
-  if (!rawName) return '';
-  return rawName
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\b(fc|cf|afc|sc|ac|ssc|as|rc|tsv|vfb|vfl|1\.|cd|ud|ogc)\b/g, '')
-    .replace(/[^a-z0-9]/g, '')
-    .trim();
-}
 
 /**
  * Dixon-Coles MLE paraméter-illesztés a szezon lejátszott mérkőzéseire
