@@ -28,6 +28,8 @@ import {
   SlidersHorizontal,
   Check,
   Star,
+  X,
+  RotateCcw,
 } from 'lucide-react';
 
 export * from './grid/types';
@@ -268,6 +270,42 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
     const exists = availableLeagues.some((l) => l.id === selectedLeague);
     return exists ? selectedLeague : 'all';
   }, [selectedLeague, availableLeagues]);
+
+  // Összecsukható szűrősáv állapota (alapértelmezetten csukva a szellős, tiszta megjelenésért)
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('soccerai_grid_filters_expanded') === 'true';
+    }
+    return false;
+  });
+
+  const handleToggleFilters = () => {
+    setIsFiltersExpanded((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('soccerai_grid_filters_expanded', String(next));
+      }
+      return next;
+    });
+  };
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (effectiveLeague !== 'all') count++;
+    if (searchQuery.trim() !== '') count++;
+    if (onlyStrongSignals) count++;
+    if (onlyLiveMatches) count++;
+    if (focusMarket !== 'ALL') count++;
+    return count;
+  }, [effectiveLeague, searchQuery, onlyStrongSignals, onlyLiveMatches, focusMarket]);
+
+  const handleResetGridFilters = () => {
+    setSelectedLeague('all');
+    setSearchQuery('');
+    setOnlyStrongSignals(false);
+    setOnlyLiveMatches(false);
+    setFocusMarket('ALL');
+  };
 
   // Szűrés a többi kritérium alapján
   const filteredMatches = useMemo(() => {
@@ -510,364 +548,465 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           </div>
         </div>
 
-        {/* Szűrők és Keresősáv */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-mesh-card border border-slate-800/80 mb-5 space-y-3.5">
-          {/* Felső sor: Kereső és gyors infó */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-emerald-400" />
-                <span>Bajnokságok ({availableLeagues.length})</span>
-              </span>
+        {/* FŐ KOMPAKT ESZKÖZTÁR (Kereső + Szűrők gomb + Nézetváltók) */}
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-mesh-card border border-slate-800/90 mb-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-md">
+          {/* Bal oldal: Gyorskereső */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Csapat vagy bajnokság keresése..."
+              className="w-full pl-9 pr-8 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
+            />
+            {searchQuery && (
               <button
-                onClick={() => setIsLeaguesExpanded(!isLeaguesExpanded)}
-                className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
-                title={isLeaguesExpanded ? 'Egy soros görgethető nézet' : 'Összes liga kibontása több sorba'}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+                title="Keresés törlése"
               >
-                {isLeaguesExpanded ? (
-                  <>
-                    <ChevronUp className="w-3 h-3 text-emerald-400" />
-                    <span>Összecsukás (1 sor)</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3 h-3 text-emerald-400" />
-                    <span>Összes liga kibontása ({availableLeagues.length})</span>
-                  </>
-                )}
+                <X className="w-3.5 h-3.5" />
               </button>
-            </div>
-
-            {/* Kereső */}
-            <div className="relative w-full sm:w-64 shrink-0">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Csapat vagy liga keresése..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
-              />
-            </div>
+            )}
           </div>
 
-          {/* Második sor: Teljes szélességű Liga választó görgetőgombokkal */}
-          <div className="relative w-full">
-            {!isLeaguesExpanded && (
-              <>
-                <button
-                  onClick={() => scrollLeagues('left')}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-lg bg-slate-900/95 text-slate-300 hover:text-white border border-slate-700 shadow-lg cursor-pointer hidden md:flex items-center justify-center"
-                  title="Görgetés balra"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => scrollLeagues('right')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-lg bg-slate-900/95 text-slate-300 hover:text-white border border-slate-700 shadow-lg cursor-pointer hidden md:flex items-center justify-center"
-                  title="Görgetés jobbra"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </>
+          {/* Jobb oldal: Szűrők lenyitó gomb + Csoportosítás + Nézetváltó */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* SZŰRŐK LENYITÓ GOMB (Badge-el és állapottal) */}
+            <button
+              onClick={handleToggleFilters}
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer border ${
+                isFiltersExpanded || activeFilterCount > 0
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-sm'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
+              }`}
+              title={isFiltersExpanded ? 'Szűrők összecsukása' : 'Részletes szűrők és mutatók megnyitása'}
+            >
+              <Filter className="w-3.5 h-3.5 text-amber-400" />
+              <span>Szűrők</span>
+              {activeFilterCount > 0 && (
+                <span className="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-black text-[10px]">
+                  {activeFilterCount}
+                </span>
+              )}
+              {isFiltersExpanded ? (
+                <ChevronUp className="w-3.5 h-3.5 ml-0.5 text-slate-400" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 ml-0.5 text-slate-400" />
+              )}
+            </button>
+
+            {/* Szűrők törlése gomb, ha van aktív szűrő */}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={handleResetGridFilters}
+                className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
+                title="Minden szűrő alaphelyzetbe"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
             )}
 
-            <div
-              ref={leaguesScrollRef}
-              className={`w-full py-1 ${
-                isLeaguesExpanded
-                  ? 'flex flex-wrap gap-1.5'
-                  : 'flex items-center gap-1.5 overflow-x-auto scroll-smooth md:px-8 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent touch-pan-x'
-              }`}
+            {/* Csoportosítás váltó (Bajnokság szerint / Időrendben) */}
+            <button
+              onClick={() => setViewMode(viewMode === 'league' ? 'time' : 'league')}
+              className="px-2.5 py-1.5 rounded-xl font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
+              title={viewMode === 'league' ? 'Váltás időrendi listára' : 'Váltás bajnokságonkénti csoportosításra'}
             >
-              {availableLeagues.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => {
-                    setSelectedLeague(l.id);
-                    setCollapsedLeagues((prev) => ({ ...prev, [l.id]: false }));
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer ${
-                    effectiveLeague === l.id
-                      ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-500/50'
-                      : 'bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800'
-                  }`}
-                >
-                  <span>{l.flag}</span>
-                  <span>{l.name}</span>
-                  <span
-                    className={`text-[10px] font-mono px-1 py-0.2 rounded ${
-                      effectiveLeague === l.id ? 'bg-black/30 text-emerald-200' : 'bg-slate-800 text-slate-400'
-                    }`}
-                  >
-                    {l.count}
-                  </span>
-                </button>
-              ))}
+              <Layers className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">{viewMode === 'league' ? 'Bajnokság szerint' : 'Időrendben'}</span>
+            </button>
 
+            {/* Kompakt / Kártyák / Táblázat nézetváltó */}
+            <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-xl border border-slate-700/80">
               <button
-                onClick={() => setSelectedLeague('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  effectiveLeague === 'all'
-                    ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-500/50'
-                    : 'bg-slate-900/90 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+                type="button"
+                onClick={() => handleSetDisplayMode('compact')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                  displayMode === 'compact' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
+                title="ScoreLab kompakt meccssoros nézet"
               >
-                Minden Bajnokság ({dayMatches.length})
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Kompakt</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetDisplayMode('cards')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                  displayMode === 'cards' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+                title="Kártyás nézet"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Kártyák</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetDisplayMode('table')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                  displayMode === 'table' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+                title="Részletes táblázat nézet"
+              >
+                <Table className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Táblázat</span>
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Másodlagos kapcsolók: Nézet, Erős jelek & Accordion vezérlő */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/60 text-xs">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setOnlyStrongSignals(!onlyStrongSignals)}
-                className={`px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                  onlyStrongSignals
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Csak Kiemelt Jelek ({signalThreshold}%+)</span>
-              </button>
+        {/* AKTÍV SZŰRŐ CHIP-EK (Csak akkor látható, ha a szűrőpanel be van csukva, de van aktív szűrő) */}
+        {!isFiltersExpanded && activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-4 text-xs animate-fade-in">
+            <span className="text-[11px] font-bold text-slate-400 mr-1">Aktív szűrők:</span>
+            {effectiveLeague !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium">
+                <span>Liga: {availableLeagues.find((l) => l.id === effectiveLeague)?.name || effectiveLeague}</span>
+                <button onClick={() => setSelectedLeague('all')} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+            {onlyStrongSignals && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-medium">
+                <span>Kiemelt ({signalThreshold}%+)</span>
+                <button onClick={() => setOnlyStrongSignals(false)} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+            {onlyLiveMatches && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300 font-medium">
+                <span>Csak Élő</span>
+                <button onClick={() => setOnlyLiveMatches(false)} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+            {focusMarket !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 font-medium">
+                <span>Piac: {focusMarket}</span>
+                <button onClick={() => setFocusMarket('ALL')} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium">
+                <span>Keresés: &bdquo;{searchQuery}&ldquo;</span>
+                <button onClick={() => setSearchQuery('')} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+            <button
+              onClick={handleResetGridFilters}
+              className="text-[11px] text-amber-400 hover:underline font-semibold ml-1 cursor-pointer"
+            >
+              Összes törlése
+            </button>
+          </div>
+        )}
 
-              {/* Élő mérkőzések gyorsszűrő gomb */}
-              <button
-                type="button"
-                onClick={() => setOnlyLiveMatches(!onlyLiveMatches)}
-                className={`px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
-                  onlyLiveMatches
-                    ? 'bg-red-500/25 text-red-200 border border-red-500/60 shadow-sm'
-                    : liveMatchesCount > 0
-                    ? 'bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/30'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50'
-                }`}
-                title="Csak az éppen folyamatban lévő mérkőzések szűrése"
-              >
-                <span className="relative flex h-2 w-2">
-                  {liveMatchesCount > 0 && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  )}
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      liveMatchesCount > 0 ? 'bg-red-500' : 'bg-slate-500'
-                    }`}
-                  ></span>
+        {/* KINYÍLÓ RÉSZLETES SZŰRŐPANEL (Csak akkor látható, ha a felhasználó rákattint a Szűrők gombra) */}
+        {isFiltersExpanded && (
+          <div className="p-4 rounded-2xl bg-mesh-card border border-slate-800 shadow-xl mb-5 space-y-4 animate-fade-in">
+            {/* 1. Rész: Bajnokságok kiválasztása */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-emerald-400" />
+                  <span>Bajnokságok ({availableLeagues.length})</span>
                 </span>
-                <span>Csak Élő ({liveMatchesCount})</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode(viewMode === 'league' ? 'time' : 'league')}
-                className="px-2.5 py-1 rounded-md font-medium bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>{viewMode === 'league' ? 'Bajnokság szerint' : 'Időrendben'}</span>
-              </button>
-
-              {/* Nézetváltó: Kompakt vs Kártyák vs Táblázat */}
-              <div className="flex items-center gap-0.5 bg-slate-900/90 p-0.5 rounded-lg border border-slate-700/60">
                 <button
-                  type="button"
-                  onClick={() => handleSetDisplayMode('compact')}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                    displayMode === 'compact' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="ScoreLab kompakt meccssoros nézet"
+                  onClick={() => setIsLeaguesExpanded(!isLeaguesExpanded)}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                  title={isLeaguesExpanded ? 'Egy soros görgethető nézet' : 'Összes liga kibontása több sorba'}
                 >
-                  <List className="w-3.5 h-3.5" />
-                  <span>Kompakt</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSetDisplayMode('cards')}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                    displayMode === 'cards' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Kártyás nézet"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Kártyák</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSetDisplayMode('table')}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                    displayMode === 'table' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                  title="Részletes táblázat nézet"
-                >
-                  <Table className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Táblázat</span>
+                  {isLeaguesExpanded ? (
+                    <>
+                      <ChevronUp className="w-3 h-3 text-emerald-400" />
+                      <span>Összecsukás (1 sor)</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3 h-3 text-emerald-400" />
+                      <span>Összes liga kibontása ({availableLeagues.length})</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              {viewMode === 'league' && groupedByLeague.length > 1 && (
-                <button
-                  onClick={handleToggleAllLeagues}
-                  className="px-2.5 py-1 rounded-md font-medium bg-slate-800/80 text-amber-300 hover:text-amber-200 border border-slate-700/50 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <ChevronsUpDown className="w-3.5 h-3.5" />
-                  <span>{allCollapsed ? 'Összes kinyitása' : 'Összes becsukása'}</span>
-                </button>
-              )}
-            </div>
-
-            {/* 0. Lépés: Fókuszpiac kiválasztása kompakt jobb sávban */}
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none touch-pan-x">
-              <span className="text-[11px] font-bold text-amber-400 whitespace-nowrap flex items-center gap-1 mr-1">
-                <Target className="w-3.5 h-3.5" />
-                Piac:
-              </span>
-              {[
-                { id: 'ALL', label: 'Mind' },
-                { id: 'OVER_25', label: 'O/U 2.5' },
-                { id: 'BTTS', label: 'BTTS' },
-                { id: '1X2', label: '1X2' },
-                { id: 'FH_OVER_05', label: '1.F >0.5' },
-                { id: 'OVER_15', label: '>1.5' },
-              ].map((mkt) => (
-                <button
-                  key={mkt.id}
-                  onClick={() => setFocusMarket(mkt.id as FocusMarket)}
-                  className={`px-2 py-0.5 rounded font-semibold whitespace-nowrap text-[11px] transition-all cursor-pointer ${
-                    focusMarket === mkt.id
-                      ? 'bg-amber-500 text-slate-950 font-bold'
-                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                  }`}
-                >
-                  {mkt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ================= SCORELAB DUPLA DINAMIKUS STATISZTIKA-VÁLASZTÓ SÁV ================= */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-5 p-3.5 rounded-2xl bg-mesh-card border border-slate-800/90 shadow-md">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-cyan-400 shrink-0" />
-            <div>
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>Dinamikus Kvantitatív Mutatósáv</span>
-                <span className="text-[10px] font-mono font-normal text-slate-400 hidden md:inline">
-                  &bull; Meccssorokon megjelenített 2 mutató
-                </span>
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap relative">
-            {openMetricDropdown && (
-              <div
-                className="fixed inset-0 z-20 cursor-default"
-                onClick={() => setOpenMetricDropdown(null)}
-              />
-            )}
-
-            {/* 1. Mutató választó gomb & dropdown */}
-            <div className="relative flex-1 sm:flex-initial">
-              <button
-                type="button"
-                onClick={() => setOpenMetricDropdown(openMetricDropdown === 1 ? null : 1)}
-                className={`w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border transition-all cursor-pointer z-30 relative ${
-                  openMetricDropdown === 1
-                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-sm shadow-cyan-500/20'
-                    : 'bg-slate-900 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
-                }`}
-                title="1. statisztikai mutató megváltoztatása"
-              >
-                <span className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] flex items-center justify-center font-black shrink-0">
-                  1.
-                </span>
-                <span className="font-mono">{metricOption1.label}</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform shrink-0 ${
-                    openMetricDropdown === 1 ? 'rotate-180 text-cyan-400' : 'text-slate-400'
-                  }`}
-                />
-              </button>
-
-              {openMetricDropdown === 1 && (
-                <div className="absolute left-0 top-full mt-1.5 w-60 p-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-30 space-y-0.5 max-h-72 overflow-y-auto">
-                  <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
-                    1. Mutató kiválasztása
-                  </div>
-                  {GRID_METRICS.map((opt) => (
+              {/* Teljes szélességű Liga választó görgetőgombokkal */}
+              <div className="relative w-full">
+                {!isLeaguesExpanded && (
+                  <>
                     <button
-                      key={opt.id}
-                      type="button"
+                      onClick={() => scrollLeagues('left')}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-lg bg-slate-900/95 text-slate-300 hover:text-white border border-slate-700 shadow-lg cursor-pointer hidden md:flex items-center justify-center"
+                      title="Görgetés balra"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => scrollLeagues('right')}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-lg bg-slate-900/95 text-slate-300 hover:text-white border border-slate-700 shadow-lg cursor-pointer hidden md:flex items-center justify-center"
+                      title="Görgetés jobbra"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+
+                <div
+                  ref={leaguesScrollRef}
+                  className={`w-full py-1 ${
+                    isLeaguesExpanded
+                      ? 'flex flex-wrap gap-1.5'
+                      : 'flex items-center gap-1.5 overflow-x-auto scroll-smooth md:px-8 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent touch-pan-x'
+                  }`}
+                >
+                  <button
+                    onClick={() => setSelectedLeague('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      effectiveLeague === 'all'
+                        ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-500/50'
+                        : 'bg-slate-900/90 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+                    }`}
+                  >
+                    Minden Bajnokság ({dayMatches.length})
+                  </button>
+
+                  {availableLeagues.map((l) => (
+                    <button
+                      key={l.id}
                       onClick={() => {
-                        handleSetMetric1(opt.id);
-                        setOpenMetricDropdown(null);
+                        setSelectedLeague(l.id);
+                        setCollapsedLeagues((prev) => ({ ...prev, [l.id]: false }));
                       }}
-                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-colors cursor-pointer ${
-                        metric1 === opt.id
-                          ? 'bg-cyan-500/20 text-cyan-300 font-bold'
-                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer ${
+                        effectiveLeague === l.id
+                          ? 'bg-emerald-600 text-white font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-500/50'
+                          : 'bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800'
                       }`}
                     >
-                      <span>{opt.label}</span>
-                      {metric1 === opt.id && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                      <span>{l.flag}</span>
+                      <span>{l.name}</span>
+                      <span
+                        className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                          effectiveLeague === l.id ? 'bg-black/30 text-emerald-200' : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {l.count}
+                      </span>
                     </button>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* 2. Mutató választó gomb & dropdown */}
-            <div className="relative flex-1 sm:flex-initial">
-              <button
-                type="button"
-                onClick={() => setOpenMetricDropdown(openMetricDropdown === 2 ? null : 2)}
-                className={`w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border transition-all cursor-pointer z-30 relative ${
-                  openMetricDropdown === 2
-                    ? 'bg-indigo-500/20 text-indigo-300 border-indigo-400 shadow-sm shadow-indigo-500/20'
-                    : 'bg-slate-900 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
-                }`}
-                title="2. statisztikai mutató megváltoztatása"
-              >
-                <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] flex items-center justify-center font-black shrink-0">
-                  2.
-                </span>
-                <span className="font-mono">{metricOption2.label}</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform shrink-0 ${
-                    openMetricDropdown === 2 ? 'rotate-180 text-indigo-400' : 'text-slate-400'
+            {/* 2. Rész: Gyorskapcsolók & Piac szűrés */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setOnlyStrongSignals(!onlyStrongSignals)}
+                  className={`px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                    onlyStrongSignals
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
+                      : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                   }`}
-                />
-              </button>
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Kiemelt Jelek ({signalThreshold}%+)</span>
+                </button>
 
-              {openMetricDropdown === 2 && (
-                <div className="absolute right-0 top-full mt-1.5 w-60 p-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-30 space-y-0.5 max-h-72 overflow-y-auto">
-                  <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
-                    2. Mutató kiválasztása
-                  </div>
-                  {GRID_METRICS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        handleSetMetric2(opt.id);
-                        setOpenMetricDropdown(null);
-                      }}
-                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-colors cursor-pointer ${
-                        metric2 === opt.id
-                          ? 'bg-indigo-500/20 text-indigo-300 font-bold'
-                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                <button
+                  type="button"
+                  onClick={() => setOnlyLiveMatches(!onlyLiveMatches)}
+                  className={`px-2.5 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                    onlyLiveMatches
+                      ? 'bg-red-500/25 text-red-200 border border-red-500/60 shadow-sm'
+                      : liveMatchesCount > 0
+                      ? 'bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/30'
+                      : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  }`}
+                >
+                  <span className="relative flex h-2 w-2">
+                    {liveMatchesCount > 0 && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    )}
+                    <span
+                      className={`relative inline-flex rounded-full h-2 w-2 ${
+                        liveMatchesCount > 0 ? 'bg-red-500' : 'bg-slate-500'
                       }`}
-                    >
-                      <span>{opt.label}</span>
-                      {metric2 === opt.id && <Check className="w-3.5 h-3.5 text-indigo-400" />}
-                    </button>
-                  ))}
+                    ></span>
+                  </span>
+                  <span>Csak Élő ({liveMatchesCount})</span>
+                </button>
+
+                {viewMode === 'league' && groupedByLeague.length > 1 && (
+                  <button
+                    onClick={handleToggleAllLeagues}
+                    className="px-2.5 py-1.5 rounded-lg font-medium bg-slate-900 text-amber-300 hover:text-amber-200 border border-slate-800 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ChevronsUpDown className="w-3.5 h-3.5" />
+                    <span>{allCollapsed ? 'Összes kinyitása' : 'Összes becsukása'}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Piacválasztó */}
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none touch-pan-x">
+                <span className="text-[11px] font-bold text-amber-400 whitespace-nowrap flex items-center gap-1 mr-1">
+                  <Target className="w-3.5 h-3.5" />
+                  Piac:
+                </span>
+                {[
+                  { id: 'ALL', label: 'Mind' },
+                  { id: 'OVER_25', label: 'O/U 2.5' },
+                  { id: 'BTTS', label: 'BTTS' },
+                  { id: '1X2', label: '1X2' },
+                  { id: 'FH_OVER_05', label: '1.F >0.5' },
+                  { id: 'OVER_15', label: '>1.5' },
+                ].map((mkt) => (
+                  <button
+                    key={mkt.id}
+                    onClick={() => setFocusMarket(mkt.id as FocusMarket)}
+                    className={`px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap text-xs transition-all cursor-pointer ${
+                      focusMarket === mkt.id
+                        ? 'bg-amber-500 text-slate-950 font-bold'
+                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    {mkt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Rész: ScoreLab Dinamikus 2-Mutató Sáv */}
+            <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-xs font-bold text-white">
+                  Kompakt Listán Megjelenített 2 Statisztikai Mutató:
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap relative">
+                {openMetricDropdown && (
+                  <div
+                    className="fixed inset-0 z-20 cursor-default"
+                    onClick={() => setOpenMetricDropdown(null)}
+                  />
+                )}
+
+                {/* 1. Mutató választó (Smaragd) */}
+                <div className="relative flex-1 sm:flex-initial">
+                  <button
+                    type="button"
+                    onClick={() => setOpenMetricDropdown(openMetricDropdown === 1 ? null : 1)}
+                    className={`w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border transition-all cursor-pointer z-30 relative ${
+                      openMetricDropdown === 1
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400 shadow-sm'
+                        : 'bg-slate-900 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
+                    }`}
+                    title="1. statisztikai mutató megváltoztatása"
+                  >
+                    <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] flex items-center justify-center font-black shrink-0">
+                      1.
+                    </span>
+                    <span className="font-mono">{metricOption1.label}</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform shrink-0 ${
+                        openMetricDropdown === 1 ? 'rotate-180 text-emerald-400' : 'text-slate-400'
+                      }`}
+                    />
+                  </button>
+
+                  {openMetricDropdown === 1 && (
+                    <div className="absolute left-0 top-full mt-1.5 w-60 p-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-30 space-y-0.5 max-h-72 overflow-y-auto">
+                      <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
+                        1. Mutató kiválasztása
+                      </div>
+                      {GRID_METRICS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            handleSetMetric1(opt.id);
+                            setOpenMetricDropdown(null);
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-colors cursor-pointer ${
+                            metric1 === opt.id
+                              ? 'bg-emerald-500/20 text-emerald-300 font-bold'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {metric1 === opt.id && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* 2. Mutató választó (Arany) */}
+                <div className="relative flex-1 sm:flex-initial">
+                  <button
+                    type="button"
+                    onClick={() => setOpenMetricDropdown(openMetricDropdown === 2 ? null : 2)}
+                    className={`w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border transition-all cursor-pointer z-30 relative ${
+                      openMetricDropdown === 2
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-400 shadow-sm'
+                        : 'bg-slate-900 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
+                    }`}
+                    title="2. statisztikai mutató megváltoztatása"
+                  >
+                    <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] flex items-center justify-center font-black shrink-0">
+                      2.
+                    </span>
+                    <span className="font-mono">{metricOption2.label}</span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform shrink-0 ${
+                        openMetricDropdown === 2 ? 'rotate-180 text-amber-400' : 'text-slate-400'
+                      }`}
+                    />
+                  </button>
+
+                  {openMetricDropdown === 2 && (
+                    <div className="absolute right-0 top-full mt-1.5 w-60 p-1.5 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl z-30 space-y-0.5 max-h-72 overflow-y-auto">
+                      <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
+                        2. Mutató kiválasztása
+                      </div>
+                      {GRID_METRICS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            handleSetMetric2(opt.id);
+                            setOpenMetricDropdown(null);
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold text-left flex items-center justify-between transition-colors cursor-pointer ${
+                            metric2 === opt.id
+                              ? 'bg-amber-500/20 text-amber-300 font-bold'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {metric2 === opt.id && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Szűrők összecsukása gomb a panel alján */}
+            <div className="pt-2 flex justify-center border-t border-slate-800/60">
+              <button
+                onClick={handleToggleFilters}
+                className="text-xs font-semibold text-slate-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+                <span>Szűrők összecsukása</span>
+              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* ================= TÁBLÁZAT(OK) ================= */}
         {filteredMatches.length === 0 ? (

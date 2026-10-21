@@ -68,10 +68,10 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
           <div
             key={match.id}
             onClick={() => onSelectMatch(match)}
-            className="p-2 sm:p-2.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-1.5 sm:gap-3 cursor-pointer group"
+            className="p-3 sm:p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-2 sm:gap-4 cursor-pointer group"
           >
             {/* Bal oldal: Csillag + Hazai - Eredmény/Idő - Vendég */}
-            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
               {/* Kedvenc kitűző csillag */}
               {onToggleFavorite && (
                 <button
@@ -89,53 +89,53 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
               )}
 
               {/* Hazai Csapat (ScoreLab stílus: Logo felül, név alatta) */}
-              <div className="flex flex-col items-center text-center w-16 sm:w-24 shrink-0">
+              <div className="flex flex-col items-center text-center w-20 sm:w-28 shrink-0">
                 <img
                   src={match.homeTeam.logo}
                   alt=""
-                  className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
-                <span className="text-[10px] sm:text-xs font-bold text-white truncate w-full mt-0.5 group-hover:text-amber-300 transition-colors">
+                <span className="text-xs sm:text-sm font-bold text-white truncate w-full mt-1 group-hover:text-amber-300 transition-colors">
                   {match.homeTeam.name}
                 </span>
               </div>
 
               {/* Középső Állapot / Idő / Eredmény */}
-              <div className="flex flex-col items-center justify-center min-w-[46px] sm:min-w-[58px] shrink-0 px-0.5">
+              <div className="flex flex-col items-center justify-center min-w-[50px] sm:min-w-[64px] shrink-0 px-1">
                 {isFinished ? (
                   <>
-                    <span className="font-mono font-black text-xs sm:text-sm text-amber-400 bg-slate-950/90 px-1.5 py-0.5 rounded border border-slate-800">
+                    <span className="font-mono font-black text-sm sm:text-base text-amber-400 bg-slate-950/90 px-2 py-0.5 rounded-lg border border-slate-800">
                       {match.homeScore ?? 0} - {match.awayScore ?? 0}
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-emerald-400 mt-0.5 flex items-center gap-0.5">
-                      <CheckCircle2 className="w-2.5 h-2.5" />
+                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 mt-0.5 flex items-center gap-0.5">
+                      <CheckCircle2 className="w-3 h-3" />
                       FT
                     </span>
                     {(match.kickoffDate || match.kickoffTime) && (
-                      <span className="text-[8px] font-mono text-slate-500 hidden sm:inline">
+                      <span className="text-[9px] font-mono text-slate-500 hidden sm:inline">
                         {match.kickoffDate ? match.kickoffDate.slice(5) : ''} {match.kickoffTime}
                       </span>
                     )}
                   </>
                 ) : isLive ? (
                   <>
-                    <span className="font-mono font-black text-xs sm:text-sm text-red-400 animate-pulse bg-red-950/50 px-1.5 py-0.5 rounded border border-red-500/30">
+                    <span className="font-mono font-black text-sm sm:text-base text-red-400 animate-pulse bg-red-950/50 px-2 py-0.5 rounded-lg border border-red-500/30">
                       {match.homeScore ?? 0} - {match.awayScore ?? 0}
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-red-400 mt-0.5 flex items-center gap-1">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-red-400 mt-0.5 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
                       {match.minute ? `${match.minute}'` : 'ÉLŐ'}
                     </span>
                   </>
                 ) : (
                   <>
-                    <span className="font-mono font-extrabold text-xs sm:text-sm text-white">
+                    <span className="font-mono font-black text-xs sm:text-sm text-white">
                       {match.kickoffTime}
                     </span>
-                    <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
                       VS
                     </span>
                   </>
@@ -143,25 +143,25 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
               </div>
 
               {/* Vendég Csapat (ScoreLab stílus: Logo felül, név alatta) */}
-              <div className="flex flex-col items-center text-center w-16 sm:w-24 shrink-0">
+              <div className="flex flex-col items-center text-center w-20 sm:w-28 shrink-0">
                 <img
                   src={match.awayTeam.logo}
                   alt=""
-                  className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
-                <span className="text-[10px] sm:text-xs font-semibold text-slate-200 truncate w-full mt-0.5 group-hover:text-amber-300 transition-colors">
+                <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate w-full mt-1 group-hover:text-amber-300 transition-colors">
                   {match.awayTeam.name}
                 </span>
               </div>
             </div>
 
             {/* Jobb oldal: 2 Dinamikus 3D Pill Mutató + Mini 1X2 Oszlop */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
               {/* Két kiválasztott mutató 3D csík-diagrammal (Klasszikus Stadionzöld & Sportfogadási Arany) */}
-              <div className="flex flex-col gap-1.5 w-[96px] sm:w-[124px] shrink-0">
+              <div className="flex flex-col gap-1.5 w-[105px] sm:w-[136px] shrink-0">
                 {/* 1. Mutató 3D Pill - Klasszikus Sport Fűzöld / Smaragd */}
                 <button
                   type="button"

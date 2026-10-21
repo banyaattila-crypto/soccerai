@@ -41,11 +41,11 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
           <div
             key={match.id}
             onClick={() => onSelectMatch(match)}
-            className="p-3.5 rounded-xl bg-mesh-card border border-slate-800 hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-md group"
+            className="p-4 sm:p-5 rounded-2xl bg-mesh-card border border-slate-800 hover:border-slate-700 transition-all cursor-pointer flex flex-col justify-between gap-3.5 shadow-md group"
           >
             {/* 1. Fejléc: Liga, Kezdés/Státusz, Adatminőség */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400">
-              <span className="flex items-center gap-1 font-semibold truncate">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span className="flex items-center gap-1.5 font-semibold truncate">
                 {onToggleFavorite && (
                   <button
                     type="button"
@@ -67,18 +67,18 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
               <div className="flex items-center gap-1.5 shrink-0">
                 {isFinished ? (
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
+                    <span className="font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/25 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                       FT
                     </span>
                     {(match.kickoffDate || match.kickoffTime) && (
-                      <span className="font-mono text-[10px] text-slate-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 flex items-center gap-1">
-                        <Calendar className="w-2.5 h-2.5 text-amber-400/80 shrink-0" />
+                      <span className="font-mono text-xs text-slate-300 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-amber-400/80 shrink-0" />
                         <span>{match.kickoffDate}</span>
                         {match.kickoffTime && (
                           <>
                             <span className="text-slate-600">&bull;</span>
-                            <Clock className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                            <Clock className="w-3 h-3 text-slate-500 shrink-0" />
                             <span>{match.kickoffTime}</span>
                           </>
                         )}
@@ -86,17 +86,17 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     )}
                   </div>
                 ) : isLive ? (
-                  <span className="font-bold text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse flex items-center gap-1">
+                  <span className="font-bold text-xs text-red-400 bg-red-500/10 px-2 py-0.5 rounded-md border border-red-500/25 animate-pulse flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                     ÉLŐ
                   </span>
                 ) : (
-                  <span className="font-mono text-amber-400 font-bold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                  <span className="font-mono text-amber-400 font-bold bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 text-xs">
                     {match.kickoffTime}
                   </span>
                 )}
                 {match.quantAnalysis && (
-                  <span className="text-[10px] text-slate-500 font-mono font-bold bg-slate-900 px-1 py-0.5 rounded">
+                  <span className="text-[11px] text-slate-400 font-mono font-bold bg-slate-900 px-1.5 py-0.5 rounded-md border border-slate-800">
                     {match.quantAnalysis.dataQuality}-szint
                   </span>
                 )}
@@ -104,27 +104,27 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
             </div>
 
             {/* 2. Csapatok & Eredmény / xG */}
-            <div className="py-1 space-y-1.5 border-y border-slate-800/60">
+            <div className="py-2 space-y-2 border-y border-slate-800/70">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <img
                     src={match.homeTeam.logo}
                     alt=""
-                    className="w-4 h-4 object-contain shrink-0"
+                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
-                  <span className="text-xs font-bold text-white truncate group-hover:text-amber-300 transition-colors">
+                  <span className="text-sm font-bold text-white truncate group-hover:text-amber-300 transition-colors">
                     {match.homeTeam.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-mono text-slate-500">
+                  <span className="text-xs font-mono text-slate-400">
                     xG {match.homeTeam.xgAvg}
                   </span>
                   {match.homeScore !== undefined && (
-                    <span className="font-mono font-bold text-xs text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded">
+                    <span className="font-mono font-black text-sm text-amber-400 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800">
                       {match.homeScore}
                     </span>
                   )}
@@ -132,25 +132,25 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <img
                     src={match.awayTeam.logo}
                     alt=""
-                    className="w-4 h-4 object-contain shrink-0"
+                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
-                  <span className="text-xs font-medium text-slate-200 truncate group-hover:text-amber-300 transition-colors">
+                  <span className="text-sm font-semibold text-slate-200 truncate group-hover:text-amber-300 transition-colors">
                     {match.awayTeam.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-mono text-slate-500">
+                  <span className="text-xs font-mono text-slate-400">
                     xG {match.awayTeam.xgAvg}
                   </span>
                   {match.awayScore !== undefined && (
-                    <span className="font-mono font-bold text-xs text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded">
+                    <span className="font-mono font-black text-sm text-amber-400 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800">
                       {match.awayScore}
                     </span>
                   )}
@@ -159,7 +159,7 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
             </div>
 
             {/* 3. Gyors Hőtérkép Pills (1, X, 2, BTTS, O2.5) */}
-            <div className="grid grid-cols-5 gap-1 text-center">
+            <div className="grid grid-cols-5 gap-1.5 text-center">
               <button
                 type="button"
                 onClick={(e) =>
@@ -172,12 +172,12 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     '1'
                   )
                 }
-                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                className={`py-1.5 px-1 rounded-lg text-xs font-mono font-bold transition-all border ${
                   getProbabilityColorClass(p.homeWin).bg
                 } ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`Hazai: ${p.homeWin}% @${match.odds.home.toFixed(2)}`}
               >
-                <span className="text-[8px] uppercase block opacity-70">1</span>
+                <span className="text-[9px] uppercase block opacity-75">1</span>
                 <span>{p.homeWin}%</span>
               </button>
 
@@ -186,12 +186,12 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                 onClick={(e) =>
                   onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw, 'X')
                 }
-                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                className={`py-1.5 px-1 rounded-lg text-xs font-mono font-bold transition-all border ${
                   getProbabilityColorClass(p.draw).bg
                 } ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`Döntetlen: ${p.draw}% @${match.odds.draw.toFixed(2)}`}
               >
-                <span className="text-[8px] uppercase block opacity-70">X</span>
+                <span className="text-[9px] uppercase block opacity-75">X</span>
                 <span>{p.draw}%</span>
               </button>
 
@@ -207,12 +207,12 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     '2'
                   )
                 }
-                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                className={`py-1.5 px-1 rounded-lg text-xs font-mono font-bold transition-all border ${
                   getProbabilityColorClass(p.awayWin).bg
                 } ${focusMarket === '1X2' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`Vendég: ${p.awayWin}% @${match.odds.away.toFixed(2)}`}
               >
-                <span className="text-[8px] uppercase block opacity-70">2</span>
+                <span className="text-[9px] uppercase block opacity-75">2</span>
                 <span>{p.awayWin}%</span>
               </button>
 
@@ -228,12 +228,12 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     'BTTS_YES'
                   )
                 }
-                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                className={`py-1.5 px-1 rounded-lg text-xs font-mono font-bold transition-all border ${
                   getProbabilityColorClass(p.bttsYes).bg
                 } ${focusMarket === 'BTTS' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`BTTS: ${p.bttsYes}% @${match.odds.bttsYes.toFixed(2)}`}
               >
-                <span className="text-[8px] uppercase block opacity-70">BTTS</span>
+                <span className="text-[9px] uppercase block opacity-75">BTTS</span>
                 <span>{p.bttsYes}%</span>
               </button>
 
@@ -242,36 +242,36 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                 onClick={(e) =>
                   onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25, 'OVER_25')
                 }
-                className={`p-1 rounded text-[10px] font-mono font-bold transition-all border ${
+                className={`py-1.5 px-1 rounded-lg text-xs font-mono font-bold transition-all border ${
                   getProbabilityColorClass(p.over25).bg
                 } ${focusMarket === 'OVER_25' ? 'ring-1 ring-amber-400' : ''}`}
                 title={`2.5 felett: ${p.over25}% @${match.odds.over25.toFixed(2)}`}
               >
-                <span className="text-[8px] uppercase block opacity-70">&gt;2.5</span>
+                <span className="text-[9px] uppercase block opacity-75">&gt;2.5</span>
                 <span>{p.over25}%</span>
               </button>
             </div>
 
             {/* 4. AI Ajánlott Tipp Sáv & Szelvény gomb */}
             {pick && (
-              <div className="pt-2 border-t border-slate-800/70 flex items-center justify-between gap-2">
+              <div className="pt-2.5 border-t border-slate-800/70 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                     MI Tipp:
                   </div>
-                  <div className="text-[11px] font-extrabold text-amber-300 truncate">
+                  <div className="text-xs sm:text-sm font-black text-amber-300 truncate">
                     {pick.marketLabel}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onCellBet(e, match, pick.marketLabel, pick.probability, pick.odds, pick.market);
                     }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all ${
+                    className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer ${
                       isPickAdded
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                         : 'bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-white border-slate-700'

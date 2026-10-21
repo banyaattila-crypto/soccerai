@@ -3,6 +3,21 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.5] - 2026-10-21
+
+### Hozzáadva & Továbbfejlesztve (Added & Enhanced) - Letisztult, Szellős Kezelőfelület
+- **1. Lépés: Összecsukható / Elrejthető Szűrősáv (`StatsGrid.tsx`):**
+  - **Kompakt, egyvonalas vezérlősáv:** A korábbi, 300–400 képpontos, többemeletes gomb- és legördülő-rengeteg helyett egyetlen letisztult sor (Keresőmező azonnali törlés gombbal, Nézetváltó gombok, Megjelenítési mód kapcsoló).
+  - **Kinyitható Szűrőfiók (`Szűrők (X aktív) ▾`):** Egyetlen gombnyomással elérhető a teljes bajnokságválasztó (vízszintesen görgethető vagy kiterjeszthető nézetben), az Élő / Kiemelt jelek szűrő, a piackapcsolók és a ScoreLab 2-mutatós választó.
+  - **Összecsukott szűrő-chipek:** Összecsukott állapotban a felhasználó egyetlen kattintással eltávolíthatja az éppen aktív szűrőket közvetlenül az eszköztárról anélkül, hogy a teljes fiókot ki kellene nyitnia.
+  - **Állapotmegőrzés:** Az összecsukott/kinyitott állapot automatikusan mentésre kerül a böngésző helyi tárhelyébe (`localStorage`).
+- **2. Lépés: Összecsukható Hero KPI Sáv (`HeroKpi.tsx`):**
+  - **28 képpontos mini-szalag:** A 3D labdás kiemelt statisztikai blokk összecsukható egy ultravékony szalaggá (`Ma: X meccs · Y bajnokság · Z kiemelt jel`), így azonnal a mérkőzések listája kerül a képernyő középpontjába.
+  - **Megőrzött állapot:** A felhasználó preferenciája megmarad (`soccerai_hero_kpi_collapsed`), bármikor visszanyitható vagy elrejthető egy kattintással.
+- **3. Lépés: Tágas, Jól Szellőző Kártyák és Megnövelt Tipográfia (`MatchCardsList.tsx`, `MatchCompactList.tsx`):**
+  - **Olvashatóbb szövegméretek:** A zsúfolt, mikroszkopikus (`text-[8px]`, `text-[10px]`) feliratok helyett tiszta, jól olvasható méretek (`text-xs`, `text-sm`, `text-base`).
+  - **Kényelmesebb belső margók és csapatlogók:** Kártyanézetben megnövelt paddingok és 24x24 px-es logók; kompakt nézetben tágasabb sorok és 28x28 px-es logók a prémium, kényelmes olvasási élményért.
+
 ## [1.24.4] - 2026-10-21
 
 ### Javítva & Letisztult Sport Arculat (Fixed & Clean Athletic Styling)

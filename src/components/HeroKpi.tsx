@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sparkles, Award, Calendar, Layers, HelpCircle, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Award, Calendar, Layers, HelpCircle, ShieldCheck, ChevronUp, ChevronDown } from 'lucide-react';
 import { ThreeDBall } from './ThreeDBall';
 
 interface HeroKpiProps {
@@ -18,8 +18,60 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
   yesterdayStat,
   onOpenMethodology,
 }) => {
+  // Összecsukható KPI sáv állapota a szellősebb és tisztább felületért
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('soccerai_hero_kpi_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('soccerai_hero_kpi_collapsed', String(next));
+      }
+      return next;
+    });
+  };
+
+  // 1. Összecsukott nézet: Ultra-letisztult, szuper-vékony (28px) diszkrét sáv
+  if (isCollapsed) {
+    return (
+      <section className="border-b border-slate-800/80 bg-mesh-dark py-1 w-full overflow-hidden transition-all">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-none py-0.5">
+            <span className="flex items-center gap-1 font-bold text-slate-300">
+              <Calendar className="w-3 h-3 text-emerald-400" />
+              <span>Ma: <strong className="text-white">{matchCount} meccs</strong></span>
+            </span>
+            <span className="text-slate-600">&bull;</span>
+            <span className="text-slate-400">
+              <strong className="text-white">{leagueCount}</strong> bajnokság
+            </span>
+            <span className="text-slate-600">&bull;</span>
+            <span className="text-emerald-400 font-medium">
+              <strong>{strongSignalCount}</strong> kiemelt jel
+            </span>
+          </div>
+
+          <button
+            onClick={toggleCollapse}
+            className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-amber-400 px-2 py-0.5 rounded-lg hover:bg-slate-800/60 transition-colors shrink-0 cursor-pointer"
+            title="KPI sáv és hőtérkép kibontása"
+          >
+            <span>KPI sáv</span>
+            <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  // 2. Kinyitott nézet: Teljes funkciók + Összecsukás gomb
   return (
-    <section className="border-b border-slate-800/80 bg-mesh-dark py-2.5 w-full overflow-hidden">
+    <section className="border-b border-slate-800/80 bg-mesh-dark py-2.5 w-full overflow-hidden transition-all">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
           
@@ -75,7 +127,7 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
             )}
           </div>
 
-          {/* Jobb oldal: Egysoros Kompakt Hőtérkép Színskála */}
+          {/* Jobb oldal: Egysoros Kompakt Hőtérkép Színskála + Összecsukás gomb */}
           <div className="flex items-center justify-between lg:justify-end gap-2 text-[10px] font-semibold overflow-x-auto scrollbar-none touch-pan-x">
             <span className="text-slate-400 whitespace-nowrap hidden xl:inline mr-1">
               Hőtérkép skála:
@@ -105,6 +157,16 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
                 <span>Segédlet</span>
               </button>
             )}
+
+            {/* Összecsukás Gomb */}
+            <button
+              onClick={toggleCollapse}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer ml-1"
+              title="KPI sáv összecsukása"
+            >
+              <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+              <span className="hidden sm:inline">Elrejtés</span>
+            </button>
           </div>
 
         </div>
