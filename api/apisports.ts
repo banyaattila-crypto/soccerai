@@ -1,10 +1,12 @@
-interface ApiRequest {
+export interface VercelRequest {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
   query?: Record<string, string | string[] | undefined>;
+  body?: unknown;
+  url?: string;
 }
 
-interface ApiResponse {
+export interface VercelResponse {
   setHeader(name: string, value: string): void;
   status(code: number): {
     end(): void;
@@ -28,13 +30,34 @@ const VERCEL_PREVIEW_REGEX = /^https:\/\/soccerai[a-z0-9-]*\.vercel\.app$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const FIXTURE_ID_REGEX = /^\d{1,10}$/;
 
-// Egyszerű memóriabeli rate limit (max 25 kérés / perc / IP)
+// Memóriabeli rate limit (max 25 kérés / perc / IP, legfeljebb 1000 egyidejű IP nyomon követése memóriatúlcsordulás ellen)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 25;
+const MAX_RATE_LIMIT_IPS = 1000;
+
+function pruneRateLimitMap(now: number): void {
+  for (const [ip, entry] of rateLimitMap.entries()) {
+    if (now > entry.resetAt) {
+      rateLimitMap.delete(ip);
+    }
+  }
+  if (rateLimitMap.size >= MAX_RATE_LIMIT_IPS) {
+    const overflow = rateLimitMap.size - MAX_RATE_LIMIT_IPS + 1;
+    let deleted = 0;
+    for (const ip of rateLimitMap.keys()) {
+      rateLimitMap.delete(ip);
+      deleted++;
+      if (deleted >= overflow) break;
+    }
+  }
+}
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
+  if (rateLimitMap.size >= MAX_RATE_LIMIT_IPS) {
+    pruneRateLimitMap(now);
+  }
   const entry = rateLimitMap.get(ip);
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
@@ -52,7 +75,7 @@ function isOriginAllowed(origin: string | undefined): boolean {
   return ALLOWED_ORIGINS.has(origin) || VERCEL_PREVIEW_REGEX.test(origin);
 }
 
-export default async function handler(req: ApiRequest, res: ApiResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const originHeader = Array.isArray(req.headers['origin'])
     ? req.headers['origin'][0]
     : req.headers['origin'];

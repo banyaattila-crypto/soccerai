@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import logoRaw from '../Logo.tsx?raw';
+import canvasHookRaw from '../../hooks/useSoccerBallCanvas.ts?raw';
 
 describe('3D Logo Bilinear Interpolation Regression', () => {
-  it('ensures Logo.tsx samples c01 from activeTex[row1 + u0] instead of row0', () => {
+  it('ensures useSoccerBallCanvas samples c01 from activeTex[row1 + u0] instead of row0', () => {
     // Ellenőrizzük, hogy a c01 a row1-ből olvas
-    expect(logoRaw).toContain('const c01 = activeTex[row1 + u0];');
+    expect(canvasHookRaw).toContain('const c01 = activeTex[row1 + u0];');
     // Ellenőrizzük, hogy a korábbi bugos sor nem szerepel benne
-    expect(logoRaw).not.toContain('const c01 = activeTex[row0 + u0];');
+    expect(canvasHookRaw).not.toContain('const c01 = activeTex[row0 + u0];');
   });
 
   it('mathematically evaluates 4-texel bilinear sampling without vertical left-edge clamping bug', () => {

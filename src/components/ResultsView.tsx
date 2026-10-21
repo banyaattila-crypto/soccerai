@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Match } from '../types/football';
+import { useEventBus } from '../utils/eventBus';
 import {
   CheckCircle2,
   XCircle,
@@ -56,12 +57,9 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const todayStr = useMemo(() => getRelativeDateStr(0), []);
   const yesterdayStr = useMemo(() => getRelativeDateStr(-1), []);
 
-  // Reakció az audit napló frissüléseire
-  useEffect(() => {
-    const handler = () => setAuditLogUpdateKey((prev) => prev + 1);
-    window.addEventListener('focitipp_audit_log_updated', handler);
-    return () => window.removeEventListener('focitipp_audit_log_updated', handler);
-  }, []);
+  // Reakció az audit napló frissüléseire típusbiztos eventBus-on keresztül
+  const handleAuditUpdate = useCallback(() => setAuditLogUpdateKey((prev) => prev + 1), []);
+  useEventBus('audit_log_updated', handleAuditUpdate);
 
   // 1. Audit napló betöltése a megmásíthatatlan tárolóból
   const auditRecords = useMemo(() => {

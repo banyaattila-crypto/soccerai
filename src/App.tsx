@@ -17,6 +17,7 @@ import { APP_VERSION } from './version';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
 import { normalizeTeamName } from './utils/teamUtils';
+import { eventBus } from './utils/eventBus';
 
 const MatchDetailModal = React.lazy(() =>
   import('./components/MatchDetailModal').then((m) => ({ default: m.MatchDetailModal }))
@@ -453,7 +454,7 @@ export function App() {
   const handleGoToLive = () => {
     setActiveTab('grid');
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('focitipp_filter_live'));
+      eventBus.emit('filter_live');
     }, 10);
   };
 

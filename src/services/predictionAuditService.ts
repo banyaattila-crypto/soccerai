@@ -1,5 +1,6 @@
 import { Match, PredictionAuditRecord, VerifiedAuditStats } from '../types/football';
 import { evaluatePickWon } from './betEvaluation';
+import { eventBus } from '../utils/eventBus';
 
 export const STORAGE_KEY_AUDIT_LOG = 'soccerai_prediction_audit_log_v2';
 export const AUDIT_BASE_STAKE = 10000; // 10 000 Ft alaptét a hitelesített ROI és nyereség számításához
@@ -99,9 +100,7 @@ export function saveAuditLog(records: PredictionAuditRecord[]): void {
       .sort((a, b) => b.kickoffTimestamp - a.kickoffTimestamp)
       .slice(0, MAX_AUDIT_RECORDS);
     localStorage.setItem(STORAGE_KEY_AUDIT_LOG, JSON.stringify(sorted));
-    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-      window.dispatchEvent(new Event('focitipp_audit_log_updated'));
-    }
+    eventBus.emit('audit_log_updated');
   } catch (err) {
     console.warn('Nem sikerült elmenteni az audit naplót:', err);
   }
@@ -397,9 +396,7 @@ export function getVerifiedMarketBreakdown(
 export function clearAuditLog(): void {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY_AUDIT_LOG);
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('focitipp_audit_log_updated'));
-  }
+  eventBus.emit('audit_log_updated');
 }
 
 /**
@@ -614,10 +611,7 @@ export function importAuditLogFromJson(jsonStr: string): AuditImportResult {
     );
 
     saveAuditLog(merged);
-
-    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-      window.dispatchEvent(new Event('focitipp_audit_log_updated'));
-    }
+    eventBus.emit('audit_log_updated');
 
     return {
       success: importedCount > 0,
