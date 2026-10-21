@@ -18,6 +18,8 @@ import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
 import { normalizeTeamName } from './utils/teamUtils';
 import { eventBus } from './utils/eventBus';
+import { isPinEnabled } from './services/pinService';
+import { PinLockScreen } from './components/PinLockScreen';
 
 const MatchDetailModal = React.lazy(() =>
   import('./components/MatchDetailModal').then((m) => ({ default: m.MatchDetailModal }))
@@ -111,6 +113,31 @@ export function App() {
   const [apiSuccessNotice, setApiSuccessNotice] = useState<string | null>(null);
   const [apiErrorNotice, setApiErrorNotice] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+
+  // 6-jegyű PIN biztonsági zárolás állapotok
+  const [pinEnabled, setPinEnabled] = useState<boolean>(() => isPinEnabled());
+  const [isLocked, setIsLocked] = useState<boolean>(() => isPinEnabled());
+
+  useEffect(() => {
+    const unsubState = eventBus.on('pin_state_changed', () => {
+      const enabled = isPinEnabled();
+      setPinEnabled(enabled);
+      if (!enabled) {
+        setIsLocked(false);
+      }
+    });
+
+    const unsubLock = eventBus.on('pin_locked', () => {
+      if (isPinEnabled()) {
+        setIsLocked(true);
+      }
+    });
+
+    return () => {
+      unsubState();
+      unsubLock();
+    };
+  }, []);
 
   // Élő meccsek betöltése (Football-Data.org Top ligák + API-Sports másodosztályok és NB I)
   const loadMatches = useCallback(
@@ -478,6 +505,8 @@ export function App() {
         currentBankroll={currentBankroll}
         liveMatchCount={liveMatchCount}
         onGoToLive={handleGoToLive}
+        isPinEnabled={pinEnabled}
+        onLockApp={() => setIsLocked(true)}
       />
 
       {/* Új PWA verzió elérhető sáv */}
@@ -728,6 +757,11 @@ export function App() {
           </div>
         </div>
       </footer>
+
+      {/* 6. Biztonsági 6-jegyű PIN Kód Zárolási Képernyő */}
+      {pinEnabled && isLocked && (
+        <PinLockScreen onUnlock={() => setIsLocked(false)} />
+      )}
 
     </div>
   );

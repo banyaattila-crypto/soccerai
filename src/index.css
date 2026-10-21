@@ -247,3 +247,20 @@ button.btn-link,
   transform: none !important;
   background: transparent !important;
 }
+
+/* 6. PIN Zárolás Rázkódási Animáció */
+@keyframes pin-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-7px);
+  }
+  40%, 80% {
+    transform: translateX(7px);
+  }
+}
+
+.animate-pin-shake {
+  animation: pin-shake 0.4s ease-in-out;
+}

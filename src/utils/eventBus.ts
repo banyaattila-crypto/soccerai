@@ -4,6 +4,8 @@ export type SoccerAiEventMap = {
   audit_log_updated: void;
   settings_updated: void;
   filter_live: void;
+  pin_state_changed: void;
+  pin_locked: void;
 };
 
 export type SoccerAiEventType = keyof SoccerAiEventMap;
@@ -25,6 +27,12 @@ class TypedEventBus {
       });
       window.addEventListener('focitipp_filter_live', () => {
         this.emitInternal('filter_live', undefined, false);
+      });
+      window.addEventListener('focitipp_pin_state_changed', () => {
+        this.emitInternal('pin_state_changed', undefined, false);
+      });
+      window.addEventListener('focitipp_pin_locked', () => {
+        this.emitInternal('pin_locked', undefined, false);
       });
     }
   }

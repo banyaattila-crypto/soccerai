@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { X, Server, Key, Check, ArrowLeft } from 'lucide-react';
+import {
+  X,
+  Server,
+  Key,
+  Check,
+  ArrowLeft,
+  Lock,
+  ShieldCheck,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { APP_VERSION } from '../version';
 import { eventBus } from '../utils/eventBus';
+import {
+  isPinEnabled,
+  setupPin,
+  changePin,
+  disablePin,
+  isValidPinFormat,
+} from '../services/pinService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -27,6 +45,108 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     return parseInt(localStorage.getItem('focitipp_threshold') || '60', 10);
   });
   const [saved, setSaved] = useState<boolean>(false);
+
+  // 6-jegyű PIN kód állapotok
+  const [pinActive, setPinActive] = useState<boolean>(() => isPinEnabled());
+  const [pinFormMode, setPinFormMode] = useState<'idle' | 'setup' | 'change' | 'disable'>('idle');
+  const [currentPinInput, setCurrentPinInput] = useState<string>('');
+  const [newPinInput, setNewPinInput] = useState<string>('');
+  const [confirmPinInput, setConfirmPinInput] = useState<string>('');
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [pinSuccessNotice, setPinSuccessNotice] = useState<string | null>(null);
+  const [showPinText, setShowPinText] = useState<boolean>(false);
+
+  // PIN állapot frissítése ha kívülről vagy módosításkor változik
+  useEffect(() => {
+    setPinActive(isPinEnabled());
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (pinSuccessNotice) {
+      const timer = setTimeout(() => setPinSuccessNotice(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [pinSuccessNotice]);
+
+  const resetPinForm = () => {
+    setPinFormMode('idle');
+    setCurrentPinInput('');
+    setNewPinInput('');
+    setConfirmPinInput('');
+    setPinError(null);
+    setShowPinText(false);
+  };
+
+  const handleSetupPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError(null);
+
+    if (!isValidPinFormat(newPinInput)) {
+      setPinError('A PIN kódnak pontosan 6 számjegyből kell állnia!');
+      return;
+    }
+
+    if (newPinInput !== confirmPinInput) {
+      setPinError('A megadott két új PIN kód nem egyezik!');
+      return;
+    }
+
+    const res = await setupPin(newPinInput);
+    if (res.success) {
+      setPinActive(true);
+      setPinSuccessNotice('A 6-jegyű PIN védelem sikeresen bekapcsolva!');
+      resetPinForm();
+    } else {
+      setPinError(res.error || 'Hiba a PIN mentésekor.');
+    }
+  };
+
+  const handleChangePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError(null);
+
+    if (!isValidPinFormat(currentPinInput)) {
+      setPinError('A jelenlegi PIN kódnak 6 számjegynek kell lennie!');
+      return;
+    }
+
+    if (!isValidPinFormat(newPinInput)) {
+      setPinError('Az új PIN kódnak pontosan 6 számjegyből kell állnia!');
+      return;
+    }
+
+    if (newPinInput !== confirmPinInput) {
+      setPinError('A megadott két új PIN kód nem egyezik!');
+      return;
+    }
+
+    const res = await changePin(currentPinInput, newPinInput);
+    if (res.success) {
+      setPinSuccessNotice('A PIN kód sikeresen megváltoztatva!');
+      resetPinForm();
+    } else {
+      setPinError(res.error || 'A jelenlegi PIN kód helytelen!');
+    }
+  };
+
+  const handleDisablePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError(null);
+
+    if (!isValidPinFormat(currentPinInput)) {
+      setPinError('Add meg a jelenlegi 6-jegyű PIN kódot a kikapcsoláshoz!');
+      return;
+    }
+
+    const res = await disablePin(currentPinInput);
+    if (res.success) {
+      setPinActive(false);
+      setPinSuccessNotice('A PIN védelem sikeresen kikapcsolva!');
+      resetPinForm();
+    } else {
+      setPinError(res.error || 'A megadott PIN kód helytelen!');
+    }
+  };
 
   useEffect(() => {
     if (saved) {
@@ -245,6 +365,245 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <span>60% (Kiegyensúlyozott)</span>
               <span>75% (Csak elit)</span>
             </div>
+          </div>
+
+          {/* 6-jegyű PIN Kód & Biztonsági Zárolás */}
+          <div className="space-y-3 p-3.5 bg-gradient-to-b from-slate-900/90 to-[#0B1220] rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <span>6-jegyű PIN Kód &amp; Alkalmazás Zárolás</span>
+              </div>
+              {pinActive ? (
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  PIN Védelem Aktív
+                </span>
+              ) : (
+                <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-medium">
+                  Kikapcsolva
+                </span>
+              )}
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Védi a bankrollt, szelvényeket és a fogadási stratégiát az illetéktelen betekintéstől. Bekapcsoláskor oldalfrissítéskor és a fejléc lakat ikonjával azonnal zárolható.
+            </p>
+
+            {pinSuccessNotice && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold animate-fade-in">
+                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{pinSuccessNotice}</span>
+              </div>
+            )}
+
+            {pinError && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold animate-fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{pinError}</span>
+              </div>
+            )}
+
+            {/* Inaktív nézet */}
+            {pinFormMode === 'idle' && (
+              <div className="pt-1">
+                {!pinActive ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetPinForm();
+                      setPinFormMode('setup');
+                    }}
+                    className="w-full py-2 px-3.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 hover:text-amber-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>6-jegyű PIN Kód Beállítása és Bekapcsolása</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetPinForm();
+                        setPinFormMode('change');
+                      }}
+                      className="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+                    >
+                      PIN Módosítása
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetPinForm();
+                        setPinFormMode('disable');
+                      }}
+                      className="py-2 px-3 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      Kikapcsolás
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Új PIN Beállítása Form */}
+            {pinFormMode === 'setup' && (
+              <form onSubmit={handleSetupPin} className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span>Új 6-jegyű PIN megadása</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPinText((prev) => !prev)}
+                    className="text-[10px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                  >
+                    {showPinText ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showPinText ? 'Elrejtés' : 'Megjelenítés'}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type={showPinText ? 'text' : 'password'}
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={newPinInput}
+                    onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Új 6-jegyű PIN..."
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono tracking-widest text-center"
+                    autoFocus
+                  />
+                  <input
+                    type={showPinText ? 'text' : 'password'}
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={confirmPinInput}
+                    onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="PIN megerősítése..."
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono tracking-widest text-center"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={resetPinForm}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Mégse
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                  >
+                    PIN Bekapcsolása
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* PIN Módosítása Form */}
+            {pinFormMode === 'change' && (
+              <form onSubmit={handleChangePin} className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                  <span>PIN Kód Módosítása</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPinText((prev) => !prev)}
+                    className="text-[10px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                  >
+                    {showPinText ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showPinText ? 'Elrejtés' : 'Megjelenítés'}</span>
+                  </button>
+                </div>
+
+                <input
+                  type={showPinText ? 'text' : 'password'}
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={currentPinInput}
+                  onChange={(e) => setCurrentPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Jelenlegi 6-jegyű PIN..."
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono tracking-widest text-center"
+                  autoFocus
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type={showPinText ? 'text' : 'password'}
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={newPinInput}
+                    onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Új 6-jegyű PIN..."
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono tracking-widest text-center"
+                  />
+                  <input
+                    type={showPinText ? 'text' : 'password'}
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={confirmPinInput}
+                    onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Új PIN megerősítése..."
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono tracking-widest text-center"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={resetPinForm}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Mégse
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer"
+                  >
+                    Módosítás Mentése
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* PIN Kikapcsolása Form */}
+            {pinFormMode === 'disable' && (
+              <form onSubmit={handleDisablePin} className="space-y-2.5 pt-1">
+                <div className="text-xs font-bold text-slate-300">
+                  PIN Védelem Kikapcsolása
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  A védelem feloldásához és kikapcsolásához add meg a jelenlegi 6-jegyű PIN kódodat:
+                </p>
+
+                <input
+                  type={showPinText ? 'text' : 'password'}
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={currentPinInput}
+                  onChange={(e) => setCurrentPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Jelenlegi 6-jegyű PIN..."
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-mono tracking-widest text-center"
+                  autoFocus
+                />
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={resetPinForm}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Mégse
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                  >
+                    Kikapcsolás Megerősítése
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Verzióinformáció & Névjegy gomb */}

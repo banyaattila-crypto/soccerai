@@ -12,6 +12,7 @@ import {
   Smartphone,
   Wallet,
   Radar,
+  Lock,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { APP_VERSION } from '../version';
@@ -31,6 +32,8 @@ interface HeaderProps {
   currentBankroll?: number;
   liveMatchCount?: number;
   onGoToLive?: () => void;
+  isPinEnabled?: boolean;
+  onLockApp?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -46,6 +49,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentBankroll,
   liveMatchCount,
   onGoToLive,
+  isPinEnabled,
+  onLockApp,
 }) => {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
@@ -303,6 +308,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Info className="w-4 h-4" />
             </button>
+
+            {/* Azonnali Zárolás Gomb (ha a 6-jegyű PIN aktív) */}
+            {isPinEnabled && onLockApp && (
+              <button
+                type="button"
+                onClick={onLockApp}
+                className="p-2 rounded-lg bg-slate-900 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 border border-slate-800 hover:border-amber-500/40 transition-colors cursor-pointer"
+                title="Alkalmazás azonnali zárolása (6-jegyű PIN)"
+              >
+                <Lock className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Beállítások */}
             <button
