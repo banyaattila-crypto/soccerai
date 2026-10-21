@@ -173,12 +173,19 @@ export function computeDixonColesExpectedGoals(params: DixonColesParams): {
 } {
   const avgH = params.avgHomeGoals ?? 1.45;
   const avgA = params.avgAwayGoals ?? 1.15;
-  const homeAdv = params.homeAdvantage ?? 1.15;
+  const homeAdv = params.homeAdvantage ?? (avgH / Math.max(0.5, avgA));
 
   // Egységes Dixon-Coles modellképlet:
-  // lambda_H = attack_H * defense_A * avgHomeGoals * (homeAdv / 1.12)
+  // lambda_H = attack_H * defense_A * baselineHomeGoals
   // lambda_A = attack_A * defense_H * avgAwayGoals
-  const rawLh = params.attackHome * params.defenseAway * avgH * (homeAdv / 1.12);
+  // A baselineHomeGoals = avgAwayGoals * homeAdvantage (ami pontosan megegyezik avgHomeGoals-szal,
+  // ha homeAdvantage = avgHomeGoals / avgAwayGoals), így kizárjuk a hazai pálya előny
+  // kétszeres súlyozását (avgH és homeAdv egyidejű szorzása helyett).
+  const baselineHomeGoals = params.homeAdvantage !== undefined
+    ? avgA * homeAdv
+    : avgH;
+
+  const rawLh = params.attackHome * params.defenseAway * baselineHomeGoals;
   const rawLa = params.attackAway * params.defenseHome * avgA;
 
   // Numerikus stabilitási korlátok (strictly pozitív intenzitási paraméterek)
@@ -212,10 +219,11 @@ export function calculateMarketProbabilities(
   const matrix = calculateDixonColesMatrix(adjHomeXg, adjAwayXg, rho);
   const mk = extractMarketsFromMatrix(matrix);
 
-  // Félidő becslés
-  const fhHomeXg = adjHomeXg * 0.45;
-  const fhAwayXg = adjAwayXg * 0.45;
-  const fhNoGoalProb = poisson(0, fhHomeXg) * poisson(0, fhAwayXg);
+  // 1. félidő becslés Dixon-Coles korrekcióval (htRatio = 0.42, rhoHT = -0.08)
+  const fhHomeXg = adjHomeXg * 0.42;
+  const fhAwayXg = adjAwayXg * 0.42;
+  const tau00 = dixonColesTau(0, 0, fhHomeXg, fhAwayXg, -0.08);
+  const fhNoGoalProb = Math.min(1.0, poisson(0, fhHomeXg) * poisson(0, fhAwayXg) * tau00);
   const rawFhOver05 = (1 - fhNoGoalProb) * 100;
 
   // 1X2 Százalékos normalizálás (szigorú 100% partició invariáns)
@@ -362,7 +370,10 @@ function getMarketProbFromExtracted(
     case 'BTTS_AND_OVER25':
       return mk.bttsAndOver25;
     case 'FH_OVER_05': {
-      const fhNoGoal = poisson(0, lh * 0.45) * poisson(0, la * 0.45);
+      const fhLh = lh * 0.42;
+      const fhLa = la * 0.42;
+      const tau00 = dixonColesTau(0, 0, fhLh, fhLa, -0.08);
+      const fhNoGoal = Math.min(1.0, poisson(0, fhLh) * poisson(0, fhLa) * tau00);
       return 1.0 - fhNoGoal;
     }
     default:

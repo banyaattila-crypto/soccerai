@@ -196,6 +196,25 @@ export function fitDixonColesModel(
     beta[k] = 1.0;
   }
 
+  // Mérkőzések időbeli súlyainak (xi) és normalizált csapatneveinek egyszeri előkalkulációja
+  const weightedMatches = validMatches.map((m) => {
+    let weight = 1.0;
+    if (m.date && xi > 0) {
+      const matchMs = new Date(m.date).getTime();
+      if (!isNaN(matchMs)) {
+        const daysAgo = Math.max(0, (nowMs - matchMs) / DAY_MS);
+        weight = Math.exp(-xi * daysAgo);
+      }
+    }
+    return {
+      homeKey: normalizeTeamName(m.homeTeam),
+      awayKey: normalizeTeamName(m.awayTeam),
+      homeGoals: m.homeGoals,
+      awayGoals: m.awayGoals,
+      weight,
+    };
+  });
+
   // Bayesian Gamma(a, b) regularizáció (Laplace smoothing), ami megvédi a kevés meccses csapatokat
   const priorA = 3.0;
   const priorB = 3.0;
@@ -206,26 +225,15 @@ export function fitDixonColesModel(
       let num = priorA - 1;
       let denom = priorB;
 
-      for (const m of validMatches) {
-        const hKey = normalizeTeamName(m.homeTeam);
-        const aKey = normalizeTeamName(m.awayTeam);
-        if (hKey !== k && aKey !== k) continue;
+      for (const m of weightedMatches) {
+        if (m.homeKey !== k && m.awayKey !== k) continue;
 
-        let weight = 1.0;
-        if (m.date && xi > 0) {
-          const matchMs = new Date(m.date).getTime();
-          if (!isNaN(matchMs)) {
-            const daysAgo = Math.max(0, (nowMs - matchMs) / DAY_MS);
-            weight = Math.exp(-xi * daysAgo);
-          }
-        }
-
-        if (hKey === k) {
-          num += weight * m.homeGoals;
-          denom += weight * beta[aKey] * homeAdvantage;
-        } else if (aKey === k) {
-          num += weight * m.awayGoals;
-          denom += weight * beta[hKey];
+        if (m.homeKey === k) {
+          num += m.weight * m.homeGoals;
+          denom += m.weight * beta[m.awayKey] * homeAdvantage;
+        } else if (m.awayKey === k) {
+          num += m.weight * m.awayGoals;
+          denom += m.weight * beta[m.homeKey];
         }
       }
 
@@ -237,42 +245,29 @@ export function fitDixonColesModel(
       let num = priorA - 1;
       let denom = priorB;
 
-      for (const m of validMatches) {
-        const hKey = normalizeTeamName(m.homeTeam);
-        const aKey = normalizeTeamName(m.awayTeam);
-        if (hKey !== k && aKey !== k) continue;
+      for (const m of weightedMatches) {
+        if (m.homeKey !== k && m.awayKey !== k) continue;
 
-        let weight = 1.0;
-        if (m.date && xi > 0) {
-          const matchMs = new Date(m.date).getTime();
-          if (!isNaN(matchMs)) {
-            const daysAgo = Math.max(0, (nowMs - matchMs) / DAY_MS);
-            weight = Math.exp(-xi * daysAgo);
-          }
-        }
-
-        if (hKey === k) {
+        if (m.homeKey === k) {
           // Ha hazai volt, a kapott gól a vendég gólja
-          num += weight * m.awayGoals;
-          denom += weight * alpha[aKey];
-        } else if (aKey === k) {
+          num += m.weight * m.awayGoals;
+          denom += m.weight * alpha[m.awayKey];
+        } else if (m.awayKey === k) {
           // Ha vendég volt, a kapott gól a hazai gólja
-          num += weight * m.homeGoals;
-          denom += weight * alpha[hKey] * homeAdvantage;
+          num += m.weight * m.homeGoals;
+          denom += m.weight * alpha[m.homeKey] * homeAdvantage;
         }
       }
 
       beta[k] = denom > 0 ? Math.max(0.2, num / denom) : 1.0;
     }
 
-    // C) Gamma (hazai előny) frissítése
+    // C) Gamma (hazai előny) frissítése azonos időbeli (m.weight) súlyozással a konzisztens MLE-ért
     let numGamma = 0;
     let denomGamma = 0;
-    for (const m of validMatches) {
-      const hKey = normalizeTeamName(m.homeTeam);
-      const aKey = normalizeTeamName(m.awayTeam);
-      numGamma += m.homeGoals;
-      denomGamma += alpha[hKey] * beta[aKey];
+    for (const m of weightedMatches) {
+      numGamma += m.weight * m.homeGoals;
+      denomGamma += m.weight * alpha[m.homeKey] * beta[m.awayKey];
     }
     if (denomGamma > 0) {
       homeAdvantage = Math.min(1.6, Math.max(1.05, numGamma / denomGamma));
@@ -291,23 +286,29 @@ export function fitDixonColesModel(
 
   // 3. Rho (alacsony gólszámú korrekciós paraméter) becslése empirikus grid-search segítségével
   // Dixon-Coles log-likelihood optimalizálás a 0-0, 0-1, 1-0, 1-1 cellákra
+  // 100%-ban azonos kanonikus computeDixonColesExpectedGoals várható gól képletet és időbeli súlyt használva
   let bestRho = -0.13;
   let maxLogLik = -Infinity;
 
   for (let r = -0.24; r <= 0.02; r += 0.02) {
     let ll = 0;
-    for (const m of validMatches) {
-      const hKey = normalizeTeamName(m.homeTeam);
-      const aKey = normalizeTeamName(m.awayTeam);
-      const lh = alpha[hKey] * beta[aKey] * homeAdvantage * (avgHomeGoals / 1.3);
-      const la = alpha[aKey] * beta[hKey] * (avgAwayGoals / 1.1);
+    for (const m of weightedMatches) {
+      const { lh, la } = computeDixonColesExpectedGoals({
+        attackHome: alpha[m.homeKey],
+        defenseHome: beta[m.homeKey],
+        attackAway: alpha[m.awayKey],
+        defenseAway: beta[m.awayKey],
+        avgHomeGoals,
+        avgAwayGoals,
+        homeAdvantage,
+      });
 
       const x = m.homeGoals;
       const y = m.awayGoals;
 
-      // Egységesített Dixon-Coles tau faktor használata
+      // Egységesített Dixon-Coles tau faktor használata időbeli súlyozással
       const tau = dixonColesTau(x, y, lh, la, r);
-      ll += Math.log(tau);
+      ll += m.weight * Math.log(tau);
     }
     if (ll > maxLogLik) {
       maxLogLik = ll;

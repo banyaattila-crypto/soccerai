@@ -11,6 +11,7 @@ import {
   calculateExpectedValue,
   quarterKelly,
 } from '../predictionEngine';
+import { fitDixonColesModel } from '../dixonColesFitting';
 
 describe('Matematikai és Numerikus Invariánsok Regressziós Tesztcsomag', () => {
   // =========================================================================
@@ -285,6 +286,63 @@ describe('Matematikai és Numerikus Invariánsok Regressziós Tesztcsomag', () =
 
       expect(weakAwayDef.lh).toBeGreaterThan(solidAwayDef.lh);
     });
+
+    it('invariáns: hazai előny (gamma) egyszeres szorzása, nincs kétszeres torzítás', () => {
+      // Két azonos átlagos erősségű csapat (1.0 vs 1.0)
+      const res = computeDixonColesExpectedGoals({
+        attackHome: 1.0,
+        defenseHome: 1.0,
+        attackAway: 1.0,
+        defenseAway: 1.0,
+        avgHomeGoals: 1.50,
+        avgAwayGoals: 1.20,
+        homeAdvantage: 1.25,
+      });
+
+      // lh pontosan 1.20 * 1.25 = 1.50, la pontosan 1.20
+      expect(res.lh).toBe(1.50);
+      expect(res.la).toBe(1.20);
+      expect(Number((res.lh / res.la).toFixed(2))).toBe(1.25);
+    });
+
+    it('invariáns: ha nincs explicit homeAdvantage megadva, avgHomeGoals / avgAwayGoals-ból pontosan származtatható', () => {
+      const res = computeDixonColesExpectedGoals({
+        attackHome: 1.0,
+        defenseHome: 1.0,
+        attackAway: 1.0,
+        defenseAway: 1.0,
+        avgHomeGoals: 1.45,
+        avgAwayGoals: 1.15,
+      });
+
+      expect(res.lh).toBe(1.45);
+      expect(res.la).toBe(1.15);
+    });
+  });
+
+  // =========================================================================
+  // 6.B DIXON-COLES ILLESZTÉS (MLE IDŐBELI SÚLYOZÁS ÉS PROFIL-LIKELIHOOD)
+  // =========================================================================
+  describe('fitDixonColesModel Időbeli Súlyozott MLE és Profil-Likelihood Invariánsok', () => {
+    it('invariáns: gamma és rho illesztése stabil és korlátok között van időbeli súlyozással', () => {
+      const dummyMatches = [
+        { homeTeam: 'Arsenal', awayTeam: 'Chelsea', homeGoals: 2, awayGoals: 1, date: '2026-10-15' },
+        { homeTeam: 'Liverpool', awayTeam: 'Man City', homeGoals: 1, awayGoals: 1, date: '2026-10-16' },
+        { homeTeam: 'Arsenal', awayTeam: 'Liverpool', homeGoals: 3, awayGoals: 1, date: '2026-10-18' },
+        { homeTeam: 'Chelsea', awayTeam: 'Man City', homeGoals: 0, awayGoals: 2, date: '2026-10-19' },
+        { homeTeam: 'Man City', awayTeam: 'Arsenal', homeGoals: 2, awayGoals: 2, date: '2026-10-20' },
+        { homeTeam: 'Chelsea', awayTeam: 'Liverpool', homeGoals: 1, awayGoals: 2, date: '2026-10-21' },
+      ];
+
+      const model = fitDixonColesModel(dummyMatches, 'PL_TEST', 0.003, 20);
+
+      expect(model.homeAdvantage).toBeGreaterThanOrEqual(1.05);
+      expect(model.homeAdvantage).toBeLessThanOrEqual(1.60);
+      expect(model.rho).toBeGreaterThanOrEqual(-0.24);
+      expect(model.rho).toBeLessThanOrEqual(0.02);
+      expect(model.teams['arsenal']).toBeDefined();
+      expect(model.teams['arsenal'].attack).toBeGreaterThan(0.5);
+    });
   });
 
   // =========================================================================
@@ -366,7 +424,7 @@ describe('Matematikai és Numerikus Invariánsok Regressziós Tesztcsomag', () =
       expect(probs.over35).toBe(33);
       expect(probs.bttsYes).toBe(57);
       expect(probs.bttsAndOver25).toBe(45);
-      expect(probs.fhOver05).toBe(73);
+      expect(probs.fhOver05).toBe(70);
     });
 
     it('Pin 2: Gólzápor rangadó (Bayern vs Dortmund: lh=2.80, la=1.70, rho=-0.13)', () => {
@@ -381,7 +439,7 @@ describe('Matematikai és Numerikus Invariánsok Regressziós Tesztcsomag', () =
       expect(probs.over35).toBe(65);
       expect(probs.bttsYes).toBe(77);
       expect(probs.bttsAndOver25).toBe(71);
-      expect(probs.fhOver05).toBe(87);
+      expect(probs.fhOver05).toBe(84);
     });
 
     it('Pin 3: Taktikai kevés gólos meccs (Juventus vs Roma: lh=1.00, la=0.80, rho=-0.16)', () => {
@@ -396,7 +454,7 @@ describe('Matematikai és Numerikus Invariánsok Regressziós Tesztcsomag', () =
       expect(probs.over35).toBe(11);
       expect(probs.bttsYes).toBe(37);
       expect(probs.bttsAndOver25).toBe(22);
-      expect(probs.fhOver05).toBe(56);
+      expect(probs.fhOver05).toBe(53);
     });
   });
 });
