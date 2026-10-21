@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.22.1';
-export const APP_RELEASE_NAME = 'API-Sports Gyorsítótár-takarítás (Cache Pruning) & localStorage Védelem';
+export const APP_VERSION = '1.22.2';
+export const APP_RELEASE_NAME = 'Cellaszintű Kelly-tétméretezés Javítás a Mérkőzés Rácsban';
 export const APP_RELEASE_DATE = '2026-10-21';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,10 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Kritikus Gyorsítótár-takarítási Javítás (pruneOldApiSportsCache): Az odds-cache kulcsok előtagja az érvényes ODDS_CACHE_PREFIX (soccerai_odds_cache_) és legacy kulcsokra lett igazítva',
-    'Elavult & Legacy Gyorsítótárak Törlése: Automatikusan törli a 24 óránál régebbi oddsokat és a korábbi verziók (soccerai_apisports_cache_v5_, stb.) megmaradt adatait',
-    'Automatikus Helyfelszabadítás QuotaExceededError esetén: A setItem hibája esetén azonnali agresszív takarítás és újrapróbálás fut le a böngésző 5 MB-os keretének védelmében',
-    '3D Nyomógomb Rendszer & Finom Aranykeret: Minden interaktív gomb megkülönböztetett, precíz vékony aranykeretet és felső fényélt visel',
-    'Dedikált Regressziós Tesztcsomag: 4 új egységteszttel bővítve (149/149 zöld teszt), oxlint 0 hiba/figyelmeztetés',
+    'Cellaszintű Kelly-tétméretezés (StatsGrid handleCellBet): A rács bármely cellájára (pl. Döntetlen X, Over, BTTS) kattintva a rendszer szigorúan az adott cella saját oddsából és valószínűségéből számítja ki a Kelly-értéket',
+    'Fals Tétméretezés Megakadályozása: Más kimenetelek (pl. Hazai győzelem) magas Kelly-százaléka már nem szivároghat át ellentétes vagy negatív EV-s piacokra',
+    'Piac-specifikus Bukméker Párosítás: A szelvényre a kattintott piac legjobb valós bukmékere (Pinnacle, Bet365, stb.) kerül át',
+    'API-Sports Gyorsítótár-takarítás & 3D Nyomógombok: Megújított localStorage takarítás és elegáns 3D aranykeretes kezelőszervek',
+    '151 / 151 Zöld Regressziós Teszt: Teljes lefedettség a cellaszintű tétméretezésre és invariánsokra',
   ],
 };

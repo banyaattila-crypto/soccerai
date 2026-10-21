@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket, PickMarket } from '../types/football';
-import { getProbabilityColorClass } from '../services/predictionEngine';
+import { getProbabilityColorClass, quarterKelly } from '../services/predictionEngine';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import {
   Search,
@@ -519,7 +519,33 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
     e.stopPropagation();
     const isSim = match.aiPick?.isSimulatedOdds !== false;
     const isExp = match.aiPick?.isOddsExpired ?? false;
-    const bookie = match.aiPick?.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker;
+
+    // A kattintott piacnak megfelelő bukméker kikeresése
+    let bookie = match.aiPick?.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker;
+    if (match.realOdds?.bestOdds) {
+      if (market === '1' && match.realOdds.bestOdds.home?.bookmaker) {
+        bookie = match.realOdds.bestOdds.home.bookmaker;
+      } else if (market === 'X' && match.realOdds.bestOdds.draw?.bookmaker) {
+        bookie = match.realOdds.bestOdds.draw.bookmaker;
+      } else if (market === '2' && match.realOdds.bestOdds.away?.bookmaker) {
+        bookie = match.realOdds.bestOdds.away.bookmaker;
+      } else if (market === 'OVER_25' && match.realOdds.bestOdds.over25?.bookmaker) {
+        bookie = match.realOdds.bestOdds.over25.bookmaker;
+      } else if (market === 'BTTS_YES' && match.realOdds.bestOdds.bttsYes?.bookmaker) {
+        bookie = match.realOdds.bestOdds.bttsYes.bookmaker;
+      }
+    }
+
+    // A kattintott cella saját esélyéből és oddsából számoljuk a Kelly-százalékot,
+    // megakadályozva, hogy egy másik (akár ellentétes vagy negatív EV-s) piac értéke kerüljön át.
+    let cellKelly = 0;
+    if (!isSim && !isExp && odds > 1.0 && prob > 0) {
+      if (market && match.aiPick?.market === market && typeof match.aiPick.quarterKellyPct === 'number') {
+        cellKelly = match.aiPick.quarterKellyPct;
+      } else {
+        cellKelly = quarterKelly(prob, odds);
+      }
+    }
 
     onAddToBetSlip({
       matchId: match.id,
@@ -528,7 +554,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       market,
       odds,
       probability: prob,
-      quarterKellyPct: !isSim && !isExp ? match.aiPick?.quarterKellyPct : 0,
+      quarterKellyPct: cellKelly,
       isRealOdds: !isSim && !isExp,
       isSimulatedOdds: isSim,
       bookmakerName: !isSim ? bookie : undefined,

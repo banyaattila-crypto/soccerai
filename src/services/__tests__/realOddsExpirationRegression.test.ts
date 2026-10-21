@@ -9,7 +9,7 @@ import {
   ODDS_CACHE_PREFIX,
   CACHE_KEY,
 } from '../apiSportsClient';
-import { buildMatchQuantAndPick } from '../predictionEngine';
+import { buildMatchQuantAndPick, quarterKelly } from '../predictionEngine';
 import {
   extractOpportunitiesFromMatches,
   filterAndSortOpportunities,
@@ -494,6 +494,36 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
 
       expect(localStorage.getItem(freshKey)).not.toBeNull();
       expect(localStorage.getItem(threeHoursOldKey)).toBeNull();
+    });
+  });
+
+  describe('Cell-Level Kelly Calculation (StatsGrid handleCellBet logic)', () => {
+    it('kiszámolja a cella saját Kelly %-át pozitív EV esetén, és 0-t ad negatív EV-re ahelyett hogy a fő pickjét másolná át', () => {
+      // Fő pick: Hazai (1) 65% @ 1.80 -> Kelly > 0
+      const homePickKelly = quarterKelly(65, 1.80);
+      expect(homePickKelly).toBeGreaterThan(0);
+
+      // Felhasználó a Döntetlen (X) cellára kattint: 20% @ 3.40 (EV = 0.20 * 3.4 - 1 = -32% -> Kelly = 0)
+      const drawCellKelly = quarterKelly(20, 3.40);
+      expect(drawCellKelly).toBe(0);
+      expect(drawCellKelly).not.toBe(homePickKelly);
+
+      // Felhasználó egy olyan piacra kattint, aminek valódi pozitív éle van: 55% @ 2.20
+      const valueCellKelly = quarterKelly(55, 2.20);
+      expect(valueCellKelly).toBeGreaterThan(0);
+      expect(valueCellKelly).toBe(4.4);
+    });
+
+    it('szimulált odds vagy lejárt odds esetén szigorúan 0 Kelly-t ad át', () => {
+      const isSimulated = true;
+      const isExpired = false;
+      const cellKellySim = !isSimulated && !isExpired ? quarterKelly(60, 2.50) : 0;
+      expect(cellKellySim).toBe(0);
+
+      const isReal = true;
+      const isExpiredOdd = true;
+      const cellKellyExp = isReal && !isExpiredOdd ? quarterKelly(60, 2.50) : 0;
+      expect(cellKellyExp).toBe(0);
     });
   });
 });
