@@ -3,6 +3,17 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.6] - 2026-10-22
+
+### Javítva & Továbbfejlesztve (Fixed & Enhanced) - Kitakarásmentes Vendégcsapat Megjelenítés
+- **2-Soros Csapatelrendezés a Mérkőzés Rács Kompakt Nézetében (`MatchCompactList.tsx`):**
+  - **Megszüntetett kitakarási hiba:** A korábbi egyvonalas, szűk 80–112 px szélességű horizontális elrendezés (`[Hazai] [VS] [Vendég] [3D diagramok]`) helyett a professzionális sportplatformok (FlashScore, SofaScore) bevált 2-soros csapatszerkezete került bevezetésre.
+  - **Tágas, védett tér a csapatneveknek:** A Hazai csapat az 1. sorban, a Vendég csapat közvetlenül alatta, a 2. sorban kapott helyet. A vendég csapatok így sosem tolódnak ki oldalra a 3D diagramok alá, és még a leghosszabb nevek (pl. *Borussia Mönchengladbach*, *Wolverhampton Wanderers*, *Paris Saint-Germain*) is bőséges hellyel, kitakarás nélkül jelennek meg.
+  - **Tökéletes vizuális párhuzam a 3D mutatókkal:** Az 1. csapatsor (Hazai) vízszintesen pontosan a Stadionzöld 3D Pill-el (Gólok / Fő piac), míg a 2. csapatsor (Vendég) a Sportfogadási Arany 3D Pill-el (Másodlagos piac) alkot harmonikus, azonos magasságú sávot.
+  - **Eredmények és Élő Percek integrációja:** Lezárt mérkőzéseknél az adott csapat góljai közvetlenül a csapat neve mellett jelennek meg a sor végén, míg a kezdési időpont és a státusz (FT / ÉLŐ) külön bal oldali információs blokkban kapott helyet.
+- **Automatizált Regressziós Tesztcsomag (`compactListLayoutRegression.test.tsx`):**
+  - 4 új automatizált teszt védi a DOM-szerkezetet, garantálva, hogy a Hazai és Vendég csapatok önálló, függőlegesen egymás alá rendezett konténerekben futnak, megakadályozva a 3D diagramok és a vendégcsapatok közötti bármiféle átfedést vagy kitakarást.
+
 ## [1.24.5] - 2026-10-21
 
 ### Hozzáadva & Továbbfejlesztve (Added & Enhanced) - Letisztult, Szellős Kezelőfelület

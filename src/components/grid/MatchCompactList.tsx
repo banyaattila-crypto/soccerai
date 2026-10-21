@@ -68,10 +68,10 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
           <div
             key={match.id}
             onClick={() => onSelectMatch(match)}
-            className="p-3 sm:p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-2 sm:gap-4 cursor-pointer group"
+            className="p-3 sm:p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3 sm:gap-5 cursor-pointer group"
           >
-            {/* Bal oldal: Csillag + Hazai - Eredmény/Idő - Vendég */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
+            {/* Bal oldal: Csillag + Idő/Állapot + 2-soros Csapatok (Hazai felül, Vendég alul - sosem takarja el a diagram) */}
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
               {/* Kedvenc kitűző csillag */}
               {onToggleFavorite && (
                 <button
@@ -88,73 +88,79 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
                 </button>
               )}
 
-              {/* Hazai Csapat (ScoreLab stílus: Logo felül, név alatta) */}
-              <div className="flex flex-col items-center text-center w-20 sm:w-28 shrink-0">
-                <img
-                  src={match.homeTeam.logo}
-                  alt=""
-                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-                <span className="text-xs sm:text-sm font-bold text-white truncate w-full mt-1 group-hover:text-amber-300 transition-colors">
-                  {match.homeTeam.name}
-                </span>
-              </div>
-
-              {/* Középső Állapot / Idő / Eredmény */}
-              <div className="flex flex-col items-center justify-center min-w-[50px] sm:min-w-[64px] shrink-0 px-1">
+              {/* Állapot / Idő / FT blokk */}
+              <div className="flex flex-col items-center justify-center min-w-[44px] sm:min-w-[56px] shrink-0 text-center">
                 {isFinished ? (
                   <>
-                    <span className="font-mono font-black text-sm sm:text-base text-amber-400 bg-slate-950/90 px-2 py-0.5 rounded-lg border border-slate-800">
-                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 mt-0.5 flex items-center gap-0.5">
+                    <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/25 flex items-center gap-0.5">
                       <CheckCircle2 className="w-3 h-3" />
                       FT
                     </span>
                     {(match.kickoffDate || match.kickoffTime) && (
-                      <span className="text-[9px] font-mono text-slate-500 hidden sm:inline">
-                        {match.kickoffDate ? match.kickoffDate.slice(5) : ''} {match.kickoffTime}
+                      <span className="text-[9px] font-mono text-slate-500 hidden sm:inline mt-0.5">
+                        {match.kickoffDate ? match.kickoffDate.slice(5) : ''}
                       </span>
                     )}
                   </>
                 ) : isLive ? (
                   <>
-                    <span className="font-mono font-black text-sm sm:text-base text-red-400 animate-pulse bg-red-950/50 px-2 py-0.5 rounded-lg border border-red-500/30">
-                      {match.homeScore ?? 0} - {match.awayScore ?? 0}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-red-400 mt-0.5 flex items-center gap-1">
+                    <span className="font-bold text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/25 animate-pulse flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
                       {match.minute ? `${match.minute}'` : 'ÉLŐ'}
                     </span>
                   </>
                 ) : (
-                  <>
-                    <span className="font-mono font-black text-xs sm:text-sm text-white">
-                      {match.kickoffTime}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">
-                      VS
-                    </span>
-                  </>
+                  <span className="font-mono font-bold text-xs sm:text-sm text-amber-400/90 bg-slate-950 px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-800">
+                    {match.kickoffTime}
+                  </span>
                 )}
               </div>
 
-              {/* Vendég Csapat (ScoreLab stílus: Logo felül, név alatta) */}
-              <div className="flex flex-col items-center text-center w-20 sm:w-28 shrink-0">
-                <img
-                  src={match.awayTeam.logo}
-                  alt=""
-                  className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-                <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate w-full mt-1 group-hover:text-amber-300 transition-colors">
-                  {match.awayTeam.name}
-                </span>
+              {/* Csapatok és Eredmények: 2 sorban egymás alatt, tágas, jól olvasható, sosem fedi el a diagram */}
+              <div className="flex flex-col justify-center gap-1.5 min-w-0 flex-1">
+                {/* 1. Sor: Hazai Csapat */}
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                    <img
+                      src={match.homeTeam.logo}
+                      alt=""
+                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                    <span className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-amber-300 transition-colors">
+                      {match.homeTeam.name}
+                    </span>
+                  </div>
+                  {match.homeScore !== undefined && (
+                    <span className="font-mono font-black text-xs sm:text-sm text-amber-400 bg-slate-950 px-1.5 py-0.2 rounded border border-slate-800 shrink-0">
+                      {match.homeScore}
+                    </span>
+                  )}
+                </div>
+
+                {/* 2. Sor: Vendég Csapat */}
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                    <img
+                      src={match.awayTeam.logo}
+                      alt=""
+                      className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                    <span className="text-xs sm:text-sm font-semibold text-slate-200 truncate group-hover:text-amber-300 transition-colors">
+                      {match.awayTeam.name}
+                    </span>
+                  </div>
+                  {match.awayScore !== undefined && (
+                    <span className="font-mono font-black text-xs sm:text-sm text-amber-400 bg-slate-950 px-1.5 py-0.2 rounded border border-slate-800 shrink-0">
+                      {match.awayScore}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 

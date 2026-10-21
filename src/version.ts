@@ -1,6 +1,6 @@
-export const APP_VERSION = '1.24.5';
-export const APP_RELEASE_NAME = 'Letisztult, Szellős Kezelőfelület és Összecsukható Panelek';
-export const APP_RELEASE_DATE = '2026-10-21';
+export const APP_VERSION = '1.24.6';
+export const APP_RELEASE_NAME = 'Vendégcsapatok Kitakarásmentes, 2-Soros Elrendezése és Szellős Kompakt Nézet';
+export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
 
