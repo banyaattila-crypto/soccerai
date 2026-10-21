@@ -970,7 +970,15 @@ export function attachCachedRealOddsToMatches(
   matches: Match[],
   nowMs: number = Date.now()
 ): Match[] {
-  return matches.map((match) => {
+  return matches.map((inputMatch) => {
+    // Tisztaság és immutabilitás: soha nem mutáljuk helyben a bemeneti Match vagy MOCK objektumokat
+    const match: Match = {
+      ...inputMatch,
+      odds: { ...inputMatch.odds },
+      aiPick: inputMatch.aiPick ? { ...inputMatch.aiPick } : undefined,
+      quantAnalysis: inputMatch.quantAnalysis ? { ...inputMatch.quantAnalysis } : undefined,
+    };
+
     const fId = match.apiSportsFixtureId || resolveApiSportsFixtureId(match);
     if (!fId) {
       if (match.aiPick) {
@@ -994,7 +1002,7 @@ export function attachCachedRealOddsToMatches(
     match.realOdds = cached;
 
     if (!cached.isExpired) {
-      // Valós bukmékeri odds érvényes! Frissítjük a piaci oddsokat
+      // Valós bukmékeri odds érvényes! Frissítjük a piaci oddsokat a klónozott objektumban
       if (cached.bestOdds.home?.odd) match.odds.home = cached.bestOdds.home.odd;
       if (cached.bestOdds.draw?.odd) match.odds.draw = cached.bestOdds.draw.odd;
       if (cached.bestOdds.away?.odd) match.odds.away = cached.bestOdds.away.odd;

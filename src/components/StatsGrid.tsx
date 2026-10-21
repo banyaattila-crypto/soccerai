@@ -453,7 +453,8 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           (league.id === 'seriea_brazil' && m.leagueId === 'bsa')
       );
       if (lm.length > 0) {
-        groups.push({ league, matches: lm });
+        const sortedLm = [...lm].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime));
+        groups.push({ league, matches: sortedLm });
       }
     });
 
@@ -477,10 +478,17 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
     return groups;
   }, [availableLeagues, filteredMatches]);
 
-  // Kedvenc meccsek kiszűrése az adott napra
+  // Időrendbe rendezett meccsek a kronologikus nézethez (garantáltan új tömböt ad, soha nem mutálja a filteredMatches-t)
+  const sortedFilteredMatches = useMemo(() => {
+    return [...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime));
+  }, [filteredMatches]);
+
+  // Kedvenc meccsek kiszűrése az adott napra (időrendi sorrendben)
   const favoriteMatches = useMemo(() => {
     if (favoriteMatchIds.size === 0) return [];
-    return dayMatches.filter((m) => favoriteMatchIds.has(m.id));
+    return dayMatches
+      .filter((m) => favoriteMatchIds.has(m.id))
+      .sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime));
   }, [dayMatches, favoriteMatchIds]);
 
   const toggleLeagueCollapse = (leagueId: string) => {
@@ -1151,7 +1159,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
               <div className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg">
                 {displayMode === 'compact' ? (
                   <MatchCompactList
-                    matches={[...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    matches={sortedFilteredMatches}
                     onSelectMatch={onSelectMatch}
                     onCellBet={handleCellBet}
                     betSlipItems={betSlipItems}
@@ -1162,7 +1170,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   />
                 ) : displayMode === 'cards' ? (
                   <MatchCardsList
-                    matches={[...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    matches={sortedFilteredMatches}
                     onSelectMatch={onSelectMatch}
                     onCellBet={handleCellBet}
                     betSlipItems={betSlipItems}
@@ -1172,7 +1180,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   />
                 ) : (
                   <MatchTable
-                    matches={[...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    matches={sortedFilteredMatches}
                     onSelectMatch={onSelectMatch}
                     onCellBet={handleCellBet}
                     betSlipItems={betSlipItems}

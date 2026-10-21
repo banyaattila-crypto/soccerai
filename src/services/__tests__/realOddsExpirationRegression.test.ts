@@ -278,6 +278,47 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       expect(updated.aiPick?.expectedValue).toBe(0);
       expect(updated.aiPick?.quarterKellyPct).toBe(0);
     });
+
+    it('soha nem mutálja helyben a bemeneti Match objektumokat (immutabilitás és Object.freeze védelem)', () => {
+      const now = 1700000000000;
+      const cachedTime = now - 15 * 60 * 1000;
+      const sample = createSampleRealOdds(cachedTime);
+
+      localStorage.setItem(
+        FIXTURE_ODDS_CACHE_KEY,
+        JSON.stringify({ timestamp: cachedTime, data: sample })
+      );
+
+      const baseMatch = createBaseMatch();
+      const originalHomeOdds = baseMatch.odds.home;
+
+      // Lefagyasztjuk a bemeneti objektumot, hogy bármilyen helyben történő mutáció TypeError-t dobna
+      Object.freeze(baseMatch.odds);
+      if (baseMatch.aiPick) Object.freeze(baseMatch.aiPick);
+      Object.freeze(baseMatch);
+
+      expect(() => {
+        const [updated] = attachCachedRealOddsToMatches([baseMatch], now);
+        expect(updated).not.toBe(baseMatch);
+        expect(updated.odds).not.toBe(baseMatch.odds);
+        expect(updated.odds.home).toBe(2.10);
+        expect(baseMatch.odds.home).toBe(originalHomeOdds);
+      }).not.toThrow();
+    });
+
+    it('ha nincs valós odds vagy lejárt, fagyasztott bemeneti Match objektumon sem dob hibát és nem mutálja azt', () => {
+      const baseMatch = createBaseMatch();
+      baseMatch.apiSportsFixtureId = undefined;
+      Object.freeze(baseMatch.odds);
+      if (baseMatch.aiPick) Object.freeze(baseMatch.aiPick);
+      Object.freeze(baseMatch);
+
+      expect(() => {
+        const [updated] = attachCachedRealOddsToMatches([baseMatch]);
+        expect(updated).not.toBe(baseMatch);
+        expect(updated.aiPick?.isSimulatedOdds).toBe(true);
+      }).not.toThrow();
+    });
   });
 
   describe('3. predictionEngine.buildMatchQuantAndPick numerikus invariáns', () => {
