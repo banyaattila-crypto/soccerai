@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.22.3';
-export const APP_RELEASE_NAME = 'Audit JSON Import Elszámolási Integritás & Manipuláció-Védelem';
+export const APP_VERSION = '1.22.4';
+export const APP_RELEASE_NAME = 'Vercel Edge CDN Cache-Control Hibavédelem';
 export const APP_RELEASE_DATE = '2026-10-21';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,10 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Audit JSON Import Elszámolás-Integritás (predictionAuditService): Importáláskor minden lezárt rekord státusza és profitja kötelezően újraszámolódik a mérkőzés valós góljai (homeScore, awayScore) és a hitelesített odds alapján',
-    'Elszámolási Csalások Teljes Kizárása: Manipulált JSON-ben átírt státuszok (pl. 0-0 meccs Over 2.5 tippjénél status: WON és fiktív profit) automatikusan felülbírálásra és semlegesítésre kerülnek a valós kimenetel szerint',
-    'Hiányos Eredmények Védelme: Gólok nélküli lezártnak hazudott rekordok automatikusan visszaminősülnek PENDING állapotba',
+    'Vercel Edge CDN Cache-Control Védelem (api/matches.ts, api/apisports.ts): Átmeneti 429 Too Many Requests és 5xx upstream hibák esetén szigorúan Cache-Control: no-store fejléc kerül beállításra',
+    'Hibás Válaszok Gyorsítótárazásának Kizárása: Kizárólag sikeres (2xx) API válaszoknál kerül beállításra publikus s-maxage CDN gyorsítótár, megelőzve a kiesések beragadását',
+    'Audit JSON Import Elszámolás-Integritás: Minden lezárt rekord státusza és profitja kötelezően újraszámolódik a mérkőzés valós góljai (homeScore, awayScore) alapján',
     'Cellaszintű Kelly & 3D Nyomógombok: Elszigetelt, pontos Kelly-méretezés a rácsban és letisztult aranykeretes 3D vezérlők',
-    '153 / 153 Zöld Egységteszt: Új regressziós tesztekkel megerősített kriptográfiai és elszámolási védelem, oxlint 0 hiba',
+    '162 / 162 Zöld Egységteszt: Új regressziós tesztekkel megerősített API proxy gyorsítótárazási és hibavédelmi vizsgálat, oxlint 0 hiba',
   ],
 };

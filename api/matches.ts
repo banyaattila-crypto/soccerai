@@ -12,6 +12,10 @@ interface ApiResponse {
   };
 }
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 const ALLOWED_ORIGINS = new Set([
   'https://soccerai-pro.vercel.app',
   'https://soccerai-pink.vercel.app',
@@ -84,6 +88,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0]?.trim()) ||
     'unknown';
   if (!checkRateLimit(clientIp)) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(429).json({
       error: 'Túl sok kérés. Kérlek várj egy percet az újrapróbálkozás előtt.',
     });
@@ -95,6 +100,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const token = headerToken?.trim() || process.env.FOOTBALL_DATA_API_KEY;
 
   if (!token) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({
       error:
         'Hiányzó szerveroldali API-kulcs (FOOTBALL_DATA_API_KEY). Állítsd be a Vercel környezeti változók között vagy a Beállításokban!',
@@ -112,11 +118,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const status = Array.isArray(rawStatus) ? rawStatus[0] : rawStatus;
 
   if (dateFrom && !DATE_REGEX.test(dateFrom)) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(400).json({
       error: 'Érvénytelen dateFrom paraméter formátum (YYYY-MM-DD szükséges).',
     });
   }
   if (dateTo && !DATE_REGEX.test(dateTo)) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(400).json({
       error: 'Érvénytelen dateTo paraméter formátum (YYYY-MM-DD szükséges).',
     });
@@ -149,10 +157,23 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       },
     });
 
-    const data: unknown = await apiRes.json();
-    res.setHeader('Cache-Control', cacheTtl);
+    let data: unknown;
+    try {
+      data = await apiRes.json();
+    } catch {
+      data = { error: `Football-Data válasz feldolgozási hiba (HTTP ${apiRes.status})` };
+    }
+
+    if (apiRes.ok) {
+      // Csak sikeres (2xx) válasznál engedélyezzük a CDN Edge gyorsítótárazást
+      res.setHeader('Cache-Control', cacheTtl);
+    } else {
+      // Átmeneti upstream hiba (pl. 429 Too Many Requests, 500, 502, 503) esetén szigorúan no-store
+      res.setHeader('Cache-Control', 'no-store');
+    }
     return res.status(apiRes.status).json(data);
   } catch (error: unknown) {
+    res.setHeader('Cache-Control', 'no-store');
     const message =
       error instanceof Error ? error.message : 'Hiba a mérkőzések lekérésekor';
     return res.status(500).json({ error: message });

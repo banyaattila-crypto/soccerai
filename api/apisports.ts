@@ -12,6 +12,10 @@ interface ApiResponse {
   };
 }
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 const ALLOWED_ORIGINS = new Set([
   'https://soccerai-pro.vercel.app',
   'https://soccerai-pink.vercel.app',
@@ -83,6 +87,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0]?.trim()) ||
     'unknown';
   if (!checkRateLimit(clientIp)) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(429).json({
       error: 'Túl sok kérés. Kérlek várj egy percet az újrapróbálkozás előtt.',
     });
@@ -94,6 +99,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const token = headerToken?.trim() || process.env.API_SPORTS_KEY;
 
   if (!token) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({
       error:
         'Hiányzó szerveroldali API-kulcs (API_SPORTS_KEY). Állítsd be a Vercel környezeti változók között vagy a Beállításokban!',
@@ -109,6 +115,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const endpoint = Array.isArray(rawEndpoint) ? rawEndpoint[0] : rawEndpoint;
 
   if (endpoint && endpoint !== 'odds' && endpoint !== 'fixtures') {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(400).json({
       error: 'Érvénytelen endpoint paraméter (csak "odds" vagy "fixtures" támogatott).',
     });
@@ -117,6 +124,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   let url: string;
   if (endpoint === 'odds' || fixture) {
     if (!fixture || !FIXTURE_ID_REGEX.test(fixture)) {
+      res.setHeader('Cache-Control', 'no-store');
       return res.status(400).json({
         error: 'Érvénytelen fixture paraméter (pozitív egész szám szükséges).',
       });
@@ -127,6 +135,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const fallbackDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const targetDate = date || fallbackDate;
     if (!DATE_REGEX.test(targetDate)) {
+      res.setHeader('Cache-Control', 'no-store');
       return res.status(400).json({
         error: 'Érvénytelen date paraméter formátum (YYYY-MM-DD szükséges).',
       });
@@ -141,11 +150,23 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       },
     });
 
-    const data: unknown = await apiRes.json();
-    // 30 perces Edge gyorsítótár a napi 100 kérés védelmére
-    res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+    let data: unknown;
+    try {
+      data = await apiRes.json();
+    } catch {
+      data = { error: `API-Sports válasz feldolgozási hiba (HTTP ${apiRes.status})` };
+    }
+
+    if (apiRes.ok) {
+      // 30 perces Edge gyorsítótár a napi 100 kérés védelmére csak sikeres (2xx) válasznál
+      res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+    } else {
+      // Átmeneti upstream hiba (pl. 429 Too Many Requests, 500, 502, 503) esetén szigorúan no-store
+      res.setHeader('Cache-Control', 'no-store');
+    }
     return res.status(apiRes.status).json(data);
   } catch (error: unknown) {
+    res.setHeader('Cache-Control', 'no-store');
     const message =
       error instanceof Error
         ? error.message
