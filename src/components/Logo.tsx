@@ -236,7 +236,7 @@ export const Logo: React.FC<LogoProps> = ({
           // Bilineáris 4-pontos mintavételezés a borotvaéles, aliasing-mentes minőségért
           const c00 = activeTex[row0 + u0];
           const c10 = activeTex[row0 + u1];
-          const c01 = activeTex[row0 + u0];
+          const c01 = activeTex[row1 + u0];
           const c11 = activeTex[row1 + u1];
 
           const w00 = (1 - fu) * (1 - fv);
