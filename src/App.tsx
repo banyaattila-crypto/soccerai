@@ -12,8 +12,6 @@ import { HeroKpi } from './components/HeroKpi';
 import { TopPicks } from './components/TopPicks';
 import { StatsGrid } from './components/StatsGrid';
 import { BetSlipDrawer } from './components/BetSlipDrawer';
-import { Logo } from './components/Logo';
-import { APP_VERSION } from './version';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
 import { normalizeTeamName } from './utils/teamUtils';
@@ -693,79 +691,7 @@ export function App() {
         currentBankroll={currentBankroll}
       />
 
-      {/* 5. Prémium Dark Lábléc */}
-      <footer className="border-t border-slate-800/80 bg-mesh-dark py-12 text-slate-400 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-2.5">
-                <Logo size={40} />
-                <span className="font-extrabold text-white text-base tracking-tight">
-                  Soccer<span className="text-amber-400">AI</span>
-                </span>
-                <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  PRO
-                </span>
-                <button
-                  onClick={() => setAboutOpen(true)}
-                  className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 border border-slate-700 transition-colors cursor-pointer"
-                  title="Alkalmazás névjegy és verzió"
-                >
-                  v{APP_VERSION}
-                </button>
-              </div>
-              <p className="text-slate-400 leading-relaxed max-w-md">
-                Kvantitatív labdarúgó analitikai és predikciós platform. 
-                Dixon-Coles korrigált Poisson modellezés, Shin de-vigging bukméker árrés szűrés és negyed-Kelly tétméretezés a fegyelmezett, adatvezérelt sportelemzéshez.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-bold text-white uppercase text-[11px] tracking-wider">
-                Lefedett Bajnokságok
-              </div>
-              <ul className="space-y-1 text-slate-400">
-                <li>&bull; Premier League &amp; Championship (Anglia)</li>
-                <li>&bull; La Liga (Spanyolország)</li>
-                <li>&bull; Serie A (Olaszország)</li>
-                <li>&bull; Bundesliga (Németország)</li>
-                <li>&bull; Ligue 1, Eredivisie &amp; Bajnokok Ligája</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-bold text-white uppercase text-[11px] tracking-wider">
-                Felelős Játék &amp; Módszertan
-              </div>
-              <p className="text-slate-500 text-[11px] leading-relaxed">
-                A rendszer statisztikai valószínűségeket és matematikai várható értékeket (Expected Value) számol. 
-                Nem garantál 100%-os biztos nyereményt. Fogadj mindig felelősségteljesen és bankroll-menedzsmenttel! (18+)
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
-            <div className="flex items-center gap-2">
-              <span>&copy; 2026 SoccerAI &bull; Minden jog fenntartva.</span>
-              <button
-                onClick={() => setAboutOpen(true)}
-                className="btn-link font-mono text-amber-400 hover:text-amber-300 font-bold hover:underline cursor-pointer"
-              >
-                v{APP_VERSION}
-              </button>
-            </div>
-            <div className="flex items-center gap-4">
-              <span>Élő Football-Data.org API Integráció</span>
-              <span>&bull;</span>
-              <span>Poisson &amp; xG Modelling</span>
-              <span>&bull;</span>
-              <span>Magyar Nyelvű Fejlesztés</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* 6. Biztonsági 6-jegyű PIN Kód Zárolási Képernyő */}
+      {/* 5. Biztonsági 6-jegyű PIN Kód Zárolási Képernyő */}
       {pinEnabled && isLocked && (
         <PinLockScreen onUnlock={() => setIsLocked(false)} />
       )}

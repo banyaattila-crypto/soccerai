@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.7] - 2026-10-22
+
+### Letisztítás & Továbbfejlesztve (Clean UI & Enhanced) - Alsó Lábléc Integrálása az About Menübe
+- **Állandó Alsó Keretes Lábléc Eltávolítása Minden Oldalról (`App.tsx`):**
+  - **Megszüntetett alsó zsúfoltság:** A korábban minden egyes nézet (Top Tippek, Mérkőzés Rács, Scanner, Eredmények, Tétnapló, Módszertan) alján megjelenő, több száz képpontos lábléc teljes mértékben eltávolításra került a fő elrendezésből.
+  - **Szellős, natív app élmény:** A tartalmi felületek fellélegeznek, a mérkőzéslisták és funkcionális panelek a teljes képernyőt kihasználják zavaró alsó dobozok nélkül.
+- **Tartalom Átültetése az Alkalmazás Névjegy Modálba (`AboutModal.tsx`):**
+  - **Platform Leírás & Modellezés:** Kvantitatív analitikai háttér, Dixon-Coles Poisson modellezés és Shin de-vigging részletezése.
+  - **Lefedett Bajnokságok:** Rendszerezett, zászlós kártyák a támogatott bajnokságokról (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, BL & UEL).
+  - **Felelős Játék & Módszertani Figyelmeztetés (18+):** Kiemelt figyelmeztető doboz a matematikai valószínűségekről és a bankroll-menedzsmentről.
+  - **Rendszerintegrációk & Szerzői Jogok:** Élő Football-Data API integráció, Poisson & xG modellezési adatok, valamint a fejlesztői információk.
+
 ## [1.24.6] - 2026-10-22
 
 ### Javítva & Továbbfejlesztve (Fixed & Enhanced) - Kitakarásmentes Vendégcsapat Megjelenítés
