@@ -55,14 +55,14 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
           </div>
           <div className="text-xs text-slate-300 flex items-center gap-2 flex-wrap">
             <span>
-              $\lambda_H$={lh.toFixed(2)} ({match.homeTeam.shortName || match.homeTeam.name})
+              λ_H = {lh.toFixed(2)} ({match.homeTeam.shortName || match.homeTeam.name})
             </span>
             <span className="text-slate-600">&bull;</span>
             <span>
-              $\lambda_A$={la.toFixed(2)} ({match.awayTeam.shortName || match.awayTeam.name})
+              λ_A = {la.toFixed(2)} ({match.awayTeam.shortName || match.awayTeam.name})
             </span>
             <span className="text-slate-600">&bull;</span>
-            <span className="font-mono text-slate-400">$\rho$={rho} korrekció</span>
+            <span className="font-mono text-slate-400">ρ = {rho} korrekció</span>
           </div>
         </div>
 
@@ -84,7 +84,7 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
             Top 6 Legvalószínűbb Végeredmény
           </span>
           <span className="text-[11px] text-slate-400">
-            Valószínűség &bull; Fair Odds ($1/p$)
+            Valószínűség &bull; Fair Odds (1/p)
           </span>
         </div>
 
