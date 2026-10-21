@@ -1,14 +1,14 @@
 import { Match } from '../types/football';
 
 const HISTORY_STORAGE_KEY = 'soccerai_match_history_archive_v1';
-export const MAX_ARCHIVED_MATCHES = 150;
+export const MAX_ARCHIVED_MATCHES = 300; // Akár 60–90 nap mérkőzéselőzményei a böngésző helyi tárhelyén
 
 /**
  * Megőrzi és összefésüli a lezárt mérkőzéseket a böngésző tartós tárolójában (localStorage).
  * Így a korábbi napok, hetek befejezett meccsei sosem törlődnek.
  */
 export function persistFinishedMatchesToHistory(newMatches: Match[]): Match[] {
-  if (typeof window === 'undefined' || !newMatches || newMatches.length === 0) {
+  if (typeof localStorage === 'undefined' || !newMatches || newMatches.length === 0) {
     return getArchivedFinishedMatches();
   }
 
@@ -58,7 +58,7 @@ export function persistFinishedMatchesToHistory(newMatches: Match[]): Match[] {
  * Betölti a korábbi mérkőzések archívumát a helyi tárhelyről.
  */
 export function getArchivedFinishedMatches(): Match[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof localStorage === 'undefined') return [];
   try {
     const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
     if (!raw) return [];
@@ -73,7 +73,7 @@ export function getArchivedFinishedMatches(): Match[] {
  * Törli az archivált meccselőzményeket (ha a felhasználó kézzel tisztítani szeretné).
  */
 export function clearArchivedFinishedMatches(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof localStorage === 'undefined') return;
   try {
     localStorage.removeItem(HISTORY_STORAGE_KEY);
   } catch {

@@ -3,6 +3,30 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.3] - 2026-10-21
+
+### Hozzáadva & Továbbfejlesztve (Added & Enhanced)
+- **Élénk 3D Színátmenetes Százaléksávok (`MatchCompactList.tsx`, `index.css`):**
+  - **Megszüntetett egyhangúság és háttérbe olvadás:** A korábbi sötétkék és egyszínű kitöltés helyett dinamikus, vibráló multi-stop gradiensek kerültek bevezetésre:
+    - 1. Mutató (Gólok / Fő piac): `from-emerald-400 via-teal-300 to-cyan-400` elektromos smaragd-türkiz színátmenet fényes aurával (`shadow-[0_0_10px_rgba(45,212,191,0.55)]`).
+    - 2. Mutató (Másodlagos piac): `from-amber-400 via-rose-500 to-purple-600` sugárzó borostyán-rózsa-lila színátmenet fényes aurával (`shadow-[0_0_10px_rgba(244,63,94,0.55)]`).
+  - **3D Hengeres Üvegfény és Élfény:** Külön belső spekuláris réteg (`from-white/35 via-white/10 to-transparent`) és felső 3D élfény-visszaverődés, amely sosem fedi el vagy nyomja el a Tailwind horizontális színátmeneteit.
+  - **Süllyesztett 3D Ágyazat:** A csúszka alapja mély süllyesztett ágyazatot (`bg-slate-950 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)]`) kapott, így a fényes gradiens élesen kiemelkedik belőle.
+- **Eredmények Csoportosítása Dátum Szerint (`ResultsView.tsx`):**
+  - **Naponkénti Csoportosítás:** A befejezett mérkőzések naptári napok szerint szétbontott kártyacsoportokban jelennek meg, kronologikusan csökkenő sorrendben (legfrissebb elöl).
+  - **Magyar Dátumfejlécek & Naptár Ikon:** Pl. `Ma – 2026. október 21., szerda`, `Tegnap – 2026. október 20., kedd` és korábbi napok a hét napjával kiírva.
+  - **Napi Eredményösszesítő Címkék:** Minden dátumcsoport fejlécében látható az adott nap meccsszáma, valamint a nyertes és vesztes tippek száma.
+- **Eredmények Eltűnésének Megszüntetése:**
+  - **Alapértelmezett "Összes Befejezett Eredmény" Nézet:** A korábbi szűk "Hitelesített Pre-Match" fül helyett a nézet alapértelmezetten az összes lezárt mérkőzést mutatja, így a felhasználó sosem találkozik üres képernyővel.
+  - **Kártyák Egyértelmű Megkülönböztetése:** Minden kártya világos jelvényt kap: `🔒 AUDITÁLT` zöld/borostyán pecsét kriptográfiai lenyomattal, vagy `📁 ARCHÍVUM` jelölés.
+  - **Demó Mód Mentése (`App.tsx`):** Mintamódban is azonnal perzisztálódnak a lezárt mérkőzések a helyi előzménytárba, valamint üres tárhely esetén automatikus kezdőarchívum inicializálódik.
+- **Bővített Adatmegőrzési Kapacitás (`historyService.ts`):**
+  - A korábbi 150 mérkőzéses limit **300 mérkőzésre** emelkedett a `historyService.ts`-ben, tökéletes összhangban a `predictionAuditService.ts` 300-as limitjével.
+  - **Hány napi eredményt ment el?:** Átlagos heti 30–40 európai mérkőzés mellett ez **60–90 nap (2–3 hónap)** teljes meccselőzményét és auditnaplóját őrzi meg a böngésző helyi tárhelyén (`localStorage`, FIFO alapon).
+  - **Közvetlen Export/Import:** Bármikor letölthető a teljes auditnapló egyetlen kattintással JSON-ban, és korlátlan ideig megőrizhető vagy átvihető másik eszközre.
+- **Új Regressziós Tesztcsomag (`src/components/__tests__/resultsGroupingRegression.test.ts`):**
+  - 199 / 199 zöld teszt a teljes projekten.
+
 ## [1.21.1] - 2026-10-20
 
 ### Javítva & CI Pipeline Zöldítés (Fixed & CI Strict Linting)

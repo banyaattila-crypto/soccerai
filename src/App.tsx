@@ -51,7 +51,7 @@ import {
 
 const DEFAULT_API_KEY = '';
 
-import { persistFinishedMatchesToHistory } from './services/historyService';
+import { persistFinishedMatchesToHistory, getArchivedFinishedMatches } from './services/historyService';
 import {
   recordPreMatchPredictions,
   settleAuditPredictions,
@@ -154,6 +154,9 @@ export function App() {
         setIsDemoMode(true);
         setApiSuccessNotice(null);
         setApiErrorNotice(null);
+        // Mintamódban is biztosítjuk az eredmények megőrzését és audit zárását
+        persistFinishedMatchesToHistory(MOCK_MATCHES);
+        settleAuditPredictions(MOCK_MATCHES);
         return;
       }
 
@@ -235,6 +238,10 @@ export function App() {
 
   // Első betöltéskor
   useEffect(() => {
+    // Ha az archív előzménytár még teljesen üres, feltöltjük az induló lezárt mérkőzésekkel
+    if (getArchivedFinishedMatches().length === 0) {
+      persistFinishedMatchesToHistory(MOCK_MATCHES);
+    }
     loadMatches(dataSource, apiKey, apiSportsKey, enableSecondary, false);
   }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches]);
 
