@@ -326,7 +326,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                       onClose();
                       onOpenBankroll();
                     }}
-                    className="flex items-center gap-1 underline font-extrabold text-white hover:text-amber-300 text-[11px] cursor-pointer"
+                    className="btn-link flex items-center gap-1 underline font-extrabold text-white hover:text-amber-300 text-[11px] cursor-pointer"
                   >
                     Megnyitás <ArrowRight className="w-3 h-3" />
                   </button>

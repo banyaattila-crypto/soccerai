@@ -1125,7 +1125,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
               <div className="rounded-2xl bg-mesh-card border border-slate-800/90 overflow-hidden shadow-lg">
                 {displayMode === 'compact' ? (
                   <MatchCompactList
-                    matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    matches={[...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
                     onSelectMatch={onSelectMatch}
                     onCellBet={handleCellBet}
                     betSlipItems={betSlipItems}
@@ -1136,7 +1136,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   />
                 ) : displayMode === 'cards' ? (
                   <MatchCardsList
-                    matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    matches={[...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
                     onSelectMatch={onSelectMatch}
                     onCellBet={handleCellBet}
                     betSlipItems={betSlipItems}
@@ -1146,7 +1146,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                   />
                 ) : (
                   <MatchTable
-                    matches={filteredMatches.sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
+                    matches={[...filteredMatches].sort((a, b) => a.kickoffTime.localeCompare(b.kickoffTime))}
                     onSelectMatch={onSelectMatch}
                     onCellBet={handleCellBet}
                     betSlipItems={betSlipItems}
@@ -1321,7 +1321,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
                   onClick={(e) =>
                     onCellBet(e, match, `${match.homeTeam.name} (1)`, p.homeWin, match.odds.home, '1')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cHome.bg} ${
+                  className={`btn-cell-3d py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cHome.bg} ${
                     is1Selected ? 'ring-2 ring-amber-400 font-bold' : ''
                   }`}
                   title={`Hazai siker: ${p.homeWin}% | Odds: ${match.odds.home}`}
@@ -1335,7 +1335,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
                   onClick={(e) =>
                     onCellBet(e, match, 'Döntetlen (X)', p.draw, match.odds.draw, 'X')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cDraw.bg} ${
+                  className={`btn-cell-3d py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cDraw.bg} ${
                     isXSelected ? 'ring-2 ring-amber-400 font-bold' : ''
                   }`}
                   title={`Döntetlen: ${p.draw}% | Odds: ${match.odds.draw}`}
@@ -1349,7 +1349,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
                   onClick={(e) =>
                     onCellBet(e, match, `${match.awayTeam.name} (2)`, p.awayWin, match.odds.away, '2')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cAway.bg} ${
+                  className={`btn-cell-3d py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cAway.bg} ${
                     is2Selected ? 'ring-2 ring-amber-400 font-bold' : ''
                   }`}
                   title={`Vendég siker: ${p.awayWin}% | Odds: ${match.odds.away}`}
@@ -1363,7 +1363,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
                   onClick={(e) =>
                     onCellBet(e, match, 'Mindkét csapat szerez gólt (BTTS)', p.bttsYes, match.odds.bttsYes, 'BTTS_YES')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cBtts.bg} ${
+                  className={`btn-cell-3d py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cBtts.bg} ${
                     isBttsSelected ? 'ring-2 ring-amber-400 font-bold' : ''
                   }`}
                   title={`BTTS Igen: ${p.bttsYes}% | Odds: ${match.odds.bttsYes}`}
@@ -1385,7 +1385,7 @@ const MatchTable: React.FC<MatchTableProps> = ({
                   onClick={(e) =>
                     onCellBet(e, match, '2.5 gól felett', p.over25, match.odds.over25, 'OVER_25')
                   }
-                  className={`py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cO25.bg} ${
+                  className={`btn-cell-3d py-2 px-2 text-center rounded-lg transition-transform hover:scale-105 cursor-pointer ${cO25.bg} ${
                     isO25Selected ? 'ring-2 ring-amber-400 font-bold' : ''
                   }`}
                   title={`2.5 gól felett: ${p.over25}% | Odds: ${match.odds.over25}`}

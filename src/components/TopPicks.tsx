@@ -482,7 +482,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
               {onSwitchToGrid && (
                 <button
                   onClick={onSwitchToGrid}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer"
+                  className="btn-link text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <span>Összes mérkőzés a Rácsban</span>
                   <ChevronRight className="w-3.5 h-3.5" />

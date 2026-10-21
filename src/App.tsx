@@ -708,7 +708,7 @@ export function App() {
               <span>&copy; 2026 SoccerAI &bull; Minden jog fenntartva.</span>
               <button
                 onClick={() => setAboutOpen(true)}
-                className="font-mono text-amber-400 hover:text-amber-300 font-bold hover:underline"
+                className="btn-link font-mono text-amber-400 hover:text-amber-300 font-bold hover:underline cursor-pointer"
               >
                 v{APP_VERSION}
               </button>

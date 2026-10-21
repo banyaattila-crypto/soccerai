@@ -232,7 +232,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
           </div>
           <button
             onClick={() => setNoticeMessage(null)}
-            className="text-amber-400/80 hover:text-white"
+            className="btn-link text-amber-400/80 hover:text-white cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -758,7 +758,7 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
               </div>
               <button
                 onClick={() => setIsManualModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="btn-link text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

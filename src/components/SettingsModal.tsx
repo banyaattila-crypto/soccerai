@@ -261,7 +261,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClose();
                   onOpenAbout();
                 }}
-                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold hover:underline flex items-center gap-1"
+                className="btn-link text-[11px] text-amber-400 hover:text-amber-300 font-bold hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>Névjegy &amp; Release Notes</span>
                 <span>&rarr;</span>
