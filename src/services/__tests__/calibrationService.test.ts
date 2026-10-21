@@ -5,10 +5,12 @@ import {
   computePerformanceMetrics,
   evaluateEdgeVerificationGate,
   runChronologicalCalibrationAudit,
+  convertAuditRecordsToChronologicalMatches,
   normalCdf,
   calculateOneSidedPValue,
   ChronologicalMatch,
 } from '../calibrationService';
+import type { PredictionAuditRecord } from '../../types/football';
 
 describe('Időrendhelyes Particionálás & Walk-Forward Split (calibrationService)', () => {
   it('szigorúan időrend szerint rendezi a mérkőzéseket és kizárja a lookahead biast', () => {
@@ -280,5 +282,195 @@ describe('Szigorú Piaci Előny Hitelesítési Döntési Fa (Edge Verification G
     // A minta 30 meccses, így szigorúan INSUFFICIENT_SAMPLE kell legyen!
     expect(report.verdict.hasProvenEdge).toBe(false);
     expect(report.verdict.edgeStatus).toBe('INSUFFICIENT_SAMPLE');
+  });
+});
+
+describe('convertAuditRecordsToChronologicalMatches (modelSnapshot integráció)', () => {
+  it('közvetlenül a modelSnapshot.probabilities-ből olvassa ki a valószínűségeket durva felezés helyett', () => {
+    const recordWithSnapshot: PredictionAuditRecord = {
+      id: 'audit-1',
+      matchId: 'm-1',
+      leagueId: 'pl',
+      leagueName: 'Premier League',
+      homeTeam: { name: 'Arsenal' },
+      awayTeam: { name: 'Chelsea' },
+      kickoffDate: '2026-10-21',
+      kickoffTime: '20:00',
+      kickoffTimestamp: 1700000000000,
+      loggedAt: '2026-10-21T18:00:00Z',
+      settled: true,
+      homeScore: 2,
+      awayScore: 1,
+      status: 'WON',
+      profit: 8500,
+      roi: 85,
+      pick: {
+        market: '1',
+        marketLabel: 'Arsenal (1)',
+        odds: 1.85,
+        probability: 58,
+        expectedValue: 7.3,
+      },
+      modelSnapshot: {
+        probabilities: {
+          homeWin: 58,
+          draw: 24,
+          awayWin: 18,
+          over15: 82,
+          over25: 61,
+          over35: 35,
+          bttsYes: 54,
+          fhOver05: 75,
+        },
+      },
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: 'dummy-hash',
+    };
+
+    const matches = convertAuditRecordsToChronologicalMatches([recordWithSnapshot]);
+    expect(matches).toHaveLength(1);
+
+    const m = matches[0];
+    // Pontosan a modelSnapshotban rögzített értékek jelennek meg, nem a régi felezett (100 - 58) / 2 = 21 és 26 értékek!
+    expect(m.modelProbabilities.homeWin).toBe(58);
+    expect(m.modelProbabilities.draw).toBe(24);
+    expect(m.modelProbabilities.awayWin).toBe(18);
+    expect(m.modelProbabilities.over25).toBe(61);
+    expect(m.modelProbabilities.bttsYes).toBe(54);
+  });
+
+  it('ha hiányzik a modelSnapshot, intelligens fallback logikával számol', () => {
+    const recordWithoutSnapshot: PredictionAuditRecord = {
+      id: 'audit-2',
+      matchId: 'm-2',
+      leagueId: 'pd',
+      leagueName: 'La Liga',
+      homeTeam: { name: 'Real Madrid' },
+      awayTeam: { name: 'Barcelona' },
+      kickoffDate: '2026-10-22',
+      kickoffTime: '21:00',
+      kickoffTimestamp: 1700086400000,
+      loggedAt: '2026-10-22T19:00:00Z',
+      settled: true,
+      homeScore: 1,
+      awayScore: 1,
+      status: 'WON',
+      profit: 24000,
+      roi: 240,
+      pick: {
+        market: 'X',
+        marketLabel: 'Döntetlen (X)',
+        odds: 3.40,
+        probability: 30,
+        expectedValue: 2.0,
+      },
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: 'dummy-hash-2',
+    };
+
+    const matches = convertAuditRecordsToChronologicalMatches([recordWithoutSnapshot]);
+    expect(matches).toHaveLength(1);
+    const m = matches[0];
+    expect(m.modelProbabilities.draw).toBe(30);
+    expect(m.modelProbabilities.homeWin).toBe(35);
+    expect(m.modelProbabilities.awayWin).toBe(35);
+  });
+
+  it('szigorúan időrend szerint rendezi a konvertált rekordokat és kiszűri a még lezáratlanokat', () => {
+    const pendingRecord: PredictionAuditRecord = {
+      id: 'audit-pending',
+      matchId: 'm-pending',
+      leagueId: 'pl',
+      leagueName: 'Premier League',
+      homeTeam: { name: 'Man City' },
+      awayTeam: { name: 'Liverpool' },
+      kickoffDate: '2026-10-25',
+      kickoffTime: '15:00',
+      kickoffTimestamp: 1700300000000,
+      loggedAt: '2026-10-25T10:00:00Z',
+      settled: false,
+      status: 'PENDING',
+      profit: 0,
+      roi: 0,
+      pick: {
+        market: '1',
+        marketLabel: 'Hazai',
+        odds: 2.0,
+        probability: 50,
+        expectedValue: 0,
+      },
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: 'dummy-hash-p',
+    };
+
+    const recordLater: PredictionAuditRecord = {
+      id: 'audit-later',
+      matchId: 'm-later',
+      leagueId: 'pl',
+      leagueName: 'Premier League',
+      homeTeam: { name: 'Spurs' },
+      awayTeam: { name: 'Villa' },
+      kickoffDate: '2026-10-22',
+      kickoffTime: '17:30',
+      kickoffTimestamp: 1700086400000,
+      loggedAt: '2026-10-22T10:00:00Z',
+      settled: true,
+      homeScore: 0,
+      awayScore: 2,
+      status: 'LOST',
+      profit: -10000,
+      roi: -100,
+      pick: {
+        market: '1',
+        marketLabel: 'Hazai',
+        odds: 2.1,
+        probability: 50,
+        expectedValue: 5,
+      },
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: 'dummy-hash-l',
+    };
+
+    const recordEarlier: PredictionAuditRecord = {
+      id: 'audit-earlier',
+      matchId: 'm-earlier',
+      leagueId: 'pl',
+      leagueName: 'Premier League',
+      homeTeam: { name: 'Newcastle' },
+      awayTeam: { name: 'Fulham' },
+      kickoffDate: '2026-10-20',
+      kickoffTime: '20:45',
+      kickoffTimestamp: 1699900000000,
+      loggedAt: '2026-10-20T10:00:00Z',
+      settled: true,
+      homeScore: 1,
+      awayScore: 0,
+      status: 'WON',
+      profit: 11000,
+      roi: 110,
+      pick: {
+        market: '1',
+        marketLabel: 'Hazai',
+        odds: 2.1,
+        probability: 52,
+        expectedValue: 9.2,
+      },
+      provenance: 'VERIFIED_PRE_MATCH',
+      auditHash: 'dummy-hash-e',
+    };
+
+    // Fordított sorrendben és függőben lévő tétellel hívjuk
+    const matches = convertAuditRecordsToChronologicalMatches([
+      recordLater,
+      pendingRecord,
+      recordEarlier,
+    ]);
+
+    // A pending rekord kiszűrődött
+    expect(matches).toHaveLength(2);
+    // Szigorú növekvő időrend
+    expect(matches[0].matchId).toBe('m-earlier');
+    expect(matches[1].matchId).toBe('m-later');
+    expect(matches[0].kickoffTimestamp).toBeLessThan(matches[1].kickoffTimestamp);
   });
 });

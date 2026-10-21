@@ -569,7 +569,11 @@ export function runChronologicalCalibrationAudit(
 }
 
 /**
- * Konvertálja a létező pre-match audit rekordokat időrendhelyes mérkőzések listájává
+ * Konvertálja a létező pre-match audit rekordokat időrendhelyes mérkőzések listájává.
+ *
+ * Ha r.modelSnapshot?.probabilities létezik, közvetlenül a kezdés előtt hitelesített
+ * modellvalószínűségeket (homeWin, draw, awayWin, over25, bttsYes) olvassa ki a durva
+ * heurisztikus felezés helyett.
  */
 export function convertAuditRecordsToChronologicalMatches(
   records: PredictionAuditRecord[]
@@ -587,6 +591,48 @@ export function convertAuditRecordsToChronologicalMatches(
     .map((r) => {
       const p = r.pick.probability;
       const o = r.pick.odds;
+      const snap = r.modelSnapshot?.probabilities;
+
+      // Ha létezik elmentett modelSnapshot, abból vesszük a pontos valószínűségeket
+      const homeWinProb = snap?.homeWin !== undefined
+        ? snap.homeWin
+        : (r.pick.market === '1' || r.pick.market === 'HOME_WIN')
+          ? p
+          : Math.round((100 - p) / 2);
+
+      const drawProb = snap?.draw !== undefined
+        ? snap.draw
+        : (r.pick.market === 'X' || r.pick.market === 'DRAW')
+          ? p
+          : 26;
+
+      const awayWinProb = snap?.awayWin !== undefined
+        ? snap.awayWin
+        : (r.pick.market === '2' || r.pick.market === 'AWAY_WIN')
+          ? p
+          : Math.round((100 - p) / 2);
+
+      const over25Prob = snap?.over25 !== undefined
+        ? snap.over25
+        : (r.pick.market === 'OVER_25')
+          ? p
+          : undefined;
+
+      const bttsProb = snap?.bttsYes !== undefined
+        ? snap.bttsYes
+        : (r.pick.market === 'BTTS' || r.pick.market === 'BTTS_YES')
+          ? p
+          : undefined;
+
+      const isHomeMarket = r.pick.market === '1' || r.pick.market === 'HOME_WIN';
+      const isDrawMarket = r.pick.market === 'X' || r.pick.market === 'DRAW';
+      const isAwayMarket = r.pick.market === '2' || r.pick.market === 'AWAY_WIN';
+      const isOver25Market = r.pick.market === 'OVER_25';
+      const isBttsMarket = r.pick.market === 'BTTS' || r.pick.market === 'BTTS_YES';
+
+      const homeOdds = isHomeMarket ? o : Math.round(((1 / (Math.max(5, homeWinProb) / 100)) / 1.06) * 100) / 100;
+      const drawOdds = isDrawMarket ? o : Math.round(((1 / (Math.max(5, drawProb) / 100)) / 1.06) * 100) / 100;
+      const awayOdds = isAwayMarket ? o : Math.round(((1 / (Math.max(5, awayWinProb) / 100)) / 1.06) * 100) / 100;
 
       return {
         matchId: r.matchId,
@@ -600,14 +646,18 @@ export function convertAuditRecordsToChronologicalMatches(
         homeScore: r.homeScore!,
         awayScore: r.awayScore!,
         modelProbabilities: {
-          homeWin: r.pick.market === 'HOME_WIN' ? p : Math.round((100 - p) / 2),
-          draw: r.pick.market === 'DRAW' ? p : 26,
-          awayWin: r.pick.market === 'AWAY_WIN' ? p : Math.round((100 - p) / 2),
+          homeWin: homeWinProb,
+          draw: drawProb,
+          awayWin: awayWinProb,
+          ...(over25Prob !== undefined ? { over25: over25Prob } : {}),
+          ...(bttsProb !== undefined ? { bttsYes: bttsProb } : {}),
         },
         closingOdds: {
-          homeWin: r.pick.market === 'HOME_WIN' ? o : 3.2,
-          draw: 3.4,
-          awayWin: r.pick.market === 'AWAY_WIN' ? o : 3.8,
+          homeWin: homeOdds,
+          draw: drawOdds,
+          awayWin: awayOdds,
+          ...(over25Prob !== undefined ? { over25: isOver25Market ? o : Math.round(((1 / (Math.max(5, over25Prob) / 100)) / 1.06) * 100) / 100 } : {}),
+          ...(bttsProb !== undefined ? { bttsYes: isBttsMarket ? o : Math.round(((1 / (Math.max(5, bttsProb) / 100)) / 1.06) * 100) / 100 } : {}),
         },
       };
     });

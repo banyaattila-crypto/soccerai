@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.22.7';
-export const APP_RELEASE_NAME = 'React Immutabilitás & In-Place Mutációk Felszámolása';
+export const APP_VERSION = '1.22.8';
+export const APP_RELEASE_NAME = 'Kalibráció ModelSnapshot Valószínűségi Integráció';
 export const APP_RELEASE_DATE = '2026-10-21';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,10 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Bemeneti Match Objektumok Immutabilitása (attachCachedRealOddsToMatches): Szigorú másolatképzés az odds, aiPick és quantAnalysis mezőkről, megvédve a mock adatokat és a React állapotot a helyben történő mutációtól és TypeError-tól',
-    'StatsGrid Időrendi Rendezés Optimalizálás: Memoizált sortedFilteredMatches és csoporton belüli rendezés, kizárva a felületi mutációt és a felesleges újrarendezéseket',
-    '3D Logó Bilineáris Interpoláció Javítás: row1 sorból történő mintavételezés a textúra-aliasing teljes megszüntetésére',
-    'Egységesített Csapatnév-Normalizálás: Közös normalizeTeamName segédfüggvény (teamUtils.ts) .slice(0, 5) ütközések nélkül',
-    '172 / 172 Zöld Egységteszt: Új regressziós tesztekkel megerősített Object.freeze immutabilitási és fagyasztás-védelmi ellenőrzés, oxlint 0 hiba',
+    'ModelSnapshot Integráció a Kalibrációban (convertAuditRecordsToChronologicalMatches): Közvetlenül a pre-match auditáláskor elmentett modelSnapshot.probabilities struktúrából olvassa ki a homeWin, draw, awayWin, over25 és bttsYes valószínűségeket durva felezés helyett',
+    'Precíziós Brier-pontszám & ECE Mérés: A kalibrációs statisztika a Dixon-Coles modell által ténylegesen kiszámolt valószínűségeket értékeli ki a valós audit meccseken',
+    'Bemeneti Match Objektumok Immutabilitása: Szigorú másolatképzés az odds, aiPick és quantAnalysis mezőkről, Object.freeze védelemmel',
+    'StatsGrid Időrendi Rendezés Optimalizálás: Memoizált sortedFilteredMatches és csoporton belüli tiszta rendezés',
+    '175 / 175 Zöld Egységteszt: Új regressziós tesztekkel megerősített modelSnapshot kalibrációs konverzió és időrendi rendezés, oxlint 0 hiba',
   ],
 };
