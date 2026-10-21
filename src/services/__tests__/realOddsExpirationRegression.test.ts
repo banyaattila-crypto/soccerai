@@ -5,6 +5,9 @@ import {
   getOddsTtlStatus,
   attachCachedRealOddsToMatches,
   ODDS_CACHE_TTL_MS,
+  pruneOldApiSportsCache,
+  ODDS_CACHE_PREFIX,
+  CACHE_KEY,
 } from '../apiSportsClient';
 import { buildMatchQuantAndPick } from '../predictionEngine';
 import {
@@ -38,9 +41,13 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
 });
 
+if (typeof window === 'undefined') {
+  (globalThis as any).window = globalThis;
+}
+
 describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Regresszió', () => {
   const FIXTURE_ID = 555123;
-  const CACHE_KEY = `soccerai_odds_cache_${FIXTURE_ID}`;
+  const FIXTURE_ODDS_CACHE_KEY = `soccerai_odds_cache_${FIXTURE_ID}`;
 
   beforeEach(() => {
     localStorage.clear();
@@ -176,7 +183,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       const sample = createSampleRealOdds(cachedTime);
 
       localStorage.setItem(
-        CACHE_KEY,
+        FIXTURE_ODDS_CACHE_KEY,
         JSON.stringify({ timestamp: cachedTime, data: sample })
       );
 
@@ -199,7 +206,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       const sample = createSampleRealOdds(cachedTime);
 
       localStorage.setItem(
-        CACHE_KEY,
+        FIXTURE_ODDS_CACHE_KEY,
         JSON.stringify({ timestamp: cachedTime, data: sample })
       );
 
@@ -223,7 +230,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       const sample = createSampleRealOdds(cachedTime);
 
       localStorage.setItem(
-        CACHE_KEY,
+        FIXTURE_ODDS_CACHE_KEY,
         JSON.stringify({ timestamp: cachedTime, data: sample })
       );
 
@@ -247,7 +254,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       const sample = createSampleRealOdds(cachedTime);
 
       localStorage.setItem(
-        CACHE_KEY,
+        FIXTURE_ODDS_CACHE_KEY,
         JSON.stringify({ timestamp: cachedTime, data: sample })
       );
 
@@ -409,6 +416,84 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
 
       expect(onlyReal.length).toBeGreaterThan(0);
       expect(onlyReal.every((o) => o.isRealOdds === true)).toBe(true);
+    });
+  });
+
+  describe('pruneOldApiSportsCache - localStorage Kvóta és Gyorsítótár Tisztítás', () => {
+    const TODAY_STR = '2026-10-21';
+    const YESTERDAY_STR = '2026-10-20';
+
+    it('törli a lejárt odds-cache bejegyzéseket az új ODDS_CACHE_PREFIX előtaggal', () => {
+      const now = Date.now();
+      const freshKey = `${ODDS_CACHE_PREFIX}1001`;
+      const expiredKey = `${ODDS_CACHE_PREFIX}1002`;
+
+      // 10 perces friss odds
+      localStorage.setItem(
+        freshKey,
+        JSON.stringify({ timestamp: now - 10 * 60 * 1000, data: { fixtureId: 1001 } })
+      );
+
+      // 25 órás elavult odds
+      localStorage.setItem(
+        expiredKey,
+        JSON.stringify({ timestamp: now - 25 * 60 * 60 * 1000, data: { fixtureId: 1002 } })
+      );
+
+      pruneOldApiSportsCache(TODAY_STR);
+
+      expect(localStorage.getItem(freshKey)).not.toBeNull();
+      expect(localStorage.getItem(expiredKey)).toBeNull();
+    });
+
+    it('törli a régebbi legacy api_sports_odds_ és soccerai_apisports_cache_v5_ kulcsokat', () => {
+      const now = Date.now();
+      const legacyOddsKey = 'api_sports_odds_999';
+      const legacyFixtureKey = 'soccerai_apisports_cache_v5_2026-10-19';
+
+      localStorage.setItem(
+        legacyOddsKey,
+        JSON.stringify({ timestamp: now - 30 * 60 * 60 * 1000, data: {} })
+      );
+      localStorage.setItem(legacyFixtureKey, JSON.stringify({ data: [] }));
+
+      pruneOldApiSportsCache(TODAY_STR);
+
+      expect(localStorage.getItem(legacyOddsKey)).toBeNull();
+      expect(localStorage.getItem(legacyFixtureKey)).toBeNull();
+    });
+
+    it('megőrzi az aktuális napi meccscache-t, de törli a korábbi napok meccscache-ét', () => {
+      const todayFixtureKey = `${CACHE_KEY}_${TODAY_STR}`;
+      const yesterdayFixtureKey = `${CACHE_KEY}_${YESTERDAY_STR}`;
+
+      localStorage.setItem(todayFixtureKey, JSON.stringify({ data: [{ id: 1 }] }));
+      localStorage.setItem(yesterdayFixtureKey, JSON.stringify({ data: [{ id: 2 }] }));
+
+      pruneOldApiSportsCache(TODAY_STR);
+
+      expect(localStorage.getItem(todayFixtureKey)).not.toBeNull();
+      expect(localStorage.getItem(yesterdayFixtureKey)).toBeNull();
+    });
+
+    it('agresszív módban eltávolítja a 2 óránál régebbi vagy lejárt oddsokat', () => {
+      const now = Date.now();
+      const freshKey = `${ODDS_CACHE_PREFIX}2001`;
+      const threeHoursOldKey = `${ODDS_CACHE_PREFIX}2002`;
+
+      localStorage.setItem(
+        freshKey,
+        JSON.stringify({ timestamp: now - 15 * 60 * 1000, data: { fixtureId: 2001 } })
+      );
+      localStorage.setItem(
+        threeHoursOldKey,
+        JSON.stringify({ timestamp: now - 3 * 60 * 60 * 1000, data: { fixtureId: 2002 } })
+      );
+
+      pruneOldApiSportsCache(TODAY_STR, true);
+
+      expect(localStorage.getItem(freshKey)).not.toBeNull();
+      expect(localStorage.getItem(threeHoursOldKey)).toBeNull();
     });
   });
 });

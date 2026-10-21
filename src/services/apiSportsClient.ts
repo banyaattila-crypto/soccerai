@@ -22,9 +22,9 @@ import {
 } from './quotaService';
 
 export const API_SPORTS_DEFAULT_KEY = '';
-const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v2';
+export const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v2';
 const FIXTURE_LOOKUP_KEY = 'soccerai_fixture_lookup_v1';
-const ODDS_CACHE_PREFIX = 'soccerai_odds_cache_';
+export const ODDS_CACHE_PREFIX = 'soccerai_odds_cache_';
 export const CACHE_TTL_MS = 45 * 60 * 1000; // 45 perces intelligens gyorsítótár
 export const ODDS_CACHE_TTL_MS = 60 * 60 * 1000; // 60 perces odds gyorsítótár
 
@@ -285,31 +285,44 @@ interface ApiSportsOddsResponse {
  * Tisztítja a korábbi napokról megmaradt API-Sports gyorsítótárakat és elavult odds-cache bejegyzéseket,
  * megelőzve a böngésző 5 MB-os localStorage kvótájának kimerülését.
  */
-export function pruneOldApiSportsCache(keepDateStr: string): void {
-  if (typeof window === 'undefined' || !window.localStorage) return;
+export function pruneOldApiSportsCache(keepDateStr: string, aggressive = false): void {
+  if (typeof localStorage === 'undefined') return;
   try {
     const keysToRemove: string[] = [];
     const keepKey = `${CACHE_KEY}_${keepDateStr}`;
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const cutoffTime = aggressive
+      ? Date.now() - 2 * 60 * 60 * 1000
+      : oneDayAgo;
 
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (!key) continue;
 
-      // Korábbi napok meccscache-ének törlése
-      if (key.startsWith(CACHE_KEY) && key !== keepKey) {
+      // 1. Korábbi napok meccscache-ének és régebbi verziók (pl. soccerai_apisports_cache_v5_, v1) törlése
+      if (
+        (key.startsWith(CACHE_KEY) && key !== keepKey) ||
+        key.startsWith('soccerai_apisports_cache_') ||
+        (key.startsWith('soccerai_apisports_fixtures_cache_') && key !== keepKey)
+      ) {
         keysToRemove.push(key);
+        continue;
       }
 
-      // 24 óránál régebbi odds cache-ek törlése
-      if (key.startsWith('api_sports_odds_')) {
+      // 2. Lejárt odds cache-ek törlése (soccerai_odds_cache_* és legacy api_sports_odds_*)
+      if (key.startsWith(ODDS_CACHE_PREFIX) || key.startsWith('api_sports_odds_')) {
         try {
           const raw = localStorage.getItem(key);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (typeof parsed.timestamp === 'number' && parsed.timestamp < oneDayAgo) {
+            const ts = typeof parsed.timestamp === 'number' ? parsed.timestamp : 0;
+            if (ts < cutoffTime) {
+              keysToRemove.push(key);
+            } else if (aggressive && parsed.data?.expiresAt && new Date(parsed.data.expiresAt).getTime() < Date.now()) {
               keysToRemove.push(key);
             }
+          } else {
+            keysToRemove.push(key);
           }
         } catch {
           keysToRemove.push(key);
@@ -616,7 +629,16 @@ export async function fetchApiSportsMatches(
       JSON.stringify({ timestamp: Date.now(), data: matches })
     );
   } catch (err) {
-    console.warn('Nem sikerült elmenteni az API-Sports cache-t:', err);
+    console.warn('Nem sikerült elmenteni az API-Sports cache-t (helyfelszabadítás indul):', err);
+    try {
+      pruneOldApiSportsCache(dateStr, true);
+      localStorage.setItem(
+        cacheKeyWithDate,
+        JSON.stringify({ timestamp: Date.now(), data: matches })
+      );
+    } catch {
+      // Ha még a takarítás után sem fér el, a memóriabeli eredményt visszaadjuk
+    }
   }
 
   return matches;
@@ -850,7 +872,16 @@ export async function fetchFixtureOdds(
       JSON.stringify({ timestamp: nowMs, data: result })
     );
   } catch (err) {
-    console.warn('Nem sikerült elmenteni az odds cache-t:', err);
+    console.warn('Nem sikerült elmenteni az odds cache-t (helyfelszabadítás indul):', err);
+    try {
+      pruneOldApiSportsCache('', true);
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({ timestamp: nowMs, data: result })
+      );
+    } catch {
+      // Helyhiány esetén a friss memóriabeli objektummal dolgozunk tovább
+    }
   }
 
   return result;
