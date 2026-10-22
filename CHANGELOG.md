@@ -3,6 +3,22 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.9] - 2026-10-22
+
+### Hozzáadva & Továbbfejlesztve (Added & Enhanced) - Részletes Meccs Magyarázat és Szakértői Elemzés
+- **Szakértői Elemzés & Meccs Magyarázat Kártya (`MatchDetailModal.tsx`, `MatchExplanationCard.tsx`, `matchExplanationService.ts`):**
+  - **Emberi nyelvezetű, gazdag meccselemzés:** A korábbi egyetlen, száraz matematikai kódmondat (`Piacfüggő λ-rács teszt: ROBUSZTUS...`) helyett a mérkőzés modál megnyitásakor egy átfogó, természetes magyar nyelvű sportszakértői meccselemzés fogadja a felhasználót.
+  - **Átfogó Narratíva & Címsor:** A csapatok erejét, favorit státuszát, aktuális tabella-helyezését és esélyeit összefoglaló, kiemelt aranyfényű cím és 2-3 mondatos összefoglaló.
+  - **Csapatdinamika, Helyezés és H2H Múlt:** Részletes forma-összehasonlítás (utolsó 5 mérkőzés győzelmi/döntetlen/vereség aránya), tabella-pozíciók és az egymás elleni múltbéli eredmények hatása a várható játékmenetre.
+  - **Gólvárás & Taktikai Tempó (xG & Poisson Modell):** Az összetett elvárt gólok (xG), a 2.5 gól feletti/alatti kimenetelek esélyei, a BTTS (mindkét csapat szerez gólt) valószínűsége és a mérkőzés ritmusa.
+  - **Kiemelt Tipp Részletes Indoklása:** Részletesen megindokolja, hogy miért az adott piacot (1X2, BTTS, Over/Under 2.5, BTTS & Over 2.5) választotta az algoritmus, és miben rejlik a piaci oddsokhoz viszonyított matematikai értéke.
+  - **4 Strukturált Kulcstényező:** Erőviszony & Formaindex, Gólprofil & Tempó, Fogadási Fókusz, valamint Taktikai Megjegyzés (pl. első félidei gólnyomás).
+  - **Kockázati Besorolás & Figyelmeztetés:** Alacsony / Közepes / Magas volatilitási címke és szakértői kockázatkezelési tanács.
+  - **Lenyitható Algoritmus Diagnosztika:** Haladó felhasználóknak egyetlen kattintással elérhető a kvantitatív λ-rács stabilitás és a Shin bukmékeri árrés részletezése.
+- **Automatizált Regressziós Tesztcsomag (`matchExplanationService.test.ts`, `matchExplanationRegression.test.tsx`):**
+  - 7 új automatizált teszt ellenőrzi a narratív generátort és a modál komponens szerver-oldali renderelését különböző piacok és hiányos adatok esetén.
+  - A teljes tesztcsomag 21 fájlban 210 / 210 teszttel zöld.
+
 ## [1.24.8] - 2026-10-22
 
 ### Javítva & Továbbfejlesztve (Fixed & Enhanced) - Intelligens Scanner Megjelenítés

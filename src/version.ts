@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.24.8';
-export const APP_RELEASE_NAME = 'Intelligens Scanner Megjelenítés és Valós Odds Tájékoztató';
+export const APP_VERSION = '1.24.9';
+export const APP_RELEASE_NAME = 'Meccs Szakértői Elemzés és Részletes Magyarázat';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,12 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Klasszikus Stadionzöld és Sportfogadási Arany Százaléksávok (MatchCompactList.tsx): A türkiz, rózsaszín és lila árnyalatok teljes eltávolítása',
-    '1. Mutató (Fő piac): Mély, elegáns stadion fűzöld és smaragd színátmenet (emerald-600 -> green-500) finom zöld aurával',
-    '2. Mutató (Másodlagos piac): Meleg prémium sportfogadási arany és borostyán színátmenet (amber-600 -> yellow-500) meleg arany aurával',
-    '3D Taktilis Mélység: Süllyesztett ágyazat, felső élfény és kristálytiszta fehér kontrasztos feliratok',
-    '199 / 199 Zöld Teszt: Minden tesztcsomag és szigorú típusellenőrzés zöld',
+    'Szakértői Elemzés & Meccs Magyarázat (MatchExplanationCard.tsx): Bármely mérkőzés megnyitásakor részletes, természetes magyar nyelvű taktikai elemzés',
+    'Átfogó meccsnarratíva: Erőviszonyok, favorit státusz, tabella-helyezések és formaelemzés',
+    'Góldinamika & Tempó: Dixon–Coles Poisson és xG eloszlás alapján kalkulált gólvárás és taktikai meccsritmus',
+    'Tipp Részletes Indoklása: Miért pont azt a piacot választotta az algoritmus (1X2, BTTS, Over/Under 2.5, kombinált piacok)',
+    'Négy Strukturált Kulcstényező & Kockázatelemzés: Erőviszony, gólprofil, fogadási fókusz, taktikai megjegyzés és kockázati szint',
+    'Lenyitható matematikai diagnosztika: Kvantitatív adatok és λ-rács stabilitás egyetlen kattintással elérhető haladó felhasználóknak',
+    '210 / 210 Zöld Teszt: Teljes körű unit és regressziós tesztfedettség',
   ],
 };

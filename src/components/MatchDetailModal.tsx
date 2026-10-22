@@ -24,6 +24,7 @@ import {
 } from '../services/apiSportsClient';
 import { ScoreLabH2HCard } from './ScoreLabH2HCard';
 import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
+import { MatchExplanationCard } from './MatchExplanationCard';
 
 interface MatchDetailModalProps {
   match: Match | null;
@@ -313,31 +314,8 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           {/* Tab 1: Fő Áttekintés & Élő Oddsok */}
           {activeTab === 'overview' && (
             <>
-              {/* AI Elemzői összefoglaló kártya */}
-              {match.aiPick && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-[#0A101F] border border-amber-500/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4" />
-                  MI Predikciós Értékelés
-                </span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Bizalom: {match.aiPick.confidence}/10
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                {match.aiPick.reasoning}
-              </p>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
-                <span className="text-slate-400">
-                  Kiemelt tipp: <strong className="text-white">{match.aiPick.marketLabel}</strong>
-                </span>
-                <span className="text-amber-300 font-bold">
-                  {!realOdds && match.aiPick.isSimulatedOdds !== false ? 'Becsült odds' : 'Odds'}: {match.aiPick.odds.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          )}
+              {/* Szakértői Elemzés & Meccs Magyarázat Kártya */}
+              <MatchExplanationCard match={match} realOddsActive={isRealOddsActive} />
 
           {/* Kvantitatív Modellezés & Szűrők (Dixon-Coles & Shin) */}
           {match.quantAnalysis && (
