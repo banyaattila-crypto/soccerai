@@ -61,3 +61,11 @@ describe.each([
     expect(await call(handler, {})).toBe(403);
   });
 });
+
+describe('idegen soccerai*.vercel.app projekt', () => {
+  it('Origin alapján nem érheti el a proxyt (a preview-k same-origin hívása Sec-Fetch-Site alapján megy)', async () => {
+    expect(await call(matchesHandler, { origin: 'https://soccerai-evil.vercel.app' })).toBe(403);
+    expect(await call(apisportsHandler, { origin: 'https://soccerai-evil.vercel.app' })).toBe(403);
+    expect(await call(apisportsHandler, { 'sec-fetch-site': 'same-origin', referer: 'https://soccerai-abc123-team.vercel.app/' })).toBe(200);
+  });
+});

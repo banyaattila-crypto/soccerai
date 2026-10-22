@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.32.0';
-export const APP_RELEASE_NAME = 'Keményített Proxy és Dátumos Kártyák';
+export const APP_VERSION = '1.33.0';
+export const APP_RELEASE_NAME = 'Mintaadat Nélkül';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,9 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Minden mérkőzéskártyán dátum és időpont látszik (pl. "10. 22. 21:00"), élő és lefújt meccsnél is',
-    'Proxy: a böngészőből nem igazolható (Origin, Sec-Fetch-Site vagy Referer nélküli) kérés nem éri el a szerveroldali API-kulcsot',
-    'Audit ellenőrző összeg: SHA-256 (a régi 53 bites helyett); a régi rekordok érvényesek maradnak. A felirat pontosítva: sérülést jelez, nem hamisítás-biztos',
-    'PIN: a felirat képernyőzárként pontosítva; CSP és biztonsági fejlécek (vercel.json); a mintaadat lusta betöltésű (a fő csomag ~20 kB-tal kisebb)',
-    '303 / 303 zöld teszt (33 tesztfájl)',
+    'A mintaadat (szimulációs mód, "Offline Demó") teljesen megszűnt: nincs beépített mintameccs, az app csak valós forrásból dolgozik',
+    'Egyszeri takarítás: a korábbi szimulációs mód nyomai (archívum, audit-napló, szelvény-piszkozat) törlődnek a böngészőből, a valós rekordok érintetlenek',
+    'Proxy: idegen "soccerai*.vercel.app" nevű projekt oldala nem érheti el a szerveroldali API-kulcsot (a saját preview-k same-origin hívása működik)',
+    '307 / 307 zöld teszt (34 tesztfájl)',
   ],
 };

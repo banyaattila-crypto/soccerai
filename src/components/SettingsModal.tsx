@@ -25,13 +25,11 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenAbout?: () => void;
-  onSaveConfig?: (source: 'builtin' | 'api', key: string, apiSportsKey?: string, enableSecondary?: boolean) => void;
+  onSaveConfig?: (source: 'api', key: string, apiSportsKey?: string, enableSecondary?: boolean) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenAbout, onSaveConfig }) => {
-  const [dataSource, setDataSource] = useState<'builtin' | 'api'>(() => {
-    return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'api';
-  });
+  const [dataSource, setDataSource] = useState<'api'>('api');
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('focitipp_apikey') || '';
   });
@@ -203,7 +201,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           {/* Adatforrás választó */}
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
-              Adatforrás & Szimulációs Mód
+              Adatforrás
             </label>
 
             <div className="space-y-2">
@@ -235,33 +233,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </div>
               </label>
 
-              <label
-                onClick={() => setDataSource('builtin')}
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
-                  dataSource === 'builtin'
-                    ? 'bg-amber-500/10 border-amber-500/50 text-white'
-                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="datasource"
-                  checked={dataSource === 'builtin'}
-                  onChange={() => setDataSource('builtin')}
-                  className="mt-1 text-amber-500 focus:ring-amber-500"
-                />
-                <div className="space-y-0.5">
-                  <div className="text-xs font-extrabold text-white flex items-center gap-2">
-                    <span>Beépített Offline Szimulációs Motor</span>
-                    <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-medium">
-                      Offline Demó
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Előre definiált minta rangadók és tesztadatok (internetkapcsolattól és API rátakorlátoktól független).
-                  </div>
-                </div>
-              </label>
             </div>
           </div>
 

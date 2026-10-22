@@ -278,8 +278,7 @@ export interface BankrollSummary {
 
 export type PredictionProvenance =
   | 'VERIFIED_PRE_MATCH'    // Kezdőrúgás előtt naplózva, megváltoztathatatlan audit bejegyzés
-  | 'UNVERIFIED_HISTORICAL' // Kezdés után/utólag beérkezett vagy korábbi nem auditált mérkőzés
-  | 'DEMO_MOCK';             // Szimulációs demó mintaadat
+  | 'UNVERIFIED_HISTORICAL'; // Kezdés után/utólag beérkezett vagy korábbi nem auditált mérkőzés
 
 export interface PredictionAuditRecord {
   id: string;               // pl. audit-m1234-1718000000

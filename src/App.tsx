@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { LEAGUES } from './data/leagues';
+import { purgeLegacyMockData } from './services/legacyMockPurge';
 
-/** A mintaadat (szimulációs mód, induló archívum) csak szükség esetén töltődik be, nem része a fő csomagnak. */
-const loadMockMatches = (): Promise<Match[]> => import('./data/mockMatches').then((m) => m.MOCK_MATCHES);
+// Egyszeri takarítás az első renderelés előtt: a korábbi szimulációs mód nyomai (archívum, audit-napló) törlődnek
+purgeLegacyMockData();
 import { fetchLiveMatches, getPendingLeagueModelCount } from './services/footballDataApi';
 import {
   fetchApiSportsMatches,
@@ -55,7 +56,7 @@ import {
 
 const DEFAULT_API_KEY = '';
 
-import { persistFinishedMatchesToHistory, getArchivedFinishedMatches } from './services/historyService';
+import { persistFinishedMatchesToHistory } from './services/historyService';
 import {
   recordPreMatchPredictions,
   settleAuditPredictions,
@@ -63,7 +64,6 @@ import {
 } from './services/predictionAuditService';
 
 export function App() {
-  // Szimulációs módban a mintameccsek az első betöltéskor (loadMatches) érkeznek, lusta importtal
   const [matches, setMatches] = useState<Match[]>([]);
   // Alapértelmezett fül: Napi Top Tippek ('picks')
   const [activeTab, setActiveTab] = useState<AppTab>('picks');
@@ -92,9 +92,7 @@ export function App() {
   }, [betSlipItems]);
 
   // API állapotok
-  const [dataSource, setDataSource] = useState<'builtin' | 'api'>(() => {
-    return (localStorage.getItem('focitipp_datasource') as 'builtin' | 'api') || 'api';
-  });
+  const [dataSource, setDataSource] = useState<'api'>('api');
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem('focitipp_apikey') || DEFAULT_API_KEY;
   });
@@ -107,7 +105,6 @@ export function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiSuccessNotice, setApiSuccessNotice] = useState<string | null>(null);
   const [apiErrorNotice, setApiErrorNotice] = useState<string | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   // 6-jegyű PIN biztonsági zárolás állapotok
   const [pinEnabled, setPinEnabled] = useState<boolean>(() => isPinEnabled());
@@ -149,7 +146,7 @@ export function App() {
   const modelRetryCountRef = useRef(0);
   const modelRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadMatchesRef = useRef<
-    ((source: 'builtin' | 'api', fbKey: string, sportsKey?: string, secEnabled?: boolean, forceRefresh?: boolean, apiSportsMaxAgeMs?: number) => Promise<void>) | null
+    ((source: 'api', fbKey: string, sportsKey?: string, secEnabled?: boolean, forceRefresh?: boolean, apiSportsMaxAgeMs?: number) => Promise<void>) | null
   >(null);
 
   useEffect(() => {
@@ -161,7 +158,7 @@ export function App() {
   // Élő meccsek betöltése (Football-Data.org Top ligák + API-Sports másodosztályok és NB I)
   const loadMatches = useCallback(
     async (
-      source: 'builtin' | 'api',
+      source: 'api',
       fbKey: string,
       sportsKey: string = apiSportsKey,
       secEnabled: boolean = enableSecondary,
@@ -169,19 +166,6 @@ export function App() {
       /** Automatikus frissítésnél a másodlagos (API-Sports) gyorsítótár maximális kora; megadva nem kényszerítjük a lekérést */
       apiSportsMaxAgeMs?: number
     ) => {
-      if (source === 'builtin') {
-        // Kizárólag akkor töltünk be mintát, ha a felhasználó kifejezetten a Szimulációs Módot választotta!
-        const mockMatches = await loadMockMatches();
-        setMatches(mockMatches);
-        setIsDemoMode(true);
-        setApiSuccessNotice(null);
-        setApiErrorNotice(null);
-        // Mintamódban is biztosítjuk az eredmények megőrzését és audit zárását
-        persistFinishedMatchesToHistory(mockMatches);
-        settleAuditPredictions(mockMatches);
-        return;
-      }
-
       setIsLoading(true);
       setApiErrorNotice(null);
       try {
@@ -236,7 +220,7 @@ export function App() {
           // Valós gyorsítótárazott bukmékeri oddsok és lejárati idők hozzácsatolása
           const enhanced = attachCachedRealOddsToMatches(combined);
           setMatches(markStaleLive(enhanced));
-          setIsDemoMode(false);
+          
           setApiErrorNotice(null);
           
           // 1. Kezdés előtti predikciók megváltoztathatatlan rögzítése az audit naplóba
@@ -263,7 +247,7 @@ export function App() {
           scheduleRetry(true);
           // NEM helyettesítünk be kamu meccseket!
           setMatches([]);
-          setIsDemoMode(false);
+          
           setApiSuccessNotice(null);
           setApiErrorNotice(
             'Nem érkezett valós mérkőzés az API-tól a megadott időszakra (vagy a lekérési kvóta épp pihen). Nem töltünk be kamu adatokat. Kérlek várj pár másodpercet és kattints az újratöltésre!'
@@ -272,7 +256,7 @@ export function App() {
       } catch (err: unknown) {
         console.error('API lekérési hiba:', err);
         setMatches([]);
-        setIsDemoMode(false);
+        
         setApiSuccessNotice(null);
         const errMsg = err instanceof Error ? err.message : 'Ismeretlen hálózati hiba';
         setApiErrorNotice(
@@ -291,10 +275,6 @@ export function App() {
 
   // Első betöltéskor
   useEffect(() => {
-    // Ha az archív előzménytár még teljesen üres, feltöltjük az induló lezárt mérkőzésekkel
-    if (getArchivedFinishedMatches().length === 0) {
-      void loadMockMatches().then(persistFinishedMatchesToHistory);
-    }
     loadMatches(dataSource, apiKey, apiSportsKey, enableSecondary, false);
   }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches]);
 
@@ -364,7 +344,7 @@ export function App() {
   };
 
   const handleSaveConfig = (
-    newSource: 'builtin' | 'api',
+    newSource: 'api',
     newKey: string,
     newSportsKey?: string,
     newSecEnabled?: boolean
@@ -571,7 +551,7 @@ export function App() {
           setActiveTab(tab);
           if (tab === 'bankroll') updateBankrollState();
         }}
-        isLiveApi={dataSource === 'api' && !isDemoMode}
+        isLiveApi={dataSource === 'api'}
         isLoading={isLoading}
         onRefresh={handleRefresh}
         currentBankroll={currentBankroll}
@@ -591,16 +571,6 @@ export function App() {
           >
             Frissítés most
           </button>
-        </div>
-      )}
-
-      {/* Demó adat / Mock fallback figyelmeztető sáv */}
-      {isDemoMode && (
-        <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-300 font-bold flex items-center justify-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>
-            Demó adat (szimulált mód): A megjelenített mérkőzések, csapaterősségek és szorzók beépített mintaadatok.
-          </span>
         </div>
       )}
 

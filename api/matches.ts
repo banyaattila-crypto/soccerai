@@ -26,7 +26,6 @@ const ALLOWED_ORIGINS = new Set([
   'http://127.0.0.1:3000',
 ]);
 
-const VERCEL_PREVIEW_REGEX = /^https:\/\/soccerai[a-z0-9-]*\.vercel\.app$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const SEASON_REGEX = /^\d{4}$/;
 
@@ -72,7 +71,9 @@ function checkRateLimit(ip: string): boolean {
 
 function isOriginAllowed(origin: string | undefined): boolean {
   if (!origin) return false;
-  return ALLOWED_ORIGINS.has(origin) || VERCEL_PREVIEW_REGEX.test(origin);
+  // Csak a saját éles/fejlesztői origin: a Vercel preview-k same-origin hívásnál Sec-Fetch-Site alapján átmennek,
+  // idegen (soccerai*.vercel.app nevű) projekt oldala viszont nem érheti el a szerveroldali kulcsot
+  return ALLOWED_ORIGINS.has(origin);
 }
 
 function headerValue(headers: Record<string, string | string[] | undefined>, name: string): string | undefined {

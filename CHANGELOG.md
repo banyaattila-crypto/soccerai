@@ -3,6 +3,16 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.33.0] - 2026-10-22
+
+### Eltávolítva (Removed) - Mintaadat
+A beépített mintaadat (`src/data/mockMatches.ts`), a "Beépített Offline Szimulációs Motor" adatforrás és a demó-sáv megszűnt. Az app kizárólag valós forrásból (Football-Data.org, API-Sports) dolgozik. Az üres előzménytár többé nem töltődik fel mintameccsekkel. A liga-lista külön fájlban él (`src/data/leagues.ts`).
+- **Egyszeri takarítás (`legacyMockPurge.ts`):** a korábbi verziók a szimulációs mód mintameccseit (`m-today-*`, `m-yest-*`, `m-tom-*`) az archívumba, az audit-naplóba és a szelvény-piszkozatba is beírhatták; ezeket az első indításkor töröljük, a valós rekordok érintetlenek. A böngészőben megjegyzett "builtin" adatforrás `api`-ra áll.
+
+### Biztonság (Security)
+- **Proxy:** a `soccerai*.vercel.app` Origin-minta bárki által regisztrálható névre is illett, így idegen oldal a böngészőből hívhatta a proxyt. A minta megszűnt; csak a saját éles és helyi fejlesztői Origin engedett. A saját preview-k same-origin hívása a `Sec-Fetch-Site` alapján továbbra is működik.
+- **Tesztek:** 4 új teszt (takarítás, idegen projekt); összesen 34 fájlban 307 / 307 zöld.
+
 ## [1.32.0] - 2026-10-22
 
 ### Hozzáadva (Added) - Dátum a kártyákon
