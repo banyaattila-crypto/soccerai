@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   ShieldCheck,
   Calculator,
@@ -6,14 +6,12 @@ import {
   Scale,
   Layers,
   Sparkles,
-  BarChart3,
   AlertTriangle,
   CheckCircle,
   FlaskConical,
   Zap,
 } from 'lucide-react';
-import { runChronologicalCalibrationAudit } from '../services/calibrationService';
-import { ReliabilityChart } from './ReliabilityChart';
+import { BacktestSection } from './BacktestSection';
 
 interface MethodologyViewProps {
   onGoToGrid: () => void;
@@ -24,11 +22,6 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
   onGoToGrid,
   onGoToPicks,
 }) => {
-  const auditReport = useMemo(() => {
-    return runChronologicalCalibrationAudit();
-  }, []);
-
-  const { calibration, performance, verdict } = auditReport;
   return (
     <section className="py-6 sm:py-8 bg-transparent w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -195,190 +188,8 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
             </div>
           </div>
 
-          {/* 6. Időrendhelyes Kalibráció, Brier-Pontszám & Piaci Él Hitelesítés */}
-          <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-4 md:col-span-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-amber-400 font-extrabold text-base">
-                <BarChart3 className="w-5 h-5 text-amber-400" />
-                <h4>6. Időrendhelyes Kalibráció, Brier Score &amp; Piaci Él Hitelesítés</h4>
-              </div>
-              <span className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">
-                Vágási dátum (T_split): <strong className="text-white">{auditReport.splitDate}</strong>
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              A pénzügyi és sportfogadási kvantitatív modellezés alapszabálya: <strong>nem létezik igazolt piaci előny időrendhelyes (chronological walk-forward), szigorúan elkülönített out-of-sample tesztelés nélkül</strong>. A véletlenszerű keresztvalidáció adatcsorgást (lookahead bias) okoz. A modell predikcióit valós időrendi szekvenciában vetjük össze a záró oddsokkal (CLV) és a tényleges kimenetelekkel.
-            </p>
-
-            {/* Döntési kapu sáv: Szigorú előny-hitelesítés */}
-            <div
-              className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
-                verdict.hasProvenEdge
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                {verdict.hasProvenEdge ? (
-                  <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                )}
-                <div className="space-y-1">
-                  <h5 className="font-extrabold text-sm">{verdict.verdictTitle}</h5>
-                  <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
-                    {verdict.verdictDescription}
-                  </p>
-                  <p className="text-[11px] font-mono font-bold pt-1 opacity-90">
-                    {verdict.claimStatusDisclaimer}
-                  </p>
-                </div>
-              </div>
-
-              <div className="shrink-0 text-right bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                  Mintaméret Haladás
-                </span>
-                <span className="text-sm font-black text-amber-400">
-                  {auditReport.outOfSampleCount} / {verdict.requiredSampleSize} meccs
-                </span>
-                <div className="w-24 bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
-                  <div
-                    className="bg-amber-400 h-full rounded-full"
-                    style={{ width: `${verdict.sampleSufficiencyPct}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Fő Kalibrációs és Statisztikai Mutatók Rács */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-              {/* Brier Score */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                  1X2 Brier-Pontszám
-                </span>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="text-xl font-black text-white">{calibration.brierScore}</span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    (bázis: {calibration.naiveBrierScore})
-                  </span>
-                </div>
-                <span className="text-[10px] text-emerald-400 block mt-1 font-semibold">
-                  BSS: +{(calibration.brierSkillScore * 100).toFixed(1)}% hozzáadott érték
-                </span>
-              </div>
-
-              {/* Várható Kalibrációs Hiba (ECE) */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                  Kalibrációs Hiba (ECE)
-                </span>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="text-xl font-black text-amber-400">
-                    {(calibration.expectedCalibrationError * 100).toFixed(1)}%
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    (max: {(calibration.maxCalibrationError * 100).toFixed(1)}%)
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-300 block mt-1">
-                  Státusz: <strong className="text-teal-300">{calibration.calibrationVerdict}</strong>
-                </span>
-              </div>
-
-              {/* Out-of-Sample ROI */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                  Out-of-Sample Realizált ROI
-                </span>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span
-                    className={`text-xl font-black ${
-                      performance.flatStakeRoiPct >= 0 ? 'text-emerald-400' : 'text-red-400'
-                    }`}
-                  >
-                    {performance.flatStakeRoiPct > 0 ? `+${performance.flatStakeRoiPct}%` : `${performance.flatStakeRoiPct}%`}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    (fix tét)
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 block mt-1">
-                  Negyed-Kelly ROI: <strong className="text-white">{performance.quarterKellyRoiPct > 0 ? `+${performance.quarterKellyRoiPct}%` : `${performance.quarterKellyRoiPct}%`}</strong>
-                </span>
-              </div>
-
-              {/* Statisztikai Szignifikancia (Z-score & p-érték) */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                  Szignifikancia (H₀: Él ≤ 0)
-                </span>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="text-xl font-black text-sky-400">p = {performance.pValue}</span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    (Z = {performance.zScore})
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 block mt-1">
-                  95% CI: [{performance.confidenceInterval95[0]}%, {performance.confidenceInterval95[1]}%]
-                </span>
-              </div>
-            </div>
-
-            {/* Megbízhatósági diagram (Reliability Table) */}
-            <div className="space-y-2 pt-2">
-              <span className="text-xs font-bold text-white block">
-                Valószínűségi Megbízhatósági Görbe (Reliability Table)
-              </span>
-              <p className="text-[11px] text-amber-200 bg-amber-500/10 border border-dashed border-amber-400/50 rounded-lg px-2.5 py-1.5">
-                Illusztratív mintaadatsor ({calibration.reliabilityBins.reduce((s, b) => s + b.count, 0)} mérkőzés a
-                tesztszakaszban). Nem az élő predikciónapló, ezért nem bizonyíték a modell pontosságára.
-              </p>
-              <ReliabilityChart bins={calibration.reliabilityBins} />
-              <div className="overflow-x-auto">
-                <table className="w-full text-[11px] text-left border border-slate-800 rounded-xl overflow-hidden">
-                  <thead className="bg-slate-900 text-slate-400 font-mono uppercase text-[10px]">
-                    <tr>
-                      <th className="p-2.5">Esély Sáv</th>
-                      <th className="p-2.5">Elemszám (N)</th>
-                      <th className="p-2.5">Átlagos Modell Esély</th>
-                      <th className="p-2.5">Tényleges Találat</th>
-                      <th className="p-2.5">Eltérés (|Gap|)</th>
-                      <th className="p-2.5 text-right">Kalibrált?</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/80 bg-slate-950/40">
-                    {calibration.reliabilityBins.map((b, i) => (
-                      <tr key={i} className="hover:bg-slate-900/50">
-                        <td className="p-2.5 font-bold text-white">{b.binLabel}</td>
-                        <td className="p-2.5 font-mono text-slate-300">{b.count} meccs</td>
-                        <td className="p-2.5 font-mono text-emerald-400 font-bold">{b.avgPredictedProb}%</td>
-                        <td className="p-2.5 font-mono text-white font-bold">{b.observedHitRate}%</td>
-                        <td className="p-2.5 font-mono text-slate-300">
-                          {b.count > 0 ? `${b.calibrationGap}%` : '—'}
-                        </td>
-                        <td className="p-2.5 text-right">
-                          {b.count === 0 ? (
-                            <span className="text-slate-500 text-[10px]">N/A</span>
-                          ) : b.isWellCalibrated ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                              ✓ Pontos
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                              Eltérés
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          {/* 6. Valós walk-forward backtest: modell vs. piac */}
+          <BacktestSection />
 
           {/* 7. Szimulált Odds vs. Bukméker Odds: Kockázatkezelés és Anti-Fake Value Etika */}
           <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-4 md:col-span-2">

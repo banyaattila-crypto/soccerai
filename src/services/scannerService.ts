@@ -2,6 +2,7 @@ import { Match, PickMarket } from '../types/football';
 import { calculateExpectedValue, quarterKelly } from './predictionEngine';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import { isOddsExpired, getOddsTtlStatus } from './apiSportsClient';
+import { marketFairFromBookmakers, blendedMarketPct } from './marketBlend';
 
 export type ScannerPreset =
   | 'all'
@@ -77,11 +78,22 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const quant = m.quantAnalysis;
     const verdict = quant?.robustnessVerdict ?? 'valószínű';
 
-    // Segédfüggvény a valós EV és Kelly kiszámításához
-    const resolveMetrics = (isRealAvailable: boolean, prob: number, odd: number) => {
+    // Piaci referencia (Pinnacle, ennek híján az átlag): az EV ehhez mér, nem a nyers modellhez.
+    // Backtest: a nyers modell-EV hozama −15% (z=−4), a modell a záró piacnál rosszabb előrejelző.
+    const fair = real ? marketFairFromBookmakers(real.bookmakers) : undefined;
+    const modelExact = {
+      home: p.exact?.homeWin ?? p.homeWin,
+      draw: p.exact?.draw ?? p.draw,
+      away: p.exact?.awayWin ?? p.awayWin,
+      over25: p.exact?.over25 ?? p.over25,
+    };
+
+    // Segédfüggvény a valós EV és Kelly kiszámításához (piaci referencia nélküli piacon 0)
+    const resolveMetrics = (isRealAvailable: boolean, market: string, odd: number) => {
       const isEffectiveReal = isRealAvailable && !realExpired;
-      const expectedValue = isEffectiveReal ? calculateExpectedValue(prob, odd) : 0;
-      const quarterKellyPct = isEffectiveReal ? quarterKelly(prob, odd) : 0;
+      const evProb = isEffectiveReal ? blendedMarketPct(market, modelExact, fair) : null;
+      const expectedValue = evProb !== null ? calculateExpectedValue(evProb, odd) : 0;
+      const quarterKellyPct = evProb !== null ? quarterKelly(evProb, odd) : 0;
       return {
         isRealOdds: isRealAvailable,
         isExpired: isRealAvailable ? realExpired : false,
@@ -96,7 +108,7 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const hasRealHome = Boolean(real?.bestOdds.home?.odd);
     const homeOdd = real?.bestOdds.home?.odd ?? m.odds.home;
     const homeSource = real?.bestOdds.home?.bookmaker ?? (hasRealHome ? ttlStatus.bookmakerName : undefined);
-    const mHome = resolveMetrics(hasRealHome, p.exact?.homeWin ?? p.homeWin, homeOdd);
+    const mHome = resolveMetrics(hasRealHome, '1', homeOdd);
     opportunities.push({
       id: `${m.id}_1`,
       match: m,
@@ -124,7 +136,7 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const hasRealDraw = Boolean(real?.bestOdds.draw?.odd);
     const drawOdd = real?.bestOdds.draw?.odd ?? m.odds.draw;
     const drawSource = real?.bestOdds.draw?.bookmaker ?? (hasRealDraw ? ttlStatus.bookmakerName : undefined);
-    const mDraw = resolveMetrics(hasRealDraw, p.exact?.draw ?? p.draw, drawOdd);
+    const mDraw = resolveMetrics(hasRealDraw, 'X', drawOdd);
     opportunities.push({
       id: `${m.id}_X`,
       match: m,
@@ -152,7 +164,7 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const hasRealAway = Boolean(real?.bestOdds.away?.odd);
     const awayOdd = real?.bestOdds.away?.odd ?? m.odds.away;
     const awaySource = real?.bestOdds.away?.bookmaker ?? (hasRealAway ? ttlStatus.bookmakerName : undefined);
-    const mAway = resolveMetrics(hasRealAway, p.exact?.awayWin ?? p.awayWin, awayOdd);
+    const mAway = resolveMetrics(hasRealAway, '2', awayOdd);
     opportunities.push({
       id: `${m.id}_2`,
       match: m,
@@ -180,7 +192,7 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const hasRealO25 = Boolean(real?.bestOdds.over25?.odd);
     const o25Odd = real?.bestOdds.over25?.odd ?? m.odds.over25;
     const o25Source = real?.bestOdds.over25?.bookmaker ?? (hasRealO25 ? ttlStatus.bookmakerName : undefined);
-    const mO25 = resolveMetrics(hasRealO25, p.exact?.over25 ?? p.over25, o25Odd);
+    const mO25 = resolveMetrics(hasRealO25, 'OVER_25', o25Odd);
     opportunities.push({
       id: `${m.id}_OVER_25`,
       match: m,
@@ -210,7 +222,7 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const u25Odd = real?.bestOdds.under25?.odd ??
       Math.max(1.25, Math.round(((1 / (under25Prob / 100)) / 1.05) * 100) / 100);
     const u25Source = real?.bestOdds.under25?.bookmaker ?? (hasRealU25 ? ttlStatus.bookmakerName : undefined);
-    const mU25 = resolveMetrics(hasRealU25, p.exact ? 100 - p.exact.over25 : under25Prob, u25Odd);
+    const mU25 = resolveMetrics(hasRealU25, 'UNDER_25', u25Odd);
     opportunities.push({
       id: `${m.id}_UNDER_25`,
       match: m,
@@ -238,7 +250,7 @@ export function extractOpportunitiesFromMatches(matches: Match[]): ScannedOpport
     const hasRealBtts = Boolean(real?.bestOdds.bttsYes?.odd);
     const bttsOdd = real?.bestOdds.bttsYes?.odd ?? m.odds.bttsYes;
     const bttsSource = real?.bestOdds.bttsYes?.bookmaker ?? (hasRealBtts ? ttlStatus.bookmakerName : undefined);
-    const mBtts = resolveMetrics(hasRealBtts, p.exact?.bttsYes ?? p.bttsYes, bttsOdd);
+    const mBtts = resolveMetrics(hasRealBtts, 'BTTS_YES', bttsOdd);
     opportunities.push({
       id: `${m.id}_BTTS_YES`,
       match: m,

@@ -3,6 +3,7 @@ import { SUPPORTED_SECONDARY_LEAGUES } from '../apiSportsClient';
 import { COMPETITION_MAP } from '../footballDataApi';
 import { calculateMarketProbabilities } from '../predictionEngine';
 import { extractOpportunitiesFromMatches, computeLeagueRadarStats } from '../scannerService';
+import { marketFairFromBookmakers } from '../marketBlend';
 import { Match } from '../../types/football';
 
 describe('Cup Competitions Support (UCL, UEL, UECL)', () => {
@@ -131,10 +132,14 @@ describe('Cup Competitions Support (UCL, UEL, UECL)', () => {
       realOdds: {
         fixtureId: 999,
         updatedAt: '12:00',
-        bookmakers: [{ name: 'Pinnacle', home: 2.15, over25: 1.50 }],
+        // Pinnacle a piaci referencia (fair); a Bet365 jobb árat ad (ár-előny)
+        bookmakers: [
+          { name: 'Pinnacle', home: 2.05, draw: 3.6, away: 3.6, over25: 1.5, under25: 2.65 },
+          { name: 'Bet365', home: 2.15, draw: 3.5, away: 3.5, over25: 1.58, under25: 2.4 },
+        ],
         bestOdds: {
-          home: { odd: 2.15, bookmaker: 'Pinnacle' },
-          over25: { odd: 1.50, bookmaker: 'Pinnacle' },
+          home: { odd: 2.15, bookmaker: 'Bet365' },
+          over25: { odd: 1.58, bookmaker: 'Bet365' },
         },
       },
     };
@@ -146,11 +151,15 @@ describe('Cup Competitions Support (UCL, UEL, UECL)', () => {
       const homeOpp = opps.find((o) => o.market === '1');
       expect(homeOpp).toBeDefined();
       expect(homeOpp?.probability).toBe(52);
-      expect(homeOpp?.expectedValue).toBeCloseTo(11.8, 0);
+      // Az EV a Pinnacle fair valószínűséghez mér (nem a nyers modellhez): ár-előny a legjobb szorzón
+      const fair = marketFairFromBookmakers(mockUclMatch.realOdds!.bookmakers);
+      expect(homeOpp?.expectedValue).toBeCloseTo((fair.p1x2![0] * 2.15 - 1) * 100, 1);
+      expect(homeOpp?.expectedValue).toBeGreaterThan(0);
+      expect(homeOpp?.expectedValue).toBeLessThan(5);
 
       const o25Opp = opps.find((o) => o.market === 'OVER_25');
       expect(o25Opp).toBeDefined();
-      expect(o25Opp?.expectedValue).toBeCloseTo(8.0, 0);
+      expect(o25Opp?.expectedValue).toBeCloseTo((fair.pOver25! * 1.58 - 1) * 100, 1);
     });
 
     it('should compute league radar statistics for international cup leagues', () => {

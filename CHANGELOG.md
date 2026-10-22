@@ -3,6 +3,29 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.27.0] - 2026-10-22
+
+### Hozzáadva & Javítva (Added & Fixed) - Piaccal súlyozás és valós backtest (F-04, F-07)
+A modell pontosságát és a "value" jelzések értékét először valós piaci adaton mértük. Eredmény (5 liga: PL, La Liga, Serie A, Bundesliga, Ligue 1; walk-forward; bemelegítés 2023/24, hangolás 2024/25, **holdout 2025/26, N = 1752**; forrás: football-data.co.uk, Pinnacle záró és nyitó szorzók):
+- **A modell valódi információt hordoz, de a piacnál rosszabb:** 1X2 log-loss: naiv 1,0718, modell 1,0004, Pinnacle záró 0,9776. RPS: 0,2293 / 0,2042 / 0,1976. Over/Under 2.5 log-loss: modell 0,6855, piac 0,6733.
+- **A keverési súly hangolása:** a log-loss a modell súlyával monoton nő (w=0: 0,9602 ... w=1: 0,9934 a hangolási szezonon), ezért az optimális modell-súly 0: a modell a záró piachoz képest nem ad pluszinformációt.
+- **A nyers modell "+EV" jelei ártalmasak:** a nyitó Pinnacle szorzón az átlagosan állított +21,5% EV mellett a valós hozam −16,0% (1950 fogadás, z = −3,97, CLV −6,3%). Minden kimenetelre fogadva a hozam −6,1% (a piac árrése).
+- **Ligánként (holdout) mindenhol ugyanaz a sorrend:** piac < modell < naiv (log-loss).
+
+Változások:
+- **Piaccal súlyozás (`marketBlend.ts`):** logaritmikus keverés a modell és a de-vigelt (Shin) piac között; `MARKET_BLEND_MODEL_WEIGHT_1X2/TOTALS` = 0 (a backtest hangolta). Valós szorzónál az EV és a Kelly a piaci referenciához mér: Pinnacle (ennek híján a bukmékerek de-vigelt átlaga) fair valószínűségéhez. Így az "ár-előny" a legjobb elérhető szorzó és a konszenzus különbsége, nem modell-előny.
+- **Piaci referencia nélküli piac (BTTS, kombinált, félidő):** az EV és a Kelly 0. A `buildMatchQuantAndPick` új `realMarketProbPct` paramétert kap; callback nélkül valós szorzónál sem számol EV-t.
+- **Scanner (`scannerService.ts`) és tipp-kiválasztás (`apiSportsClient.ts`):** ugyanazt a piaccal súlyozott valószínűséget használják; a kártyákon "Ár-előny a piaci konszenzushoz (+EV)" felirat.
+- **Backtest-motor (`backtestEngine.ts`):** CSV-értelmezés, walk-forward (nincs előretekintés: csak a nála korábbi meccsek tanítanak, kézi klub-priorok nélkül, hetente újraillesztve), log-loss / Brier / RPS, megbízhatósági sávok, fogadási szimuláció nyitó szorzón CLV-vel, súlyhangolás. A `fitDixonColesModel` új `asOfMs`, a `computeExpectedGoalsFromModel` új `usePriors` paramétert kapott.
+- **Szkriptek:** `scripts/backtest-download.mjs` (CSV-k letöltése a gitignore-olt `data/backtest/` mappába) és `scripts/backtest.ts` (futtatás: `npx tsx scripts/backtest.ts`); kimenet: `src/data/backtestReport.json` és `docs/backtest-report.md`. Új fejlesztői függőség: `tsx`.
+- **Módszertan (`BacktestSection.tsx`):** a kézi mintaadatsor helyett a valós backtest eredménye: pontosság-táblázat, fogadási szimuláció, megbízhatósági diagram, hangolási görbe, figyelmeztető állapotsor.
+- **Eredmények nézet:** a "Hitelesített ROI" mellé kikerült, hogy többnyire szimulált szorzón számolt kalibrációs mutató, nem piaci hozam.
+- **Tesztek:** 21 új teszt (`marketBlend.test.ts`, `backtestEngine.test.ts`), a valós szorzós tesztek az új, piaci referenciához mérő viselkedésre átírva; összesen 27 fájlban 259 / 259 zöld.
+
+### Korlátok
+- A backtest 5 liga Pinnacle árain készült; az app élő oddsai API-Sports bukmékerekből jönnek (a Pinnacle ott is szerepel, ha elérhető). Egy szezon holdout statisztikai ereje korlátozott (N = 1752); a z-érték −3,97 azonban egyértelmű.
+- Az Over/Under súlyhangolás ugyanazt az eredményt adta (0); BTTS-re nincs piaci adat a CSV-kben.
+
 ## [1.26.3] - 2026-10-22
 
 ### Javítva (Fixed) - A főliga-lekérés hibájának újrapróbálása (`App.tsx`)

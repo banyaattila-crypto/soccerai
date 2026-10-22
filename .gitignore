@@ -28,3 +28,6 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# Backtest: letöltött historikus CSV-k (football-data.co.uk), nem verziózzuk
+data/backtest/

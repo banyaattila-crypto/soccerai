@@ -71,7 +71,9 @@ export function fitDixonColesModel(
   matches: FinishedMatchResult[],
   leagueCode: string,
   xi: number = 0.0025,
-  maxIter: number = 35
+  maxIter: number = 35,
+  /** Az "ma" időpontja az időlecsengéshez (ms). Backtestnél a predikció dátuma, hogy ne legyen előretekintés. */
+  asOfMs: number = Date.now()
 ): FittedDixonColesModel {
   const validMatches = matches.filter(
     (m) =>
@@ -83,7 +85,7 @@ export function fitDixonColesModel(
       m.awayTeam
   );
 
-  const nowMs = Date.now();
+  const nowMs = asOfMs;
   const DAY_MS = 24 * 3600 * 1000;
 
   // 1. Csapatok és alapadatok felmérése
@@ -517,7 +519,9 @@ export function computeExpectedGoalsFromModel(
   homeTeamName: string,
   awayTeamName: string,
   fallbackHomeAvg: number = 1.45,
-  fallbackAwayAvg: number = 1.15
+  fallbackAwayAvg: number = 1.15,
+  /** false: a kézi klub-priorok kikapcsolva (backtestnél, mert a mai priorok a múltra előretekintést jelentenének) */
+  usePriors: boolean = true
 ): {
   homeXg: number;
   awayXg: number;
@@ -549,12 +553,12 @@ export function computeExpectedGoalsFromModel(
 
   // Ha a csapat mintája kicsi (pl. nemzetközi kupa), a kézi klub-priorral keverjük:
   // súly = n / (n + PRIOR_BLEND_MATCHES). Prior nélküli csapatnál a modell-érték marad.
-  hRating = blendWithClubPrior(hRating, homeTeamName);
-  aRating = blendWithClubPrior(aRating, awayTeamName);
+  if (usePriors) hRating = blendWithClubPrior(hRating, homeTeamName);
+  if (usePriors) aRating = blendWithClubPrior(aRating, awayTeamName);
 
   // Fallback: kézi klub-prior, ha a csapat nem szerepel a modellben
-  if (!hRating) hRating = getClubPriorRating(homeTeamName);
-  if (!aRating) aRating = getClubPriorRating(awayTeamName);
+  if (usePriors && !hRating) hRating = getClubPriorRating(homeTeamName);
+  if (usePriors && !aRating) aRating = getClubPriorRating(awayTeamName);
 
   const homeAttack = hRating ? hRating.attack : 1.0;
   const homeDefense = hRating ? hRating.defense : 1.0;

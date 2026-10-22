@@ -1,0 +1,438 @@
+{
+ "generatedAt": "2026-10-22T17:36:37.530Z",
+ "source": "football-data.co.uk (Pinnacle záró és nyitó szorzók)",
+ "leagues": [
+  "Premier League",
+  "La Liga",
+  "Serie A",
+  "Bundesliga",
+  "Ligue 1"
+ ],
+ "seasons": {
+  "warmup": "2023/24",
+  "tune": "2024/25",
+  "holdout": "2025/26"
+ },
+ "weights": {
+  "modelWeight1x2": 0,
+  "modelWeightTotals": 0,
+  "curve1x2": [
+   {
+    "w": 0,
+    "logLoss": 0.9602418997627199
+   },
+   {
+    "w": 0.05,
+    "logLoss": 0.960855363906843
+   },
+   {
+    "w": 0.1,
+    "logLoss": 0.9615706215673591
+   },
+   {
+    "w": 0.2,
+    "logLoss": 0.9633121385748009
+   },
+   {
+    "w": 0.3,
+    "logLoss": 0.9654775778930416
+   },
+   {
+    "w": 0.5,
+    "logLoss": 0.9711234352498582
+   },
+   {
+    "w": 0.75,
+    "logLoss": 0.9807511355370643
+   },
+   {
+    "w": 1,
+    "logLoss": 0.9933664489606285
+   }
+  ]
+ },
+ "tune": {
+  "n": 1752,
+  "scores": {
+   "model": {
+    "n": 1752,
+    "logLoss": 0.9933664489606285,
+    "brier": 0.5929628484489217,
+    "rps": 0.20365767079132113
+   },
+   "market": {
+    "n": 1752,
+    "logLoss": 0.9602418997627199,
+    "brier": 0.5704517812178711,
+    "rps": 0.19340282110270332
+   },
+   "blend": {
+    "n": 1752,
+    "logLoss": 0.9602418997627199,
+    "brier": 0.5704517812178713,
+    "rps": 0.19340282110270332
+   },
+   "naive": {
+    "n": 1752,
+    "logLoss": 1.0766009951515727,
+    "brier": 0.6520916734429855,
+    "rps": 0.23243869367819883
+   }
+  },
+  "totals": {
+   "n": 1752,
+   "model": 0.6775284644184552,
+   "market": 0.6647916570867524,
+   "blend": 0.6647916570867524
+  }
+ },
+ "holdout": {
+  "n": 1752,
+  "scores": {
+   "model": {
+    "n": 1752,
+    "logLoss": 1.0003711839685754,
+    "brier": 0.5965640545392552,
+    "rps": 0.20419302470669687
+   },
+   "market": {
+    "n": 1752,
+    "logLoss": 0.977564084793658,
+    "brier": 0.5822366058231323,
+    "rps": 0.1976331076308448
+   },
+   "blend": {
+    "n": 1752,
+    "logLoss": 0.977564084793658,
+    "brier": 0.5822366058231323,
+    "rps": 0.1976331076308448
+   },
+   "naive": {
+    "n": 1752,
+    "logLoss": 1.0717537405559285,
+    "brier": 0.6482878015470825,
+    "rps": 0.22926277339922252
+   }
+  },
+  "totals": {
+   "n": 1752,
+   "model": 0.6854871780601338,
+   "market": 0.6732998533111761,
+   "blend": 0.6732998533111761
+  },
+  "perLeague": [
+   {
+    "league": "Premier League",
+    "n": 380,
+    "modelLL": 1.027431132685928,
+    "marketLL": 1.0146057489157378,
+    "blendLL": 1.0146057489157378
+   },
+   {
+    "league": "La Liga",
+    "n": 380,
+    "modelLL": 0.9842137019347438,
+    "marketLL": 0.9635906325917681,
+    "blendLL": 0.9635906325917681
+   },
+   {
+    "league": "Serie A",
+    "n": 380,
+    "modelLL": 1.0028584783079753,
+    "marketLL": 0.9774060861059581,
+    "blendLL": 0.9774060861059581
+   },
+   {
+    "league": "Bundesliga",
+    "n": 306,
+    "modelLL": 0.9785910733004053,
+    "marketLL": 0.9494252793437092,
+    "blendLL": 0.9494252793437092
+   },
+   {
+    "league": "Ligue 1",
+    "n": 306,
+    "modelLL": 1.0055234868305067,
+    "marketLL": 0.9772522986477062,
+    "blendLL": 0.9772522986477062
+   }
+  ]
+ },
+ "betting": {
+  "holdout": {
+   "model": [
+    {
+     "threshold": 0,
+     "bets": 2162,
+     "roiPct": -15.215541165587416,
+     "claimedEvPct": 19.505335113672785,
+     "clvPct": -6.0983527856457895,
+     "zScore": -4.001952329828975
+    },
+    {
+     "threshold": 0.02,
+     "bets": 1950,
+     "roiPct": -16.044102564102573,
+     "claimedEvPct": 21.529416022360735,
+     "clvPct": -6.2535993840656445,
+     "zScore": -3.966528684356127
+    },
+    {
+     "threshold": 0.05,
+     "bets": 1648,
+     "roiPct": -16.24150485436894,
+     "claimedEvPct": 24.82674065182771,
+     "clvPct": -6.55061273775709,
+     "zScore": -3.60682522534213
+    }
+   ],
+   "blend": [
+    {
+     "threshold": 0,
+     "bets": 0,
+     "roiPct": 0,
+     "claimedEvPct": 0,
+     "clvPct": 0,
+     "zScore": 0
+    },
+    {
+     "threshold": 0.02,
+     "bets": 0,
+     "roiPct": 0,
+     "claimedEvPct": 0,
+     "clvPct": 0,
+     "zScore": 0
+    },
+    {
+     "threshold": 0.05,
+     "bets": 0,
+     "roiPct": 0,
+     "claimedEvPct": 0,
+     "clvPct": 0,
+     "zScore": 0
+    }
+   ]
+  },
+  "tuneAndHoldout": {
+   "model": [
+    {
+     "threshold": 0,
+     "bets": 4556,
+     "roiPct": -13.079455662862138,
+     "claimedEvPct": 20.64780318525185,
+     "clvPct": -5.992257691287255,
+     "zScore": -4.862734613170227
+    },
+    {
+     "threshold": 0.02,
+     "bets": 4109,
+     "roiPct": -14.015575565831092,
+     "claimedEvPct": 22.790612506713547,
+     "clvPct": -6.189012101596258,
+     "zScore": -4.882344992212749
+    },
+    {
+     "threshold": 0.05,
+     "bets": 3503,
+     "roiPct": -14.383956608621167,
+     "claimedEvPct": 26.134304294429146,
+     "clvPct": -6.554936284527077,
+     "zScore": -4.522375749143501
+    }
+   ],
+   "blend": [
+    {
+     "threshold": 0,
+     "bets": 0,
+     "roiPct": 0,
+     "claimedEvPct": 0,
+     "clvPct": 0,
+     "zScore": 0
+    },
+    {
+     "threshold": 0.02,
+     "bets": 0,
+     "roiPct": 0,
+     "claimedEvPct": 0,
+     "clvPct": 0,
+     "zScore": 0
+    },
+    {
+     "threshold": 0.05,
+     "bets": 0,
+     "roiPct": 0,
+     "claimedEvPct": 0,
+     "clvPct": 0,
+     "zScore": 0
+    }
+   ]
+  },
+  "baselineBetAllRoiPct": -6.101217656012174
+ },
+ "reliability": {
+  "model": [
+   {
+    "binLabel": "0% – 10%",
+    "binMin": 0,
+    "binMax": 0.1,
+    "count": 38,
+    "avgPredictedProb": 8.1,
+    "observedHitRate": 5.3,
+    "calibrationGap": 2.8,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "10% – 20%",
+    "binMin": 0.1,
+    "binMax": 0.2,
+    "count": 452,
+    "avgPredictedProb": 16.4,
+    "observedHitRate": 11.9,
+    "calibrationGap": 4.4,
+    "isWellCalibrated": false
+   },
+   {
+    "binLabel": "20% – 30%",
+    "binMin": 0.2,
+    "binMax": 0.3,
+    "count": 2321,
+    "avgPredictedProb": 25.5,
+    "observedHitRate": 25.6,
+    "calibrationGap": 0,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "30% – 40%",
+    "binMin": 0.3,
+    "binMax": 0.4,
+    "count": 1046,
+    "avgPredictedProb": 34.6,
+    "observedHitRate": 31.6,
+    "calibrationGap": 2.9,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "40% – 50%",
+    "binMin": 0.4,
+    "binMax": 0.5,
+    "count": 722,
+    "avgPredictedProb": 44.7,
+    "observedHitRate": 45.8,
+    "calibrationGap": 1.1,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "50% – 60%",
+    "binMin": 0.5,
+    "binMax": 0.6,
+    "count": 445,
+    "avgPredictedProb": 54.4,
+    "observedHitRate": 58.9,
+    "calibrationGap": 4.5,
+    "isWellCalibrated": false
+   },
+   {
+    "binLabel": "60% – 70%",
+    "binMin": 0.6,
+    "binMax": 0.7,
+    "count": 166,
+    "avgPredictedProb": 63.8,
+    "observedHitRate": 73.5,
+    "calibrationGap": 9.7,
+    "isWellCalibrated": false
+   },
+   {
+    "binLabel": "70% – 100%",
+    "binMin": 0.7,
+    "binMax": 1.0001,
+    "count": 66,
+    "avgPredictedProb": 75.1,
+    "observedHitRate": 84.8,
+    "calibrationGap": 9.7,
+    "isWellCalibrated": false
+   }
+  ],
+  "blend": [
+   {
+    "binLabel": "0% – 10%",
+    "binMin": 0,
+    "binMax": 0.1,
+    "count": 169,
+    "avgPredictedProb": 7.6,
+    "observedHitRate": 5.3,
+    "calibrationGap": 2.2,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "10% – 20%",
+    "binMin": 0.1,
+    "binMax": 0.2,
+    "count": 755,
+    "avgPredictedProb": 15.8,
+    "observedHitRate": 15.5,
+    "calibrationGap": 0.3,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "20% – 30%",
+    "binMin": 0.2,
+    "binMax": 0.3,
+    "count": 1922,
+    "avgPredictedProb": 25.5,
+    "observedHitRate": 25.6,
+    "calibrationGap": 0.1,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "30% – 40%",
+    "binMin": 0.3,
+    "binMax": 0.4,
+    "count": 977,
+    "avgPredictedProb": 34,
+    "observedHitRate": 33.4,
+    "calibrationGap": 0.6,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "40% – 50%",
+    "binMin": 0.4,
+    "binMax": 0.5,
+    "count": 569,
+    "avgPredictedProb": 44.8,
+    "observedHitRate": 47.1,
+    "calibrationGap": 2.3,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "50% – 60%",
+    "binMin": 0.5,
+    "binMax": 0.6,
+    "count": 404,
+    "avgPredictedProb": 54.7,
+    "observedHitRate": 52.7,
+    "calibrationGap": 2,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "60% – 70%",
+    "binMin": 0.6,
+    "binMax": 0.7,
+    "count": 257,
+    "avgPredictedProb": 64.5,
+    "observedHitRate": 63.8,
+    "calibrationGap": 0.7,
+    "isWellCalibrated": true
+   },
+   {
+    "binLabel": "70% – 100%",
+    "binMin": 0.7,
+    "binMax": 1.0001,
+    "count": 203,
+    "avgPredictedProb": 76.7,
+    "observedHitRate": 80.3,
+    "calibrationGap": 3.6,
+    "isWellCalibrated": false
+   }
+  ]
+ }
+}

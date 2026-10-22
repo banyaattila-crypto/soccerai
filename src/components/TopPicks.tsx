@@ -212,7 +212,7 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span className={isRealActive && edge > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}>
                 {isRealActive
                   ? (pick.expectedValue > 0
-                    ? `Elméleti él (+EV): +${pick.expectedValue}%`
+                    ? `Ár-előny a piaci konszenzushoz (+EV): +${pick.expectedValue}%`
                     : edge > 0
                     ? `Modell/Piac rés: +${edge}%`
                     : `Fair szorzó: @${(100 / Math.max(1, pick.probability)).toFixed(2)}`)
@@ -446,12 +446,12 @@ export const TopPicks: React.FC<TopPicksProps> = ({
           <p>
             {decision.withEdge > 0 ? (
               <>
-                <strong>{decision.withEdge} tippen</strong> valós, érvényes áron pozitív elméleti él (+EV) látszik. Ez
-                modellbecslés, nem garancia: a kis mintán mért él többnyire zaj.
+                <strong>{decision.withEdge} tippen</strong> a legjobb elérhető szorzó jobb a piaci konszenzus (Pinnacle) fair áránál (+EV). Ez
+                ár-előny a bukmékerek között, nem modell-előny: a backtest szerint a modell a piacnál rosszabb előrejelző.
               </>
             ) : decision.realActive > 0 ? (
               <>
-                <strong>Van valós ár ({decision.realActive} tipp), de pozitív elméleti él nincs.</strong> Ma nincs
+                <strong>Van valós ár ({decision.realActive} tipp), de pozitív ár-előny nincs.</strong> Ma nincs
                 értékfogadási ajánlás.
               </>
             ) : (

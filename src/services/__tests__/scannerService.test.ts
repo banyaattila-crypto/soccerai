@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { marketFairFromBookmakers } from '../marketBlend';
 import {
   extractOpportunitiesFromMatches,
   filterAndSortOpportunities,
@@ -42,7 +43,7 @@ describe('scannerService - Kvantitatív Értékkereső & Radar', () => {
         fhOver05: 75,
       },
       odds: {
-        home: 1.85, // model 62% -> ev = 0.62 * 1.85 - 1 = +14.7%
+        home: 1.85, // legjobb szorzó; az EV a Pinnacle fair valószínűséghez mér
         draw: 3.8,
         away: 5.5,
         bttsYes: 1.75,
@@ -51,9 +52,13 @@ describe('scannerService - Kvantitatív Értékkereső & Radar', () => {
       realOdds: {
         fixtureId: 101,
         updatedAt: '12:00',
-        bookmakers: [{ name: 'Pinnacle', home: 1.85 }],
+        // Pinnacle = piaci referencia; a Bet365 jobb hazai szorzót ad (ár-előny)
+        bookmakers: [
+          { name: 'Pinnacle', home: 1.78, draw: 4.0, away: 5.0 },
+          { name: 'Bet365', home: 1.85, draw: 3.8, away: 4.8 },
+        ],
         bestOdds: {
-          home: { odd: 1.85, bookmaker: 'Pinnacle' },
+          home: { odd: 1.85, bookmaker: 'Bet365' },
         },
       },
       aiPick: {
@@ -126,7 +131,9 @@ describe('scannerService - Kvantitatív Értékkereső & Radar', () => {
     const m1Home = opps.find((o) => o.id === 'm1_1');
     expect(m1Home).toBeDefined();
     expect(m1Home?.isRealOdds).toBe(true);
-    expect(m1Home?.expectedValue).toBeCloseTo(14.7, 1);
+    // EV = legjobb szorzó · Pinnacle fair valószínűség − 1 (nem a nyers modell: az +14,7% lett volna)
+    const fair = marketFairFromBookmakers(dummyMatches[0].realOdds!.bookmakers);
+    expect(m1Home?.expectedValue).toBeCloseTo((fair.p1x2![0] * 1.85 - 1) * 100, 1);
     expect(m1Home?.quarterKellyPct).toBeGreaterThan(0);
 
     // Szimulált árképzésű mérkőzés (m2_1): szigorúan 0 EV és Kelly!

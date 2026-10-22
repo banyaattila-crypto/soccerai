@@ -1,7 +1,7 @@
 {
   "name": "soccerai",
   "private": true,
-  "version": "1.26.3",
+  "version": "1.27.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,6 +27,7 @@
     "oxlint": "^1.81.0",
     "postcss": "^8.5.30",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.5"

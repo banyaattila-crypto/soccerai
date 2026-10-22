@@ -10,6 +10,7 @@ import {
   CACHE_KEY,
 } from '../apiSportsClient';
 import { buildMatchQuantAndPick, quarterKelly } from '../predictionEngine';
+import { blendedMarketPct } from '../marketBlend';
 import {
   extractOpportunitiesFromMatches,
   filterAndSortOpportunities,
@@ -82,7 +83,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
           name: 'Bet365',
           home: 2.05,
           draw: 3.40,
-          away: 3.75,
+          away: 3.95,
           over25: 1.72,
           under25: 2.10,
           bttsYes: 1.62,
@@ -103,7 +104,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
         name: 'Bet365',
         home: 2.05,
         draw: 3.40,
-        away: 3.75,
+        away: 3.95,
         over25: 1.72,
         under25: 2.10,
         bttsYes: 1.62,
@@ -112,7 +113,7 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       bestOdds: {
         home: { odd: 2.10, bookmaker: 'Pinnacle' },
         draw: { odd: 3.50, bookmaker: 'Pinnacle' },
-        away: { odd: 3.75, bookmaker: 'Bet365' },
+        away: { odd: 3.95, bookmaker: 'Bet365' },
         over25: { odd: 1.75, bookmaker: 'Pinnacle' },
         under25: { odd: 2.15, bookmaker: 'Pinnacle' },
         bttsYes: { odd: 1.65, bookmaker: 'Pinnacle' },
@@ -243,9 +244,11 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       expect(updated.aiPick?.isSimulatedOdds).toBe(false);
       expect(updated.aiPick?.bookmakerName).toBe('Pinnacle');
       expect(updated.aiPick?.ttlMinutes).toBe(45);
-      // Modell esély: 58%, Valós odds: 2.10 -> EV = 0.58 * 2.10 - 1 = +21.8%
-      expect(updated.aiPick?.expectedValue).toBeGreaterThan(0);
-      expect(updated.aiPick?.quarterKellyPct).toBeGreaterThan(0);
+      // Az EV a piaci referenciához (Pinnacle fair) mér, nem a nyers modellhez: a korábbi +21,8% (58% · 2,10)
+      // helyett legfeljebb néhány százalékos ár-előny (legjobb szorzó vs. Pinnacle) lehetséges.
+      expect(updated.aiPick?.expectedValue).toBeLessThan(10);
+      expect(updated.aiPick?.expectedValue).toBeGreaterThan(-10);
+      expect(updated.aiPick?.quarterKellyPct).toBeGreaterThanOrEqual(0);
     });
 
     it('lejárt bukmékeri odds esetén szigorúan letiltja és 0-ra állítja a Value (+EV) és Kelly értékeket', () => {
@@ -385,6 +388,9 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
         dataQuality: 'A',
         leagueLabel: 'Premier League',
         isSimulatedOdds: false, // VALÓS PIACI ODDS!
+        // Piaci referencia: a piac szerint a hazai 62%, az Over 2.5 60% -> a 1,80-as szorzón +11,6% ár-előny
+        realMarketProbPct: (market, model) =>
+          blendedMarketPct(market, model, { p1x2: [0.62, 0.22, 0.16], pOver25: 0.6 }),
       });
 
       expect(res.aiPick).toBeDefined();
@@ -392,6 +398,31 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
       expect(res.aiPick?.expectedValue).toBeGreaterThan(0);
       expect(res.aiPick?.quarterKellyPct).toBeGreaterThan(0);
       expect(res.quantAnalysis.quarterKellyPct).toBeGreaterThan(0);
+    });
+
+    it('valós szorzó, de piaci referencia nélkül (nincs realMarketProbPct) az EV és a Kelly 0', () => {
+      const res = buildMatchQuantAndPick({
+        homeTeamName: 'Arsenal',
+        awayTeamName: 'Chelsea',
+        homeXg: 2.1,
+        awayXg: 1.1,
+        probabilities: {
+          homeWin: 65,
+          draw: 20,
+          awayWin: 15,
+          bttsYes: 55,
+          over15: 85,
+          over25: 65,
+          over35: 40,
+          fhOver05: 75,
+        },
+        odds: { home: 1.8, draw: 3.8, away: 5.0, bttsYes: 1.65, over25: 1.6, under25: 2.3 },
+        dataQuality: 'A',
+        leagueLabel: 'Premier League',
+        isSimulatedOdds: false,
+      });
+      expect(res.aiPick?.expectedValue).toBe(0);
+      expect(res.aiPick?.quarterKellyPct).toBe(0);
     });
   });
 

@@ -630,7 +630,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
                 {verifiedStats.settledCount > 0
-                  ? `${(verifiedStats.totalStaked / 1000).toFixed(0)}e Ft össztétre`
+                  ? `${(verifiedStats.totalStaked / 1000).toFixed(0)}e Ft össztétre; többnyire szimulált szorzón számolva (kalibrációs mutató, nem piaci hozam)`
                   : 'Csak lezárt pre-match auditból'}
               </span>
             </div>

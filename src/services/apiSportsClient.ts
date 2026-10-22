@@ -10,6 +10,7 @@ import {
 } from './predictionEngine';
 import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
 import { normalizeTeamName } from '../utils/teamUtils';
+import { marketFairFromBookmakers, blendedMarketPct } from './marketBlend';
 import {
   computeExpectedGoalsFromModel,
   loadLeagueModel,
@@ -992,7 +993,10 @@ export function attachCachedRealOddsToMatches(
 
       const ttlStatus = getOddsTtlStatus(cached, nowMs);
 
-      // Újraszámoljuk az aiPick-et valós oddsszal (isSimulatedOdds: false)
+      // Újraszámoljuk az aiPick-et valós oddsszal (isSimulatedOdds: false).
+      // Az EV/Kelly a piaci referenciához (Pinnacle, ennek híján az átlag) mér: a backtest szerint a nyers
+      // modell-EV hozama negatív, a piac a pontosabb előrejelző.
+      const marketFair = marketFairFromBookmakers(cached.bookmakers);
       const { aiPick, quantAnalysis } = buildMatchQuantAndPick({
         homeTeamName: match.homeTeam.name,
         awayTeamName: match.awayTeam.name,
@@ -1012,6 +1016,7 @@ export function attachCachedRealOddsToMatches(
         isSimulatedOdds: false,
         dixonColesRatings: match.quantAnalysis?.dixonColesRatings,
         rho: match.quantAnalysis?.dixonColesRatings?.rho,
+        realMarketProbPct: (market, modelExactPct) => blendedMarketPct(market, modelExactPct, marketFair),
       });
 
       if (aiPick) {

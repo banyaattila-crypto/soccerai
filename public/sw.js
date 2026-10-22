@@ -1,5 +1,5 @@
 // SoccerAI Service Worker (PWA & Offline Cache - Network-First Navigation)
-const CACHE_VERSION = 'v1.26.3-20261022';
+const CACHE_VERSION = 'v1.27.0-20261022';
 const CACHE_NAME = `soccerai-core-${CACHE_VERSION}`;
 const API_CACHE_NAME = `soccerai-api-${CACHE_VERSION}`;
 

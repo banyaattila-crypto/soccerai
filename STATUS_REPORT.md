@@ -1,10 +1,10 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.26.3` (SemVer 2.0.0)
-**Kiadás neve:** Szezon-alapú Modell: Pontosabb Esélyek
+**Aktuális verzió:** `v1.27.0` (SemVer 2.0.0)
+**Kiadás neve:** Piaccal Súlyozás és Valós Backtest
 **Dátum:** 2026. október 22.
-**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 238/238 teszt zöld (25 tesztfájl), production build hibátlan
+**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 259/259 teszt zöld (27 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
 **Élő URL:** https://soccerai-pro.vercel.app
 **Helyi szerver:** `http://localhost:3000` (`npm run dev`)
@@ -15,9 +15,10 @@
 
 A SoccerAI PRO magyar nyelvű kvantitatív futball-elemző: Dixon–Coles-alapú esélyszámítás, λ-rács robusztussági szűrő, Shin de-vig, negyed-Kelly, pre-match predikciónapló és saját bankroll-követő.
 
-A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép helyes, de a modell bemeneti adata vékony volt. Két lépésben reagáltunk:
+A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép helyes, de a modell bemeneti adata vékony volt. Három lépésben reagáltunk:
 
 - **v1.25.0 (Design csomag):** a felület nem állít többet, mint amit az adat megenged: érzékenységi sáv, őszinte adatminőség-felirat, szimulált ár jelölése, döntés-központú állapotsor, megbízhatósági diagram, tőkegörbe, akadálymentesség.
+- **v1.27.0 (Piaccal súlyozás és valós backtest):** a pontosságot először valós piaci adaton mértük (lásd 2/B). A modell jobb a naiv gyakoriságnál, de rosszabb a záró piacnál, a nyers "+EV" jelek hozama negatív. Ezért valós szorzónál az EV és a Kelly a piaci referenciához mér, a Módszertan a valós backtestet mutatja.
 - **v1.26.0 (Adat- és modell csomag):** a modell a teljes szezon-előzményből tanul, egységes a skála, az EV kerekítetlen valószínűséggel számol, a gólmátrix 12x12, és egynapos mintából többé nem készül "illesztett" modell.
 
 **Élő ellenőrzés (2026-10-22, v1.26.0):** a szezon-lekérés és a `regularTime` mező működik (PL 70 + 380, CL 189 meccs; a hosszabbításos kupameccseknél a `fullTime` tartalmazza a hosszabbítást, a `regularTime` a 90 percet). Az ellenőrzés hibákat talált: részleges modell tartósulása és átmeneti hiba hibacache-be kerülése (v1.26.1), valamint az, hogy új deploy után a 10 kérés/perces keret miatt csak az első liga modellje készült el (v1.26.2: automatikus újrapróbálás). Élő modellek: PL (450 meccs), BL1 (360), CL (243).
@@ -43,7 +44,24 @@ A v1.25.0-ig a modell 3 napos ablakból illeszkedett (a szimulációban rosszabb
 
 **Korrekció:** az audit első szimulációjában a szimulált "piac" más ρ-val készült, mint a szimulált világ, ezért az ott közölt ROI-számok (−0,4% … −4,2%) torzítottak voltak. A fenti következtetés a javított szimulációból származik.
 
-**Korlátok:** a szimuláció szintetikus és független Poisson-világot feltételez; valós záró oddsokkal végzett backtest nem készült. A ~100 nagy klub kézi priorja (`EUROPEAN_CLUB_PRIORS`) a szimulációban nem szerepelt.
+**Korlátok:** a szimuláció szintetikus és független Poisson-világot feltételez; a valós piaci backtest a 2/B pontban van. A ~100 nagy klub kézi priorja (`EUROPEAN_CLUB_PRIORS`) a szimulációban nem szerepelt.
+
+## 2/B. Valós walk-forward backtest (v1.27.0)
+
+5 liga (PL, La Liga, Serie A, Bundesliga, Ligue 1), football-data.co.uk, Pinnacle záró és nyitó szorzók. Bemelegítés 2023/24, hangolás 2024/25, **holdout 2025/26 (N = 1752)**. Egy meccset csak a nála korábbi meccsekből illesztett modell jósol, kézi klub-priorok nélkül, hetente újraillesztve. Újrafuttatás: `node scripts/backtest-download.mjs`, majd `npx tsx scripts/backtest.ts` (kimenet: `docs/backtest-report.md`, `src/data/backtestReport.json`).
+
+| Forrás (holdout, 1X2) | Log-loss | Brier | RPS |
+| :--- | ---: | ---: | ---: |
+| Naiv (gyakoriság) | 1,0718 | 0,6483 | 0,2293 |
+| Modell (Dixon–Coles) | 1,0004 | 0,5966 | 0,2042 |
+| **Piac (Pinnacle záró, Shin)** | **0,9776** | **0,5822** | **0,1976** |
+
+- A modell valódi információt hordoz (jobb a naivnál), de **a záró piacnál rosszabb**, mind az öt ligában.
+- A keverési súly hangolásakor a log-loss a modell súlyával monoton nő: az optimum 0, a modell a piachoz képest nem ad pluszinformációt.
+- A nyers modell "+EV" fogadásai a nyitó Pinnacle szorzón: állított EV +21,5%, valós ROI **−16,0%** (1950 fogadás, z = −3,97, CLV −6,3%). Minden kimenetelre fogadva −6,1% (az árrés).
+- Következmény: valós szorzónál az EV és a Kelly a piaci referenciához (Pinnacle, ennek híján az átlag) mér; az "él" így ár-előny a bukmékerek között, nem modell-előny. Piaci referencia nélküli piacra (BTTS, kombinált, félidő) nincs EV.
+
+**Korlátok:** egy szezon holdout (N = 1752), Pinnacle árak; az élő oddsok API-Sports bukmékerekből jönnek. BTTS-re nincs piaci adat a CSV-kben.
 
 ### Leletek állapota
 
@@ -52,10 +70,10 @@ A v1.25.0-ig a modell 3 napos ablakból illeszkedett (a szimulációban rosszabb
 | F-01 | Kritikus | A modellt 3 napos ablakból illesztették | Javítva (v1.26.0); élő ellenőrzés hátra |
 | F-02 | Magas | Skála-inkonzisztencia (+21% / +10% gólszám) | Javítva (v1.26.0) |
 | F-03 | Magas | Az EV és a Kelly egész %-ból számolt | Javítva (v1.26.0) |
-| F-04 | Magas | A kalibrációs kapu mintaadatra és szintetikus oddsra épül; kitalált ×1,15 Kelly-ROI | Nyitva (a UI jelzi, hogy illusztratív) |
+| F-04 | Magas | A kalibrációs kapu mintaadatra és szintetikus oddsra épül | Javítva (v1.27.0): a Módszertan a valós backtestet mutatja; a régi `calibrationService` függvények megmaradnak, de a nézet nem használja |
 | F-05 | Magas | Proxy rate limit memóriában, `Origin` nélküli kérés engedett | Nyitva |
 | F-06 | Közepes | A "tamper-evident" hash 53 bites, kulcs nélküli, kliensoldali | Nyitva |
-| F-07 | Közepes | A "Hitelesített ROI" szimulált oddsra számol | Nyitva |
+| F-07 | Közepes | A "Hitelesített ROI" szimulált oddsra számol | Részben (v1.27.0): a felirat jelzi, hogy kalibrációs mutató, nem piaci hozam |
 | F-08 | Közepes | `isFitted` már a kézi priorra is igaz volt | Javítva (v1.26.0) |
 | F-09 | Közepes | `\|\|` felülírta a 0 értékű ρ-t és hazai előnyt | Javítva (v1.26.0) |
 | F-10 | Közepes | `MAXG=8`: nagy λ-nál a mátrix tömege vész | Javítva (v1.26.0, 12x12) |
@@ -75,7 +93,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 | :--- | :--- |
 | Frontend | React 19, TypeScript ~6.0 (strict), Vite 8 |
 | Stílus | Tailwind CSS v4, sötét téma |
-| Tesztek | Vitest 5.0.5: 238 teszt, 25 fájl |
+| Tesztek | Vitest 5.0.5: 259 teszt, 27 fájl |
 | Lint | Oxlint (`--deny-warnings`) |
 | PWA | Web App Manifest + Service Worker (network-first navigáció) |
 | Adat | Football-Data.org v4 (ingyenes csomag, 10 kérés/perc), API-Sports v3, Vercel serverless proxy |
@@ -110,7 +128,8 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 soccerai/
 ├── STATUS_REPORT.md, CHANGELOG.md, README.md, RELEASE_NOTES.md
 ├── package.json, vite.config.ts, tsconfig*.json, index.html
-├── scripts/verifyBrowser.mjs         Headless Chromium CDP ellenőrzés
+├── scripts/                          verifyBrowser.mjs (CDP ellenőrzés), backtest-download.mjs, backtest.ts (walk-forward backtest)
+├── docs/backtest-report.md           a legutóbbi valós backtest jelentése
 ├── public/                           manifest, sw.js, ikonok, labda-textúrák
 ├── api/
 │   ├── matches.ts                    Football-Data proxy (`competition`, `season`, `status`)
@@ -123,6 +142,8 @@ soccerai/
     │   ├── predictionEngine.ts       Dixon–Coles mátrix (MAXG=12), Shin, λ-rács, Kelly
     │   ├── dixonColesFitting.ts      μ/γ/α/β/ρ illesztés + klub-priorok
     │   ├── seasonHistory.ts          szezon-előzmény, modell-előkészítés, 90 perces eredmény
+    │   ├── marketBlend.ts            piaccal súlyozás, piaci referencia (Pinnacle fair)
+    │   ├── backtestEngine.ts         walk-forward backtest, RPS/log-loss, fogadási szimuláció
     │   ├── calibrationService.ts     Brier, ECE, edge-kapu
     │   ├── predictionAuditService.ts pre-match napló
     │   ├── bankrollService.ts, equityCurve.ts
@@ -141,11 +162,8 @@ soccerai/
 
 ## 6. Javasolt következő csomagok
 
-1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó egy szerveroldali előmelegítés (cron) vagy ligánkénti ütemezés.
-2. **Piaccal súlyozás és valós backtest (F-04, F-07):**
-   - Valós oddsnál a modell és a de-vigelt piaci valószínűség keverése, a Kelly shrinkelt valószínűségből.
-   - Walk-forward backtest múltbeli szezonokon, záró oddsokkal (RPS, log-loss, valós CLV); a mintaadat kivezetése.
-   - Ez teszi lehetővé, hogy az "él" állítás egyáltalán értelmezhető legyen.
+1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó szerveroldali előmelegítés (cron).
+2. **Modell-javítás a piac ellen (a backtest a mérce):** a modell a záró piacnál 0,02 log-loss-szal rosszabb. Kipróbálandó: hiányzó játékosok/forma bevonása, jobb időlecsengés (ξ hangolás a backtesten), liga-specifikus hazai előny, kétlépcsős (támadás/védelem) erősség-modell, xG-alapú bemenet. Minden változtatás elfogadási kritériuma: a backtest holdout log-loss-ának javulása és pozitív CLV.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
 4. **Higiénia (F-14, F-15):** mock lusta betöltése, üres `catch`-ek, nagy komponensek szétvágása, CSP.
 
@@ -156,7 +174,7 @@ soccerai/
 ```bash
 npm ci          # reprodukálható telepítés
 npm run dev     # fejlesztői szerver (3000)
-npm test        # 238 teszt
+npm test        # 259 teszt
 npx tsc -b      # típusellenőrzés
 npx oxlint --deny-warnings
 npm run build   # production build

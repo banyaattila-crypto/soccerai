@@ -524,6 +524,14 @@ export function buildMatchQuantAndPick(params: {
   dixonColesRatings?: QuantAnalysis['dixonColesRatings'];
   /** A mátrixhoz használt ρ; ha nincs megadva, a ratingekből, végül −0,13 */
   rho?: number;
+  /**
+   * Valós szorzónál az EV/Kelly valószínűsége (%): a piaccal súlyozott érték (lásd marketBlend.ts).
+   * null: nincs piaci referencia a piachoz, ekkor az EV 0. Szimulált szorzónál nem használt.
+   */
+  realMarketProbPct?: (
+    market: PickMarket,
+    modelExactPct: { home: number; draw: number; away: number; over25: number }
+  ) => number | null;
 }): {
   aiPick: Match['aiPick'];
   quantAnalysis: QuantAnalysis;
@@ -596,10 +604,19 @@ export function buildMatchQuantAndPick(params: {
     market: PickMarket
   ): { ev: number; qk: number; isTop: boolean; rankScore: number } => {
     // Szimulált ár esetén a Value (+EV%) és Kelly tét szigorúan tiltott / 0, mivel nem képvisel valós piaci arbitrázst!
-    const evProb = getMarketProbFromExtracted(exactMk, market, homeXg, awayXg) * 100;
-    const rawEv = calculateExpectedValue(evProb, candidateOdds);
-    const ev = isSimulatedOdds ? 0 : rawEv;
-    const qk = isSimulatedOdds ? 0 : quarterKelly(evProb, candidateOdds);
+    // Valós szorzónál az EV a PIACCAL SÚLYOZOTT valószínűségből jön (backtest: a nyers modell-EV hozama
+    // −15%, z=−4). Piaci referencia nélküli piacra (pl. BTTS) nincs megbízható EV, ezért 0.
+    let evProb: number | null = null;
+    if (!isSimulatedOdds && params.realMarketProbPct) {
+      evProb = params.realMarketProbPct(market, {
+        home: exactMk.home * 100,
+        draw: exactMk.draw * 100,
+        away: exactMk.away * 100,
+        over25: exactMk.over25 * 100,
+      });
+    }
+    const ev = evProb === null ? 0 : calculateExpectedValue(evProb, candidateOdds);
+    const qk = evProb === null ? 0 : quarterKelly(evProb, candidateOdds);
 
     if (rob.verdict === 'ELVETVE') {
       return { ev, qk, isTop: false, rankScore: -999 };

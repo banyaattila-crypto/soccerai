@@ -73,7 +73,7 @@ describe('Kerekítetlen valószínűség az EV-hez', () => {
     expect(p.exact!.homeWin + p.exact!.draw + p.exact!.awayWin).toBeCloseTo(100, 1);
   });
 
-  it('valós oddsnál az EV a kerekítetlen valószínűségből jön, nem az egész %-ból', () => {
+  it('az EV-hez átadott valószínűség kerekítetlen (nem az egész %)', () => {
     const homeXg = 1.9;
     const awayXg = 1.0;
     const probabilities = calculateMarketProbabilities(homeXg, awayXg, 1.0, -0.13);
@@ -88,13 +88,16 @@ describe('Kerekítetlen valószínűség az EV-hez', () => {
       leagueLabel: 'T',
       isSimulatedOdds: false,
       rho: -0.13,
+      // identitás-hivatkozás: a motor a KEREKÍTETLEN modell-valószínűséget adja át a hívónak
+      realMarketProbPct: (market, m) =>
+        market === '1' ? m.home : market === '2' ? m.away : market === 'OVER_25' ? m.over25 : market === 'UNDER_25' ? 100 - m.over25 : null,
     });
     expect(aiPick).toBeDefined();
     const exactByMarket: Record<string, number | undefined> = {
       '1': probabilities.exact?.homeWin,
       '2': probabilities.exact?.awayWin,
       OVER_25: probabilities.exact?.over25,
-      BTTS_YES: probabilities.exact?.bttsYes,
+      UNDER_25: probabilities.exact ? 100 - probabilities.exact.over25 : undefined,
     };
     const exact = exactByMarket[aiPick!.market];
     if (exact !== undefined) {
