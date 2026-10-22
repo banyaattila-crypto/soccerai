@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { MOCK_MATCHES, LEAGUES } from './data/mockMatches';
-import { fetchLiveMatches } from './services/footballDataApi';
+import { fetchLiveMatches, getPendingLeagueModelCount } from './services/footballDataApi';
 import {
   fetchApiSportsMatches,
   API_SPORTS_DEFAULT_KEY,
@@ -137,6 +137,22 @@ export function App() {
     };
   }, []);
 
+  // Modell-építés újrapróbálása: az ingyenes kulcs 10 kérés/perc keretébe nem fér bele minden liga előzménye
+  // az első betöltéskor, ezért a pihenő után automatikusan folytatjuk (legfeljebb MAX_MODEL_RETRIES alkalommal).
+  const MAX_MODEL_RETRIES = 8;
+  const MODEL_RETRY_DELAY_MS = 65 * 1000;
+  const modelRetryCountRef = useRef(0);
+  const modelRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadMatchesRef = useRef<
+    ((source: 'builtin' | 'api', fbKey: string, sportsKey?: string, secEnabled?: boolean, forceRefresh?: boolean) => Promise<void>) | null
+  >(null);
+
+  useEffect(() => {
+    return () => {
+      if (modelRetryTimerRef.current) clearTimeout(modelRetryTimerRef.current);
+    };
+  }, []);
+
   // Élő meccsek betöltése (Football-Data.org Top ligák + API-Sports másodosztályok és NB I)
   const loadMatches = useCallback(
     async (
@@ -206,9 +222,27 @@ export function App() {
           const secText = liveSecondary.length > 0
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} egyéb európai & másodosztályú liga)`
             : '';
+          const pendingModels = getPendingLeagueModelCount();
+          const modelText =
+            pendingModels > 0
+              ? ` Modell-építés folyamatban: ${pendingModels} liga még hátra, automatikus újrapróbálás.`
+              : '';
           setApiSuccessNotice(
-            `Sikeres szinkronizáció! ${combined.length} valós mérkőzés elérhető${secText}.`
+            `Sikeres szinkronizáció! ${combined.length} valós mérkőzés elérhető${secText}.${modelText}`
           );
+
+          if (modelRetryTimerRef.current) {
+            clearTimeout(modelRetryTimerRef.current);
+            modelRetryTimerRef.current = null;
+          }
+          if (pendingModels > 0 && modelRetryCountRef.current < MAX_MODEL_RETRIES) {
+            modelRetryCountRef.current += 1;
+            modelRetryTimerRef.current = setTimeout(() => {
+              loadMatchesRef.current?.(source, fbKey, sportsKey, secEnabled, true);
+            }, MODEL_RETRY_DELAY_MS);
+          } else if (pendingModels === 0) {
+            modelRetryCountRef.current = 0;
+          }
         } else {
           // NEM helyettesítünk be kamu meccseket!
           setMatches([]);
@@ -233,6 +267,10 @@ export function App() {
     },
     [apiSportsKey, enableSecondary]
   );
+
+  useEffect(() => {
+    loadMatchesRef.current = loadMatches;
+  }, [loadMatches]);
 
   // Első betöltéskor
   useEffect(() => {

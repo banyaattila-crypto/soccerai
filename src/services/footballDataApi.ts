@@ -93,6 +93,12 @@ export const COMPETITION_MAP: Record<
 };
 
 
+/** Átmeneti okból (kvóta, időkeret) még hiányzó vagy részleges modellű ligák az utolsó lekérés után */
+let pendingModelCodes: string[] = [];
+export function getPendingLeagueModelCount(): number {
+  return pendingModelCodes.length;
+}
+
 const CACHE_KEY = 'soccerai_live_matches_cache_v5';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perces gyorsítótár
 
@@ -188,7 +194,9 @@ export async function fetchLiveMatches(
   // Dixon–Coles modell ligánként a TELJES szezon-előzményből (aktuális + szükség esetén előző szezon).
   // A korábbi 3 napos ablakból illesztett modell rosszabb esélyeket adott a ligaátlagnál.
   // Ha nincs elég minta (vagy kvóta), a modell null marad, és a ligaátlag + klub-prior számol.
-  const leagueModelsMap = await ensureLeagueModels(uniqueCompCodes, apiKey);
+  const leagueModelsMap = await ensureLeagueModels(uniqueCompCodes, apiKey, 15000, (p) => {
+    pendingModelCodes = p;
+  });
 
   // Konvertálás a belső Match formátumra
   const matches: Match[] = rawData.matches.map((m) => {

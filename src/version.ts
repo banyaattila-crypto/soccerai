@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.26.1';
-export const APP_RELEASE_NAME = 'Szezon-alapú Modell: Éles Ellenőrzés Utáni Javítás';
+export const APP_VERSION = '1.26.2';
+export const APP_RELEASE_NAME = 'Szezon-alapú Modell: Automatikus Újrapróbálás';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -23,6 +23,7 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
     '90 perces eredmény hosszabbítás/tizenegyes esetén (rendes játékidő), a piacok helyes elszámolásához',
     'Tartósabb modellek: 24 órás cache, hibacache a nem elérhető ligákra, kvóta- és időkeret-védelem',
     'Átmeneti hibák (429, hálózat) nem cache-elődnek hibaként; részleges előzményből készült modell nem tartósul',
-    '237 / 237 zöld teszt (25 tesztfájl)',
+    'Automatikus újrapróbálás: a 10 kérés/perc keret miatt hiányzó ligamodellek a pihenő után maguktól elkészülnek, és a felület jelzi az állapotot',
+    '238 / 238 zöld teszt (25 tesztfájl)',
   ],
 };

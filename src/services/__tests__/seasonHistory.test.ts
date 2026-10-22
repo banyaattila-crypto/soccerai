@@ -216,3 +216,35 @@ describe('ensureLeagueModels: átmeneti hibák nem cache-elődnek tartósan', ()
     expect(Object.keys(store.data).some((k) => k.startsWith('soccerai_dc_model_v2_'))).toBe(false);
   });
 });
+
+describe('ensureLeagueModels: függő (később újrapróbálandó) ligák jelentése', () => {
+  it('429 esetén a liga függő, sikeres lekérésnél nem az', async () => {
+    let pending: string[] = [];
+    vi.stubGlobal('fetch', async () => ({ ok: false, status: 429, headers: new Headers(), json: async () => ({}) }));
+    await ensureLeagueModels(['SA'], '', 5000, (p) => {
+      pending = p;
+    });
+    vi.unstubAllGlobals();
+    expect(pending).toEqual(['SA']);
+
+    const hist: FootballDataHistoryMatch[] = [];
+    for (let i = 0; i < 12; i++)
+      for (let j = 0; j < 12; j++)
+        if (i !== j)
+          hist.push({
+            utcDate: '2026-09-01T18:30:00Z',
+            status: 'FINISHED',
+            homeTeam: { name: `C${i}` },
+            awayTeam: { name: `C${j}` },
+            score: { duration: 'REGULAR', fullTime: { home: (i + j) % 4, away: (i * j) % 3 } },
+          });
+    // 3 szezon-lekérés szükséges nélkül is elég (2 x 132 > 180): teljes adat, nincs függő
+    vi.stubGlobal('fetch', async () => ({ ok: true, status: 200, headers: new Headers(), json: async () => ({ matches: hist }) }));
+    pending = ['x'];
+    await ensureLeagueModels(['PL'], '', 5000, (p) => {
+      pending = p;
+    });
+    vi.unstubAllGlobals();
+    expect(pending).toEqual([]);
+  });
+});

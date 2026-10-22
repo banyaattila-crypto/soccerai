@@ -3,6 +3,13 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.26.2] - 2026-10-22
+
+### Javítva (Fixed) - Modell-építés automatikus újrapróbálása
+A v1.26.1 élő ellenőrzése: új deploy után az edge-cache üres, az ingyenes Football-Data kulcs 10 kérés/perces keretét az első látogató elégeti, ezért csak az első liga (PL) modellje készült el, a többi a következő (10 perces, vagy kézi) frissítésig hiányzott.
+- **Újrapróbálás (`seasonHistory.ts`, `footballDataApi.ts`, `App.tsx`):** az `ensureLeagueModels` jelenti a még függő ligákat; ha van ilyen, az app 65 másodperc után (a kvótapihenő lejártakor) automatikusan újratölt, legfeljebb 8 alkalommal. A sikeres szinkron üzenete kiírja, hány liga modellje készül még.
+- **Teszt:** 1 új teszt (függő liga jelentése); összesen 25 fájlban 238 / 238 zöld.
+
 ## [1.26.1] - 2026-10-22
 
 ### Javítva (Fixed) - Éles ellenőrzés utáni javítás (`seasonHistory.ts`)

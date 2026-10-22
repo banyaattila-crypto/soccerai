@@ -196,10 +196,13 @@ function cacheFailure(code: string, nowMs: number): void {
 export async function ensureLeagueModels(
   codes: string[],
   apiKey: string = '',
-  budgetMs: number = 15000
+  budgetMs: number = 15000,
+  onPending?: (pendingCodes: string[]) => void
 ): Promise<Record<string, FittedDixonColesModel | null>> {
   const started = Date.now();
   const models: Record<string, FittedDixonColesModel | null> = {};
+  // Átmeneti okból (kvóta, időkeret, részleges adat) még nem teljes modellű ligák: a hívó később újrapróbálhatja
+  const pending: string[] = [];
 
   for (const code of codes) {
     const cached = loadLeagueModel(code);
@@ -210,8 +213,10 @@ export async function ensureLeagueModels(
     models[code] = null;
 
     if (isFailureCached(code, started)) continue;
-    if (Date.now() - started > budgetMs) continue;
-    if (checkFootballDataQuota().isRateLimited) continue;
+    if (Date.now() - started > budgetMs || checkFootballDataQuota().isRateLimited) {
+      pending.push(code);
+      continue;
+    }
 
     const { results, partial, unavailable } = await fetchCompetitionHistory(code, apiKey);
     if (results.length >= MIN_FIT_MATCHES) {
@@ -219,13 +224,17 @@ export async function ensureLeagueModels(
       // Részleges előzményből (kvóta/hiba miatt hiányzik az előző szezon) készült modellt nem tartósítunk:
       // ez a futás használja, de a következő frissítéskor teljes adatból újraillesztjük.
       if (!partial || results.length >= TARGET_HISTORY_MATCHES) saveLeagueModel(fitted);
+      else pending.push(code);
       models[code] = fitted;
     } else if (unavailable || !partial) {
       // Csak a tényleg nem elérhető (403/404), vagy teljes lekérés mellett is kevés mintájú ligát hibacache-eljük.
       // Kvóta-, hálózati és 5xx hibát SOSEM: azok átmenetiek.
       cacheFailure(code, Date.now());
+    } else {
+      pending.push(code); // átmeneti hiba: később újrapróbáljuk
     }
   }
 
+  onPending?.(pending);
   return models;
 }
