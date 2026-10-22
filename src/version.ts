@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.25.0';
-export const APP_RELEASE_NAME = 'Őszinte Felület: Bizonytalanság, Szimulált Ár Jelölés, Kalibrációs Diagram és Tőkegörbe';
+export const APP_VERSION = '1.26.0';
+export const APP_RELEASE_NAME = 'Szezon-alapú Modell: Pontosabb Esélyek';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,13 +16,12 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Érzékenységi sáv a tipp-kártyákon: a modell-esély mellett látszik, hogyan mozog a valószínűség, ha a várható gólok (λ) a mintából becsült hibával eltérnek',
-    'Őszinte adatminőség-felirat: Szezon-illesztés / Részleges / Vékony minta / Ligaátlag + prior, a mögötte álló meccsszámmal',
-    'Szimulált és lejárt ár egyértelmű jelölése: csíkozott sáv, szaggatott keretek, külön jelvény (színvakon is megkülönböztethető)',
-    'Döntés-központú állapotsor és üres állapot: ha nincs valós ár, a lista kifejezetten nem fogadási ajánlás; ha nincs jelölt, nincs kényszerített tipp',
-    'Megbízhatósági (reliability) diagram a Módszertanban, illusztratív mintaadat jelöléssel',
-    'Tőkegörbe és maximális drawdown a Tétnaplóban',
-    'Akadálymentesség: AA kontrasztú szürke szövegek, prefers-reduced-motion támogatás (CSS és labda-animáció), diagramok szöveges alternatívával',
-    '219 / 219 zöld teszt (23 tesztfájl)',
+    'Szezon-alapú illesztés: a Dixon–Coles modell a teljes aktuális (és szükség esetén az előző) szezon lejátszott meccseiből tanul, a korábbi 3 napos ablak helyett',
+    'Egységes skála: a gólszint (μ) és a hazai előny (γ) külön paraméter, megszűnt a +21% / +10%-os gólszám-torzítás',
+    'Kerekítetlen valószínűség az EV-hez és a Kelly-hez (korábban egész százalék); gólmátrix 12x12 (korábban 8x8)',
+    'Őszinte adatalap: egynapos mintából már nem készül "illesztett" modell; nincs elég minta esetén ligaátlag + klub-prior',
+    '90 perces eredmény hosszabbítás/tizenegyes esetén (rendes játékidő), a piacok helyes elszámolásához',
+    'Tartósabb modellek: 24 órás cache, hibacache a nem elérhető ligákra, kvóta- és időkeret-védelem',
+    '234 / 234 zöld teszt (25 tesztfájl), köztük szintetikus pontossági regresszió',
   ],
 };

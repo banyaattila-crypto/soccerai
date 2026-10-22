@@ -15,7 +15,22 @@ export default defineConfig(({ mode }) => {
         '/api/matches': {
           target: 'https://api.football-data.org/v4',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/matches/, '/matches'),
+          rewrite: (path) => {
+            // A Vercel proxy (api/matches.ts) mintájára: ?competition=PL -> /competitions/PL/matches
+            const url = new URL(path, 'http://localhost')
+            const competition = url.searchParams.get('competition')
+            if (competition) {
+              const code = competition.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase()
+              const params = new URLSearchParams()
+              for (const key of ['status', 'season']) {
+                const value = url.searchParams.get(key)
+                if (value) params.append(key, value)
+              }
+              const qs = params.toString()
+              return `/competitions/${code}/matches${qs ? `?${qs}` : ''}`
+            }
+            return path.replace(/^\/api\/matches/, '/matches')
+          },
           headers: env.FOOTBALL_DATA_API_KEY
             ? { 'X-Auth-Token': env.FOOTBALL_DATA_API_KEY }
             : {}

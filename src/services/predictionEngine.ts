@@ -1,6 +1,7 @@
 import { MarketProbabilities, PickMarket, Match, QuantAnalysis } from '../types/football';
 
-const MAXG = 8;
+/** Gólmátrix mérete (0..MAXG-1 gól csapatonként). 12-nél a λ=5,5 esetén is <0,1% tömeg vész el. */
+export const MAXG = 12;
 
 /**
  * Poisson-eloszlás valószínűségi sűrűségfüggvénye
@@ -189,8 +190,8 @@ export function computeDixonColesExpectedGoals(params: DixonColesParams): {
   const rawLa = params.attackAway * params.defenseHome * avgA;
 
   // Numerikus stabilitási korlátok (strictly pozitív intenzitási paraméterek)
-  const lh = Math.min(5.5, Math.max(0.2, Math.round(rawLh * 100) / 100));
-  const la = Math.min(5.5, Math.max(0.2, Math.round(rawLa * 100) / 100));
+  const lh = Math.min(5.5, Math.max(0.2, Math.round(rawLh * 1000) / 1000));
+  const la = Math.min(5.5, Math.max(0.2, Math.round(rawLa * 1000) / 1000));
 
   return { lh, la };
 }
@@ -257,6 +258,19 @@ export function calculateMarketProbabilities(
   const ftOver05 = Math.round((1 - matrix[0][0]) * 100);
   const fhOver05 = Math.min(ftOver05, Math.max(1, Math.round(rawFhOver05)));
 
+  const pct = (x: number) => Math.round(x * 10000) / 100;
+  const exact = {
+    homeWin: pct(mk.home),
+    draw: pct(mk.draw),
+    awayWin: pct(mk.away),
+    bttsYes: pct(mk.btts),
+    over15: pct(mk.over15),
+    over25: pct(mk.over25),
+    over35: pct(mk.over35),
+    fhOver05: Math.round(rawFhOver05 * 100) / 100,
+    bttsAndOver25: pct(mk.bttsAndOver25),
+  };
+
   return {
     homeWin: normHome,
     draw: normDraw,
@@ -267,6 +281,7 @@ export function calculateMarketProbabilities(
     over35,
     fhOver05,
     bttsAndOver25,
+    exact,
   };
 }
 
@@ -507,6 +522,8 @@ export function buildMatchQuantAndPick(params: {
   leagueLabel: string;
   isSimulatedOdds: boolean;
   dixonColesRatings?: QuantAnalysis['dixonColesRatings'];
+  /** A mátrixhoz használt ρ; ha nincs megadva, a ratingekből, végül −0,13 */
+  rho?: number;
 }): {
   aiPick: Match['aiPick'];
   quantAnalysis: QuantAnalysis;
@@ -525,6 +542,15 @@ export function buildMatchQuantAndPick(params: {
   } = params;
 
   const shinRes = devigShin([odds.home, odds.draw, odds.away]);
+
+  // Kerekítetlen piac-valószínűségek: az EV és a Kelly ezekből számol, nem az egész %-ból
+  const exactMk = extractMarketsFromMatrix(
+    calculateDixonColesMatrix(
+      homeXg,
+      awayXg,
+      params.rho ?? dixonColesRatings?.rho ?? -0.13
+    )
+  );
   const lambdaReport = lambdaInversionReport(
     odds.over25,
     odds.under25,
@@ -570,9 +596,10 @@ export function buildMatchQuantAndPick(params: {
     market: PickMarket
   ): { ev: number; qk: number; isTop: boolean; rankScore: number } => {
     // Szimulált ár esetén a Value (+EV%) és Kelly tét szigorúan tiltott / 0, mivel nem képvisel valós piaci arbitrázst!
-    const rawEv = calculateExpectedValue(prob, candidateOdds);
+    const evProb = getMarketProbFromExtracted(exactMk, market, homeXg, awayXg) * 100;
+    const rawEv = calculateExpectedValue(evProb, candidateOdds);
     const ev = isSimulatedOdds ? 0 : rawEv;
-    const qk = isSimulatedOdds ? 0 : quarterKelly(prob, candidateOdds);
+    const qk = isSimulatedOdds ? 0 : quarterKelly(evProb, candidateOdds);
 
     if (rob.verdict === 'ELVETVE') {
       return { ev, qk, isTop: false, rankScore: -999 };

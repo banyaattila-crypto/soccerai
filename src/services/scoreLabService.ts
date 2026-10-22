@@ -134,8 +134,9 @@ export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
   lh = Math.min(5.5, Math.max(0.2, Math.round(lh * 100) / 100));
   la = Math.min(5.5, Math.max(0.2, Math.round(la * 100) / 100));
 
-  // 8x8 Dixon-Coles mátrix generálása
+  // MAXG x MAXG Dixon-Coles mátrix generálása
   const raw8x8 = calculateDixonColesMatrix(lh, la, rho);
+  const N = raw8x8.length; // a mátrix mérete (MAXG), a 4+ cellák ennek a végéig összegzik a gólokat
 
   // 5x5 aggregáció (0, 1, 2, 3, 4+)
   const matrix5x5: ScoreMatrixCell[][] = [];
@@ -146,13 +147,13 @@ export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
       if (i < 4 && j < 4) {
         cellProb = raw8x8[i][j];
       } else if (i === 4 && j < 4) {
-        for (let k = 4; k < 8; k++) cellProb += raw8x8[k][j];
+        for (let k = 4; k < N; k++) cellProb += raw8x8[k][j];
       } else if (i < 4 && j === 4) {
-        for (let k = 4; k < 8; k++) cellProb += raw8x8[i][k];
+        for (let k = 4; k < N; k++) cellProb += raw8x8[i][k];
       } else {
         // i === 4 && j === 4
-        for (let r = 4; r < 8; r++) {
-          for (let c = 4; c < 8; c++) {
+        for (let r = 4; r < N; r++) {
+          for (let c = 4; c < N; c++) {
             cellProb += raw8x8[r][c];
           }
         }
@@ -204,8 +205,8 @@ export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
   let sumHome = 0;
   let sumDraw = 0;
   let sumAway = 0;
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
       const p = raw8x8[i][j];
       if (i > j) sumHome += p;
       else if (i === j) sumDraw += p;
@@ -219,8 +220,8 @@ export function getDixonColesScoreMatrix(match: Match): ScoreLabMatrixReport {
   let highP = 0; // 4+
   const totalBins: Record<number, number> = {};
 
-  for (let i = 0; i < 8; i++) {
-    for (let j = 0; j < 8; j++) {
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
       const p = raw8x8[i][j];
       const sum = i + j;
       totalBins[sum] = (totalBins[sum] || 0) + p;

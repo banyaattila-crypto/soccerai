@@ -3,6 +3,27 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.26.0] - 2026-10-22
+
+### Javítva & Továbbfejlesztve (Fixed & Enhanced) - Szezon-alapú Modell (Adat- és modell csomag)
+A külső kódaudit (F-01, F-02, F-03, F-09, F-10, F-12) és az azt követő szintetikus szimuláció alapján.
+- **Szezon-előzmény (`seasonHistory.ts`, `api/matches.ts`, `vite.config.ts`):** a Dixon–Coles modell ligánként a teljes aktuális szezon lejátszott meccseiből tanul, és ha ez 180 meccs alatt van, az előző szezont is felhasználja. Új `season` paraméter a proxyn (négyjegyű évszám ellenőrzéssel); a fejlesztői proxy is érti a `competition` végpontot. 24 órás edge-cache és modell-cache, a 10 kérés/perc korlát betartásával, időkerettel (15 mp) és hibacache-sel (6 óra) a nem elérhető ligákra (pl. az ingyenes csomagban nem szereplő Európa Liga).
+- **Egységes skála (`dixonColesFitting.ts`):** a modell explicit liga-gólszintet (μ) és hazai előnyt (γ) illeszt, α és β átlaga 1,0. Megszűnt a dupla skálázás, amely a szimulációban +21% hazai és +10% vendég gólszám-torzítást okozott. A kézi klub-priorok ugyanabban a konvencióban vannak.
+- **Bayes-i regularizáció:** a csapat erőssége 1,0 felé húz (K=14, a szimulációban ez adta a legjobb out-of-sample log-loss-t); a ρ kis mintán a tipikus −0,10 felé húz.
+- **Kerekítetlen valószínűség (`predictionEngine.ts`, `scannerService.ts`):** az EV és a Kelly a gólmátrixból számolt, két tizedesre kerekített valószínűségből jön (`MarketProbabilities.exact`), a kijelzés marad egész százalék. A λ két helyett három tizedesig pontos, az xG két tizedesig.
+- **Gólmátrix 12x12 (`MAXG`):** a korábbi 8x8 csonkolás magas gólszámú meccseken ~1 százalékpontot vitt el (a Bayern–Dortmund referencia-pin Over 2.5: 82 → 83, Over 3.5: 65 → 66). A ScoreLab 4+ cellái a mátrix teljes méretét használják.
+- **`||` helyett `??`:** a 0 értékű ρ és hazai előny többé nem íródik felül az alapértékkel.
+- **Őszinte adatalap (`apiSportsClient.ts`, `dixonColesFitting.ts`):** az API-Sports ligáknál egyetlen nap meccseiből már nem készül "illesztett" modell; az `isFitted` csak modell-eredetű értéknél igaz, nem a kézi priornál. Az adatminőség (A/B/C) a tényleges mintaszámból jön. Kis mintájú modell-ratinget a klub-priorral keveri a program.
+- **90 perces eredmény (`seasonHistory.ts`, `footballDataApi.ts`):** hosszabbítás/tizenegyes esetén a `regularTime` mező, ha elérhető; ez javítja a kupameccsek elszámolását. [Az élő API-n a mező megléte ellenőrzendő.]
+- **Modell-cache v2, meccs-cache v5:** a korábbi, vékony mintából készült modellek nem használhatók tovább.
+- **Tesztek:** 15 új teszt (`dixonColesAccuracy.test.ts`, `seasonHistory.test.ts`); összesen 25 fájlban 234 / 234 zöld.
+
+### Mért hatás (szintetikus liga, 40 ismétlés; nem valós piaci backtest)
+- Átlagos várható gól 380 meccses illesztésnél: hazai 1,82 → 1,50, vendég 1,32 → 1,19 (igaz: 1,50 / 1,20).
+- 1X2 log-loss (kisebb a jobb): ligaátlag 1,0751; 30 meccsből illesztve 1,0800 (rosszabb a ligaátlagnál); 60 meccsből 1,0692; 190 meccsből 1,0466; 380 meccsből 1,0382 (korábban kb. 1,05); orákulum 1,0217. Ezért az illesztés alsó határa 60 meccs.
+- Hatékony piacon (5% árrés) a valós ROI minden változatnál kb. −5% (−4,2% … −6,6%), miközben a modell átlagosan +18% … +47% EV-t állít. A pontosabb illesztés a log-loss-t javítja, de az "élt" nem teremti meg: az "igazolt piaci előny" állítás tiltva marad, és a következő lépés a piaccal való súlyozás.
+- Módszertani megjegyzés: az audit első szimulációjában a "piac" valószínűségei más ρ-val készültek, mint a szimulált világ, ezért az ott közölt ROI-számok (−0,4% … −4,2%) torzítottak voltak; a most közölt számok a javított szimulációból származnak.
+
 ## [1.25.0] - 2026-10-22
 
 ### Hozzáadva & Továbbfejlesztve (Added & Enhanced) - Őszinte Felület (Design csomag)

@@ -9,21 +9,22 @@ import {
   robustnessGridTest,
   lambdaInversionReport,
   buildMatchQuantAndPick,
+  MAXG,
 } from '../predictionEngine';
 
 describe('predictionEngine - Matematikai és Kvantitatív Motor', () => {
   describe('Dixon-Coles Bivariate Poisson Mátrix', () => {
-    it('8x8 valószínűségi mátrixot generál, amelynek összege pontosan 1.0 (100%)', () => {
+    it('MAXG×MAXG valószínűségi mátrixot generál, amelynek összege pontosan 1.0 (100%)', () => {
       const lambdaHome = 1.65;
       const lambdaAway = 1.15;
       const matrix = calculateDixonColesMatrix(lambdaHome, lambdaAway, -0.13);
 
-      expect(matrix.length).toBe(8);
-      expect(matrix[0].length).toBe(8);
+      expect(matrix.length).toBe(MAXG);
+      expect(matrix[0].length).toBe(MAXG);
 
       let sum = 0;
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
+      for (let i = 0; i < MAXG; i++) {
+        for (let j = 0; j < MAXG; j++) {
           expect(matrix[i][j]).toBeGreaterThanOrEqual(0);
           sum += matrix[i][j];
         }

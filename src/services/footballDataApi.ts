@@ -4,14 +4,8 @@ import {
   buildMatchQuantAndPick,
 } from './predictionEngine';
 import { getRelativeDateStr, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
-import {
-  fitDixonColesModel,
-  computeExpectedGoalsFromModel,
-  loadLeagueModel,
-  saveLeagueModel,
-  FittedDixonColesModel,
-  FinishedMatchResult,
-} from './dixonColesFitting';
+import { computeExpectedGoalsFromModel } from './dixonColesFitting';
+import { ensureLeagueModels, getRegularTimeGoals } from './seasonHistory';
 import {
   checkFootballDataQuota,
   recordFootballDataCall,
@@ -41,6 +35,10 @@ interface FootballDataMatch {
     winner: string | null;
     duration: string;
     fullTime: {
+      home: number | null;
+      away: number | null;
+    };
+    regularTime?: {
       home: number | null;
       away: number | null;
     };
@@ -95,7 +93,7 @@ export const COMPETITION_MAP: Record<
 };
 
 
-const CACHE_KEY = 'soccerai_live_matches_cache_v4';
+const CACHE_KEY = 'soccerai_live_matches_cache_v5';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perces gyorsítótár
 
 /**
@@ -180,42 +178,17 @@ export async function fetchLiveMatches(
     );
   }
 
-  // Egyedi bajnokságok összegyűjtése és valós Dixon-Coles modell illesztése helyben (0 extra API hívás, kvótavédelem)
+  // Egyedi bajnokságok, fontossági sorrendben (kvótakorlát esetén a főbb ligák kerülnek előre)
   const uniqueCompCodes = Array.from(
     new Set(rawData.matches.map((m) => m.competition.code || 'PL'))
+  ).sort(
+    (a, b) => (COMPETITION_MAP[a]?.priority ?? 99) - (COMPETITION_MAP[b]?.priority ?? 99)
   );
 
-  const leagueModelsMap: Record<string, FittedDixonColesModel | null> = {};
-  for (const code of uniqueCompCodes) {
-    leagueModelsMap[code] = loadLeagueModel(code);
-  }
-
-  // A letöltött befejezett meccsekből helyben illesztjük a modelleket extra hálózati kérések nélkül
-  for (const code of uniqueCompCodes) {
-    if (!leagueModelsMap[code]) {
-      const finishedForComp: FinishedMatchResult[] = rawData.matches
-        .filter(
-          (m) =>
-            (m.competition.code || 'PL') === code &&
-            m.status === 'FINISHED' &&
-            m.score?.fullTime?.home !== null &&
-            m.score?.fullTime?.away !== null
-        )
-        .map((m) => ({
-          homeTeam: m.homeTeam.name,
-          awayTeam: m.awayTeam.name,
-          homeGoals: m.score.fullTime.home!,
-          awayGoals: m.score.fullTime.away!,
-          date: m.utcDate ? m.utcDate.split('T')[0] : undefined,
-        }));
-
-      if (finishedForComp.length >= 4) {
-        const fitted = fitDixonColesModel(finishedForComp, code);
-        saveLeagueModel(fitted);
-        leagueModelsMap[code] = fitted;
-      }
-    }
-  }
+  // Dixon–Coles modell ligánként a TELJES szezon-előzményből (aktuális + szükség esetén előző szezon).
+  // A korábbi 3 napos ablakból illesztett modell rosszabb esélyeket adott a ligaátlagnál.
+  // Ha nincs elég minta (vagy kvóta), a modell null marad, és a ligaátlag + klub-prior számol.
+  const leagueModelsMap = await ensureLeagueModels(uniqueCompCodes, apiKey);
 
   // Konvertálás a belső Match formátumra
   const matches: Match[] = rawData.matches.map((m) => {
@@ -264,7 +237,7 @@ export async function fetchLiveMatches(
       homeXg,
       awayXg,
       1.0,
-      leagueModel?.rho || -0.13
+      leagueModel?.rho ?? -0.13
     );
 
     // Szimulált piaci szorzók (fair odds + 5% bukmékeri árrés)
@@ -297,11 +270,16 @@ export async function fetchLiveMatches(
     );
 
     const isTopTier = ['PL', 'PD', 'SA', 'BL1', 'CL', 'EL', 'EC'].includes(compCode);
-    const dataQuality: 'A' | 'B' | 'C' = isFitted
-      ? 'A'
-      : isTopTier
-      ? 'B'
-      : 'C';
+    // Adatminőség a tényleges illesztési mintából: A ≥100, B ≥30 meccs; modell nélkül top ligában B, egyébként C
+    const fitSample = leagueModel?.sampleSize ?? 0;
+    const dataQuality: 'A' | 'B' | 'C' =
+      isFitted && fitSample >= 100
+        ? 'A'
+        : isFitted && fitSample >= 30
+        ? 'B'
+        : isTopTier
+        ? 'B'
+        : 'C';
 
     const { aiPick, quantAnalysis } = buildMatchQuantAndPick({
       homeTeamName: homeDisplayName,
@@ -322,14 +300,15 @@ export async function fetchLiveMatches(
         ? `${compInfo.name} (Valós Dixon–Coles illesztés, ${leagueModel?.sampleSize} meccs)`
         : `${compInfo.name} (ligaátlag bázis)`,
       isSimulatedOdds: true,
+      rho: leagueModel?.rho ?? -0.13,
       dixonColesRatings: isFitted && homeRating && awayRating
         ? {
             homeAttack: homeRating.attack,
             homeDefense: homeRating.defense,
             awayAttack: awayRating.attack,
             awayDefense: awayRating.defense,
-            homeAdvantage: leagueModel?.homeAdvantage || 1.2,
-            rho: leagueModel?.rho || -0.13,
+            homeAdvantage: leagueModel?.homeAdvantage ?? 1.2,
+            rho: leagueModel?.rho ?? -0.13,
             isEmpiricallyFitted: true,
             sampleSize: leagueModel?.sampleSize,
           }
@@ -364,8 +343,8 @@ export async function fetchLiveMatches(
         goalsScoredAvg: awayRating ? awayRating.attack : 1.0,
         goalsConcededAvg: awayRating ? awayRating.defense : 1.0,
       },
-      homeScore: m.score?.fullTime?.home ?? undefined,
-      awayScore: m.score?.fullTime?.away ?? undefined,
+      homeScore: getRegularTimeGoals(m.score)?.home ?? undefined,
+      awayScore: getRegularTimeGoals(m.score)?.away ?? undefined,
       homeHalfTimeScore: m.score?.halfTime?.home ?? undefined,
       awayHalfTimeScore: m.score?.halfTime?.away ?? undefined,
       probabilities,

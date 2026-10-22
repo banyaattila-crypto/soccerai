@@ -435,8 +435,8 @@ describe('Matematikai és Numerikus Invariánsok Regressziós Tesztcsomag', () =
       expect(probs.draw).toBe(19);
       expect(probs.awayWin).toBe(21);
       expect(probs.over15).toBe(95);
-      expect(probs.over25).toBe(82);
-      expect(probs.over35).toBe(65);
+      expect(probs.over25).toBe(83); // MAXG 8->12: a korábbi csonkolás ~1 pp-et elvitt a magas gólszámú meccseken
+      expect(probs.over35).toBe(66);
       expect(probs.bttsYes).toBe(77);
       expect(probs.bttsAndOver25).toBe(71);
       expect(probs.fhOver05).toBe(84);

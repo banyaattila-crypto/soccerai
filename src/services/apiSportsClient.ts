@@ -13,9 +13,6 @@ import { normalizeTeamName } from '../utils/teamUtils';
 import {
   computeExpectedGoalsFromModel,
   loadLeagueModel,
-  saveLeagueModel,
-  fitDixonColesModel,
-  FinishedMatchResult,
 } from './dixonColesFitting';
 import {
   checkApiSportsQuota,
@@ -446,29 +443,11 @@ export async function fetchApiSportsMatches(
     targetLeagueIds.has(f.league?.id)
   );
 
-  // 3.5 Befejezett meccsekből Dixon-Coles modellek illesztése/frissítése
-  for (const lid of targetLeagueIds) {
-    const finishedForLeague: FinishedMatchResult[] = rawFixtures
-      .filter(
-        (f) =>
-          f.league.id === lid &&
-          ['FT', 'AET', 'PEN'].includes(f.fixture.status?.short || '') &&
-          f.goals.home !== null &&
-          f.goals.away !== null
-      )
-      .map((f) => ({
-        homeTeam: f.teams.home.name,
-        awayTeam: f.teams.away.name,
-        homeGoals: f.goals.home!,
-        awayGoals: f.goals.away!,
-        date: f.fixture.date ? f.fixture.date.split('T')[0] : undefined,
-      }));
-
-    if (finishedForLeague.length >= 6) {
-      const fitted = fitDixonColesModel(finishedForLeague, `apisports_${lid}`);
-      saveLeagueModel(fitted);
-    }
-  }
+  // 3.5 Dixon-Coles illesztés: EGYETLEN nap lejátszott meccseiből (ligánként 0-10 db) nem illesztünk modellt.
+  // Az audit szerint ez rosszabb esélyeket ad a ligaátlagnál. Az API-Sports ingyenes csomagja a szezon-előzményt
+  // nem engedi, ezért ezeknél a ligáknál a ligaátlag (SUPPORTED_SECONDARY_LEAGUES) + klub-prior számol, és a
+  // felület "Ligaátlag + prior" adatalapot jelez. Ha később szezon-modell kerül a `apisports_<id>` kulcs alá, az
+  // alábbi loadLeagueModel automatikusan használja.
 
   // 4. Konvertálás a belső Match formátumra & Dixon-Coles modellezés
   const matches: Match[] = rawFixtures.map((f) => {
@@ -509,7 +488,7 @@ export async function fetchApiSportsMatches(
       homeXg,
       awayXg,
       1.0,
-      leagueModel?.rho || -0.13
+      leagueModel?.rho ?? -0.13
     );
 
     // Szimulált piaci szorzók (fair odds + 5.5% árrés)
@@ -560,14 +539,15 @@ export async function fetchApiSportsMatches(
         ? `${lConfig.name} (Valós Dixon–Coles illesztés)`
         : `${lConfig.name} (ligaátlag xG bázis)`,
       isSimulatedOdds: true,
+      rho: leagueModel?.rho ?? -0.13,
       dixonColesRatings: isFitted && homeRating && awayRating
         ? {
             homeAttack: homeRating.attack,
             homeDefense: homeRating.defense,
             awayAttack: awayRating.attack,
             awayDefense: awayRating.defense,
-            homeAdvantage: leagueModel?.homeAdvantage || 1.2,
-            rho: leagueModel?.rho || -0.13,
+            homeAdvantage: leagueModel?.homeAdvantage ?? 1.2,
+            rho: leagueModel?.rho ?? -0.13,
             isEmpiricallyFitted: true,
             sampleSize: leagueModel?.sampleSize,
           }
@@ -1031,6 +1011,7 @@ export function attachCachedRealOddsToMatches(
         leagueLabel: match.leagueName,
         isSimulatedOdds: false,
         dixonColesRatings: match.quantAnalysis?.dixonColesRatings,
+        rho: match.quantAnalysis?.dixonColesRatings?.rho,
       });
 
       if (aiPick) {

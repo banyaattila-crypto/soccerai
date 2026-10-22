@@ -48,7 +48,15 @@ export interface FittedDixonColesModel {
   fittedAt: string; // ISO időbélyeg
 }
 
-const STORAGE_PREFIX = 'soccerai_dc_model_v1_';
+// v2: az új (μ-alapú, egységes skálájú) illesztés. A v1 modellek 3 napos ablakból készültek, ezeket nem használjuk tovább.
+const STORAGE_PREFIX = 'soccerai_dc_model_v2_';
+const PRIOR_STRENGTH = 14; // pszeudo-megfigyelés (várható gól egységben); a szimulációban K≈14 adta a legjobb out-of-sample log-loss-t
+const GAMMA_MIN = 1.05;
+const GAMMA_MAX = 1.7;
+const MU_MIN = 0.3;
+const MU_MAX = 3.0;
+const RHO_PRIOR = -0.1;
+const RHO_PRIOR_MATCHES = 300;
 const MODEL_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 órás gyorsítótár
 
 /**
@@ -186,15 +194,23 @@ export function fitDixonColesModel(
     };
   }
 
-  // 2. Iteratív arányos illesztés (Minorization-Maximization Poisson MLE)
-  // Kezdőértékek: minden csapat alpha = 1.0, beta = 1.0
+  // 2. Iteratív illesztés (koordinátánkénti Poisson-MLE, MM-frissítések)
+  //
+  //    λ_hazai  = μ · γ · α_i · β_j
+  //    λ_vendég = μ · α_j · β_i
+  //
+  //    α (támadás) és β (védelmi gyengeség) átlaga mindig 1,0; a liga gólszintje (μ) és a hazai
+  //    előny (γ) külön paraméter. Ez a konvenció egyezik a predikciós képlettel
+  //    (computeDixonColesExpectedGoals) és az EUROPEAN_CLUB_PRIORS értékeivel, így nincs dupla skálázás.
   const alpha: Record<string, number> = {};
   const beta: Record<string, number> = {};
-
   for (const k of teamKeys) {
     alpha[k] = 1.0;
     beta[k] = 1.0;
   }
+
+  let mu = Math.min(MU_MAX, Math.max(MU_MIN, avgAwayGoals));
+  let gamma = Math.min(GAMMA_MAX, Math.max(GAMMA_MIN, homeAdvantage));
 
   // Mérkőzések időbeli súlyainak (xi) és normalizált csapatneveinek egyszeri előkalkulációja
   const weightedMatches = validMatches.map((m) => {
@@ -215,82 +231,79 @@ export function fitDixonColesModel(
     };
   });
 
-  // Bayesian Gamma(a, b) regularizáció (Laplace smoothing), ami megvédi a kevés meccses csapatokat
-  const priorA = 3.0;
-  const priorB = 3.0;
-
+  // Bayes-regularizáció: PRIOR_STRENGTH várható gólnyi pszeudo-megfigyelés 1,0 körül.
+  // A (tapasztalati arány) = (gól + K) / (várható gól-expozíció + K), így adat nélkül pontosan 1,0.
   for (let iter = 0; iter < maxIter; iter++) {
-    // A) Alpha (támadóerősség) frissítése
+    // A) Alpha (támadóerősség)
     for (const k of teamKeys) {
-      let num = priorA - 1;
-      let denom = priorB;
-
+      let num = PRIOR_STRENGTH;
+      let denom = PRIOR_STRENGTH;
       for (const m of weightedMatches) {
-        if (m.homeKey !== k && m.awayKey !== k) continue;
-
         if (m.homeKey === k) {
           num += m.weight * m.homeGoals;
-          denom += m.weight * beta[m.awayKey] * homeAdvantage;
+          denom += m.weight * mu * gamma * beta[m.awayKey];
         } else if (m.awayKey === k) {
           num += m.weight * m.awayGoals;
-          denom += m.weight * beta[m.homeKey];
+          denom += m.weight * mu * beta[m.homeKey];
         }
       }
-
-      alpha[k] = denom > 0 ? Math.max(0.2, num / denom) : 1.0;
+      alpha[k] = Math.max(0.2, num / denom);
     }
 
-    // B) Beta (védelmi gyengeség) frissítése
+    // B) Beta (védelmi gyengeség)
     for (const k of teamKeys) {
-      let num = priorA - 1;
-      let denom = priorB;
-
+      let num = PRIOR_STRENGTH;
+      let denom = PRIOR_STRENGTH;
       for (const m of weightedMatches) {
-        if (m.homeKey !== k && m.awayKey !== k) continue;
-
         if (m.homeKey === k) {
-          // Ha hazai volt, a kapott gól a vendég gólja
+          // Hazaiként a kapott gól a vendég gólja
           num += m.weight * m.awayGoals;
-          denom += m.weight * alpha[m.awayKey];
+          denom += m.weight * mu * alpha[m.awayKey];
         } else if (m.awayKey === k) {
-          // Ha vendég volt, a kapott gól a hazai gólja
           num += m.weight * m.homeGoals;
-          denom += m.weight * alpha[m.homeKey] * homeAdvantage;
+          denom += m.weight * mu * gamma * alpha[m.homeKey];
         }
       }
-
-      beta[k] = denom > 0 ? Math.max(0.2, num / denom) : 1.0;
+      beta[k] = Math.max(0.2, num / denom);
     }
 
-    // C) Gamma (hazai előny) frissítése azonos időbeli (m.weight) súlyozással a konzisztens MLE-ért
-    let numGamma = 0;
-    let denomGamma = 0;
+    // C) Liga gólszintje (μ) és hazai előny (γ), azonos időbeli súlyozással
+    let sumHome = 0;
+    let sumAway = 0;
+    let expHomeBase = 0;
+    let expAwayBase = 0;
     for (const m of weightedMatches) {
-      numGamma += m.weight * m.homeGoals;
-      denomGamma += m.weight * alpha[m.homeKey] * beta[m.awayKey];
+      sumHome += m.weight * m.homeGoals;
+      sumAway += m.weight * m.awayGoals;
+      expHomeBase += m.weight * alpha[m.homeKey] * beta[m.awayKey];
+      expAwayBase += m.weight * alpha[m.awayKey] * beta[m.homeKey];
     }
-    if (denomGamma > 0) {
-      homeAdvantage = Math.min(1.6, Math.max(1.05, numGamma / denomGamma));
+    if (expAwayBase > 0 && sumAway > 0) {
+      mu = Math.min(MU_MAX, Math.max(MU_MIN, sumAway / expAwayBase));
+    }
+    if (expHomeBase > 0 && sumHome > 0) {
+      gamma = Math.min(GAMMA_MAX, Math.max(GAMMA_MIN, sumHome / (mu * expHomeBase)));
     }
 
-    // D) Normalizálás: az átlagos támadóerő mindig pontosan 1.0 maradjon
-    const sumAlpha = Object.values(alpha).reduce((acc, v) => acc + v, 0);
-    const meanAlpha = sumAlpha / nTeams;
-    if (meanAlpha > 0) {
+    // D) Normalizálás: α és β átlaga 1,0; a skála átkerül μ-be (a λ-k nem változnak)
+    const meanAlpha = Object.values(alpha).reduce((acc, v) => acc + v, 0) / nTeams;
+    const meanBeta = Object.values(beta).reduce((acc, v) => acc + v, 0) / nTeams;
+    if (meanAlpha > 0 && meanBeta > 0) {
       for (const k of teamKeys) {
         alpha[k] /= meanAlpha;
-        beta[k] *= meanAlpha;
+        beta[k] /= meanBeta;
       }
+      mu *= meanAlpha * meanBeta;
     }
   }
+  homeAdvantage = gamma;
 
-  // 3. Rho (alacsony gólszámú korrekciós paraméter) becslése empirikus grid-search segítségével
-  // Dixon-Coles log-likelihood optimalizálás a 0-0, 0-1, 1-0, 1-1 cellákra
-  // 100%-ban azonos kanonikus computeDixonColesExpectedGoals várható gól képletet és időbeli súlyt használva
+  // 3. Rho (alacsony gólszámú korrekciós paraméter) becslése empirikus grid-search segítségével.
+  // Adott λ-k mellett a Poisson-tagok nem függnek ρ-tól, ezért elég a τ-faktorok súlyozott log-likelihoodja.
   let bestRho = -0.13;
   let maxLogLik = -Infinity;
 
-  for (let r = -0.24; r <= 0.02; r += 0.02) {
+  for (let r = -0.24; r <= 0.02 + 1e-9; r += 0.02) {
     let ll = 0;
     for (const m of weightedMatches) {
       const { lh, la } = computeDixonColesExpectedGoals({
@@ -298,21 +311,14 @@ export function fitDixonColesModel(
         defenseHome: beta[m.homeKey],
         attackAway: alpha[m.awayKey],
         defenseAway: beta[m.awayKey],
-        avgHomeGoals,
-        avgAwayGoals,
-        homeAdvantage,
+        avgAwayGoals: mu,
+        homeAdvantage: gamma,
       });
-
-      const x = m.homeGoals;
-      const y = m.awayGoals;
-
-      // Egységesített Dixon-Coles tau faktor használata időbeli súlyozással
-      const tau = dixonColesTau(x, y, lh, la, r);
-      ll += m.weight * Math.log(tau);
+      ll += m.weight * Math.log(dixonColesTau(m.homeGoals, m.awayGoals, lh, la, r));
     }
     if (ll > maxLogLik) {
       maxLogLik = ll;
-      bestRho = Math.round(r * 100) / 100;
+      bestRho = Math.round(r * 100) / 100 + 0; // +0: a −0 kiküszöbölése
     }
   }
 
@@ -321,8 +327,8 @@ export function fitDixonColesModel(
   for (const k of teamKeys) {
     const s = teamStats[k];
     teamsOut[k] = {
-      attack: Math.round(alpha[k] * 100) / 100,
-      defense: Math.round(beta[k] * 100) / 100,
+      attack: Math.round(alpha[k] * 1000) / 1000,
+      defense: Math.round(beta[k] * 1000) / 1000,
       goalsScored: s.goalsScored,
       goalsConceded: s.goalsConceded,
       matchesPlayed: s.homeMatches + s.awayMatches,
@@ -338,10 +344,12 @@ export function fitDixonColesModel(
   return {
     leagueCode,
     teams: teamsOut,
-    homeAdvantage: Math.round(homeAdvantage * 100) / 100,
-    avgHomeGoals: Math.round(avgHomeGoals * 100) / 100,
-    avgAwayGoals: Math.round(avgAwayGoals * 100) / 100,
-    rho: bestRho,
+    homeAdvantage: Math.round(homeAdvantage * 1000) / 1000,
+    // μ (a vendég alapszint) és μ·γ: a predikciós képlet ezekkel egységes
+    avgHomeGoals: Math.round(mu * homeAdvantage * 1000) / 1000,
+    avgAwayGoals: Math.round(mu * 1000) / 1000,
+    // ρ becslése zajos (±0,05 még 380 meccsnél is): kis mintán a tipikus −0,10 felé húzzuk
+    rho: Math.round(((matchCount * bestRho + RHO_PRIOR_MATCHES * RHO_PRIOR) / (matchCount + RHO_PRIOR_MATCHES)) * 100) / 100 + 0,
     sampleSize: matchCount,
     fittedAt: new Date().toISOString(),
   };
@@ -483,6 +491,24 @@ function getClubPriorRating(teamName: string): TeamRating | undefined {
   };
 }
 
+const PRIOR_BLEND_MATCHES = 12;
+
+/**
+ * Kis mintájú modell-rating keverése a kézi klub-priorral (ha van prior).
+ */
+function blendWithClubPrior(rating: TeamRating | undefined, teamName: string): TeamRating | undefined {
+  if (!rating) return rating;
+  const prior = getClubPriorRating(teamName);
+  if (!prior) return rating;
+  const n = rating.matchesPlayed;
+  const w = n / (n + PRIOR_BLEND_MATCHES);
+  return {
+    ...rating,
+    attack: Math.round((w * rating.attack + (1 - w) * prior.attack) * 1000) / 1000,
+    defense: Math.round((w * rating.defense + (1 - w) * prior.defense) * 1000) / 1000,
+  };
+}
+
 /**
  * Kiszámítja a két csapat valós várható góljait (xG: lambda, mu) a Dixon-Coles modellből
  */
@@ -518,7 +544,15 @@ export function computeExpectedGoalsFromModel(
     if (matchKey) aRating = model.teams[matchKey];
   }
 
-  // Fallback European club priors, ha a csapat nem szerepel a lokális mintában
+  // Az illesztett rating tényleges forrása: modell-e, vagy csak a kézi klub-prior
+  const fromModel = Boolean(hRating || aRating);
+
+  // Ha a csapat mintája kicsi (pl. nemzetközi kupa), a kézi klub-priorral keverjük:
+  // súly = n / (n + PRIOR_BLEND_MATCHES). Prior nélküli csapatnál a modell-érték marad.
+  hRating = blendWithClubPrior(hRating, homeTeamName);
+  aRating = blendWithClubPrior(aRating, awayTeamName);
+
+  // Fallback: kézi klub-prior, ha a csapat nem szerepel a modellben
   if (!hRating) hRating = getClubPriorRating(homeTeamName);
   if (!aRating) aRating = getClubPriorRating(awayTeamName);
 
@@ -529,7 +563,8 @@ export function computeExpectedGoalsFromModel(
 
   const avgH = model?.avgHomeGoals ?? fallbackHomeAvg;
   const avgA = model?.avgAwayGoals ?? fallbackAwayAvg;
-  const homeAdv = model?.homeAdvantage ?? 1.15;
+  // Modell nélkül a hazai előny a fallback átlagokból adódik (nem fix 1,15, ami az avgH-t felülírná)
+  const homeAdv = model?.homeAdvantage ?? fallbackHomeAvg / Math.max(0.5, fallbackAwayAvg);
 
   // Egységesített Dixon-Coles várható gól képlet
   const { lh, la } = computeDixonColesExpectedGoals({
@@ -543,11 +578,12 @@ export function computeExpectedGoalsFromModel(
   });
 
   return {
-    homeXg: Math.max(0.2, Math.round(lh * 10) / 10),
-    awayXg: Math.max(0.2, Math.round(la * 10) / 10),
+    homeXg: Math.max(0.2, Math.round(lh * 100) / 100),
+    awayXg: Math.max(0.2, Math.round(la * 100) / 100),
     homeRating: hRating,
     awayRating: aRating,
-    isFitted: Boolean(hRating || aRating),
+    // Csak akkor "illesztett", ha legalább az egyik csapat értéke a modellből jön, nem csupán a kézi priorból
+    isFitted: fromModel,
   };
 }
 

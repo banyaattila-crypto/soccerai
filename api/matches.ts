@@ -28,6 +28,7 @@ const ALLOWED_ORIGINS = new Set([
 
 const VERCEL_PREVIEW_REGEX = /^https:\/\/soccerai[a-z0-9-]*\.vercel\.app$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const SEASON_REGEX = /^\d{4}$/;
 
 // Memóriabeli rate limit (max 30 kérés / perc / IP, legfeljebb 1000 egyidejű IP nyomon követése memóriatúlcsordulás ellen)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -134,11 +135,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const rawDateTo = req.query?.dateTo;
   const rawCompetition = req.query?.competition;
   const rawStatus = req.query?.status;
+  const rawSeason = req.query?.season;
 
   const dateFrom = Array.isArray(rawDateFrom) ? rawDateFrom[0] : rawDateFrom;
   const dateTo = Array.isArray(rawDateTo) ? rawDateTo[0] : rawDateTo;
   const competition = Array.isArray(rawCompetition) ? rawCompetition[0] : rawCompetition;
   const status = Array.isArray(rawStatus) ? rawStatus[0] : rawStatus;
+  const season = Array.isArray(rawSeason) ? rawSeason[0] : rawSeason;
 
   if (dateFrom && !DATE_REGEX.test(dateFrom)) {
     res.setHeader('Cache-Control', 'no-store');
@@ -153,6 +156,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  if (season && !SEASON_REGEX.test(season)) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(400).json({
+      error: 'Érvénytelen season paraméter formátum (négyjegyű évszám szükséges).',
+    });
+  }
+
   let url: string;
   let cacheTtl = 's-maxage=120, stale-while-revalidate=300';
 
@@ -161,6 +171,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     url = `https://api.football-data.org/v4/competitions/${sanitizedComp}/matches`;
     const compParams = new URLSearchParams();
     if (status) compParams.append('status', status);
+    if (season) compParams.append('season', season);
     if (compParams.toString()) url += `?${compParams.toString()}`;
     // Bajnokság szintű meccslista (szezon előzmények): 24 órás Edge cache
     cacheTtl = 's-maxage=86400, stale-while-revalidate=172800';

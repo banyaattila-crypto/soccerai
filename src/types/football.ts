@@ -50,6 +50,18 @@ export interface MarketProbabilities {
   over35: number;  // 3.5 gól felett
   fhOver05: number; // Első félidő 0.5 felett
   bttsAndOver25?: number; // BTTS & 2.5 felett közvetlenül a gólmátrixból
+  /** Kerekítetlen valószínűségek (%), két tizedesre: az EV és a Kelly ezekkel számol, a kijelzés az egész számokkal. */
+  exact?: {
+    homeWin: number;
+    draw: number;
+    awayWin: number;
+    bttsYes: number;
+    over15: number;
+    over25: number;
+    over35: number;
+    fhOver05: number;
+    bttsAndOver25: number;
+  };
 }
 
 export interface MatchOdds {
