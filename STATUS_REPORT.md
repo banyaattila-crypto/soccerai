@@ -1,10 +1,10 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.28.1` (SemVer 2.0.0)
-**Kiadás neve:** Piaci Valószínűség Valós Szorzónál
+**Aktuális verzió:** `v1.29.0` (SemVer 2.0.0)
+**Kiadás neve:** Nyolc Új Liga a Backtest Alapján
 **Dátum:** 2026. október 22.
-**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 273/273 teszt zöld (27 tesztfájl), production build hibátlan
+**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 277/277 teszt zöld (28 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
 **Élő URL:** https://soccerai-pro.vercel.app
 **Helyi szerver:** `http://localhost:3000` (`npm run dev`)
@@ -15,13 +15,14 @@
 
 A SoccerAI PRO magyar nyelvű kvantitatív futball-elemző: Dixon–Coles-alapú esélyszámítás, λ-rács robusztussági szűrő, Shin de-vig, negyed-Kelly, pre-match predikciónapló és saját bankroll-követő.
 
-A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép helyes, de a modell bemeneti adata vékony volt. Öt lépésben reagáltunk (időrendben):
+A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép helyes, de a modell bemeneti adata vékony volt. Hat lépésben reagáltunk (időrendben):
 
 - **v1.25.0 (Design csomag):** a felület nem állít többet, mint amit az adat megenged: érzékenységi sáv, őszinte adatminőség-felirat, szimulált ár jelölése, döntés-központú állapotsor, megbízhatósági diagram, tőkegörbe, akadálymentesség.
 - **v1.26.0 (Adat- és modell csomag):** a modell a teljes szezon-előzményből tanul, egységes a skála, az EV kerekítetlen valószínűséggel számol, a gólmátrix 12x12, és egynapos mintából többé nem készül "illesztett" modell.
 - **v1.27.0 (Piaccal súlyozás és valós backtest):** a pontosságot először valós piaci adaton mértük (lásd 2/B). A modell jobb a naiv gyakoriságnál, de rosszabb a záró piacnál, a nyers "+EV" jelek hozama negatív. Ezért valós szorzónál az EV és a Kelly a piaci referenciához mér, a Módszertan a valós backtestet mutatja.
 - **v1.27.1 (Hangolt paraméterek):** az időlecsengés (ξ = 0,0015) és a regularizáció (K = 5) a valós backtesten hangolva; holdout log-loss 1,0004 → 0,9982. A rés a piachoz kb. 0,02 maradt.
 - **v1.28.0 (Piaci valószínűség):** ahol van valós szorzó, az 1X2 és az O/U 2.5 esély a de-vigelt piaci ár (a legpontosabb elérhető becslés), a modell értéke mellette látszik; a meccs-részletező EV-je a piaci konszenzushoz mér.
+- **v1.29.0 (Nyolc új liga):** norvég, svéd, dán, finn, ír, japán, mexikói és román első osztály az API-Sports-on át (a backtesten jól prediktálható ligák), extra kvóta nélkül; szezon-előzmény még nincs hozzájuk.
 
 **Élő ellenőrzések (2026-10-22):**
 - **v1.26.0:** a szezon-lekérés és a `regularTime` mező működik (PL 70 + 380, CL 189 meccs; hosszabbításos kupameccseknél a `fullTime` tartalmazza a hosszabbítást, a `regularTime` a 90 percet). Az ellenőrzés hibákat talált, ezeket külön javítások zárták: részleges modell tartósulása és átmeneti hiba hibacache-be kerülése (v1.26.1); új deploy után a 10 kérés/perces keret miatt csak az első liga modellje készült el (v1.26.2: automatikus újrapróbálás); a sikertelen főliga-lekérés nem próbálkozott újra (v1.26.3).
@@ -100,7 +101,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 | :--- | :--- |
 | Frontend | React 19, TypeScript ~6.0 (strict), Vite 8 |
 | Stílus | Tailwind CSS v4, sötét téma |
-| Tesztek | Vitest 5.0.5: 273 teszt, 27 fájl |
+| Tesztek | Vitest 5.0.5: 277 teszt, 28 fájl |
 | Lint | Oxlint (`--deny-warnings`) |
 | Szkriptek | `tsx` (backtest és hangolás: `scripts/backtest.ts`, `scripts/backtest-tune.ts`) |
 | PWA | Web App Manifest + Service Worker (network-first navigáció) |
@@ -173,7 +174,7 @@ soccerai/
 
 1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó szerveroldali előmelegítés (cron).
 2. **Modell-javítás a piac ellen (a backtest a mérce):** a ξ/K hangolás megvolt (v1.27.1), a hazai/idegenbeli szétválasztás és a feljutó-prior kipróbálva és elutasítva (`docs/backtest-experiments.md`). A rés a piachoz kb. 0,02 log-loss maradt, szerkezeti változtatással nem záródik. További javulás csak új információs forrástól várható (xG, felállás/sérülés); ez adatforrás-vizsgálatot igényel (elérhetőség, jogi feltételek, költség).
-2/c. **Több liga bekötése (mérés megvolt, `docs/backtest-extra-leagues.md`):** a kisebb ligákon sem előzi meg a modell a piacot, tehát "piaci előny" miatt nem érdemes őket felvenni. A modell önálló becslőként ott értékes, ahol nincs piaci ár: Norvégia, Svédország, Dánia, Finnország, Írország, Japán, Mexikó, Románia (a naivhoz képest 0,04–0,09 log-loss-előny). Lengyelország, Ausztria, az USA (MLS) és Argentína esetén a modell alig jobb a gyakoriságnál. Javasolt lépés: az API-Sports liga-konfiguráció bővítése a jól prediktálható ligákkal (a napi fixture-lekérés extra kvótát nem fogyaszt), és a football-data.co.uk extra-liga CSV-k bekötése szezon-előzménynek Vercel-proxyn át.
+2/c. **Több liga:** a nyolc jól prediktálható liga felvéve (v1.29.0). Nyitva: a football-data.co.uk extra-liga CSV-k bekötése szezon-előzménynek Vercel-proxyn át, hogy ezeken a ligákon szezon-alapú modell legyen a ligaátlag helyett (a licenc-feltételeket előbb ellenőrizni kell). A backteszten gyenge ligák (Lengyelország, Ausztria, USA, Argentína) a naivnál alig jobbak.
 2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** megvan (v1.28.0). Nyitott: a piaci alapú esély csak a már lekért szorzójú meccsekre jelenik meg (napi API-Sports kvóta); megfontolandó a szorzók előzetes, ütemezett lekérése a legfontosabb meccsekre.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
 4. **Higiénia (F-14, F-15):** mock lusta betöltése, üres `catch`-ek, nagy komponensek szétvágása, CSP.
@@ -185,7 +186,7 @@ soccerai/
 ```bash
 npm ci          # reprodukálható telepítés
 npm run dev     # fejlesztői szerver (3000)
-npm test        # 273 teszt
+npm test        # 277 teszt
 npx tsc -b      # típusellenőrzés
 npx oxlint --deny-warnings
 npm run build   # production build

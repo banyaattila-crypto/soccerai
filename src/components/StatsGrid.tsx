@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket, PickMarket } from '../types/football';
 import { quarterKelly } from '../services/predictionEngine';
+import { getSecondaryLeaguePriority } from '../services/apiSportsClient';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import { useEventBus } from '../utils/eventBus';
 import {
@@ -248,7 +249,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
           m.leagueId === 'serieb' ? 22 :
           m.leagueId === 'bundesliga2' ? 23 :
           m.leagueId === 'ligue2' ? 24 :
-          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 25 : 30;
+          m.leagueId === 'seriea_brazil' || m.leagueId === 'bsa' ? 25 : getSecondaryLeaguePriority(m.leagueId) ?? 30;
 
         map.set(m.leagueId, {
           id: m.leagueId,

@@ -216,7 +216,104 @@ export const SUPPORTED_SECONDARY_LEAGUES: Record<number, ApiSportsLeagueConfig> 
     avgHomeGoals: 1.38,
     avgAwayGoals: 1.08,
   },
+
+  // Backteszttel jól prediktálható további ligák (docs/backtest-extra-leagues.md): a modell a naiv gyakoriságnál
+  // 0,04–0,09 log-loss-szal jobb. Gólátlagok: football-data.co.uk, 2023-tól. Az API-Sports napi fixture-lekérése az
+  // összes ligát visszaadja, ezért ezek a ligák extra kvótát nem fogyasztanak.
+  // ID a dokumentáció szerint (a menetrendben nem szerepelt)
+  103: {
+    id: 103,
+    internalId: 'eliteserien',
+    name: 'Eliteserien',
+    country: 'Norvégia',
+    flag: '🇳🇴',
+    priority: 26,
+    avgHomeGoals: 1.72,
+    avgAwayGoals: 1.35,
+  },
+  // ID élőben ellenőrizve
+  113: {
+    id: 113,
+    internalId: 'allsvenskan',
+    name: 'Allsvenskan',
+    country: 'Svédország',
+    flag: '🇸🇪',
+    priority: 27,
+    avgHomeGoals: 1.55,
+    avgAwayGoals: 1.29,
+  },
+  // ID élőben ellenőrizve
+  119: {
+    id: 119,
+    internalId: 'superliga_dk',
+    name: 'Superliga',
+    country: 'Dánia',
+    flag: '🇩🇰',
+    priority: 28,
+    avgHomeGoals: 1.59,
+    avgAwayGoals: 1.4,
+  },
+  // ID a dokumentáció szerint (a menetrendben nem szerepelt)
+  244: {
+    id: 244,
+    internalId: 'veikkausliiga',
+    name: 'Veikkausliiga',
+    country: 'Finnország',
+    flag: '🇫🇮',
+    priority: 29,
+    avgHomeGoals: 1.53,
+    avgAwayGoals: 1.3,
+  },
+  // ID élőben ellenőrizve
+  357: {
+    id: 357,
+    internalId: 'ireland_premier',
+    name: 'League of Ireland Premier Division',
+    country: 'Írország',
+    flag: '🇮🇪',
+    priority: 30,
+    avgHomeGoals: 1.42,
+    avgAwayGoals: 1.1,
+  },
+  // ID a dokumentáció szerint (a menetrendben nem szerepelt)
+  98: {
+    id: 98,
+    internalId: 'j1',
+    name: 'J1 League',
+    country: 'Japán',
+    flag: '🇯🇵',
+    priority: 31,
+    avgHomeGoals: 1.39,
+    avgAwayGoals: 1.19,
+  },
+  // ID a dokumentáció szerint (a menetrendben nem szerepelt)
+  262: {
+    id: 262,
+    internalId: 'liga_mx',
+    name: 'Liga MX',
+    country: 'Mexikó',
+    flag: '🇲🇽',
+    priority: 32,
+    avgHomeGoals: 1.61,
+    avgAwayGoals: 1.23,
+  },
+  // ID élőben ellenőrizve
+  283: {
+    id: 283,
+    internalId: 'liga1_romania',
+    name: 'Liga I',
+    country: 'Románia',
+    flag: '🇷🇴',
+    priority: 33,
+    avgHomeGoals: 1.43,
+    avgAwayGoals: 1.07,
+  },
 };
+
+/** A másodlagos (API-Sports) liga rendezési prioritása a belső azonosító alapján. */
+export function getSecondaryLeaguePriority(internalId: string): number | undefined {
+  return Object.values(SUPPORTED_SECONDARY_LEAGUES).find((l) => l.internalId === internalId)?.priority;
+}
 
 interface ApiSportsFixtureItem {
   fixture: {

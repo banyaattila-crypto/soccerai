@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.29.0] - 2026-10-22
+
+### Hozzáadva (Added) - Nyolc új liga az API-Sports-on át (`apiSportsClient.ts`)
+A kisebb ligák backtestje (`docs/backtest-extra-leagues.md`) szerint a modell ezeken önálló becslőként 0,04–0,09 log-loss-szal jobb a naiv gyakoriságnál (piaci előny viszont sehol nincs), ezért ezeket vettük fel.
+- **Új ligák:** Eliteserien (Norvégia, 103), Allsvenskan (Svédország, 113), Superliga (Dánia, 119), Veikkausliiga (Finnország, 244), League of Ireland Premier Division (Írország, 357), J1 League (Japán, 98), Liga MX (Mexikó, 262), Liga I (Románia, 283). Az ID-k közül a svéd, dán, ír és román élőben ellenőrizve (szerepelt a napi menetrendben); a norvég, finn, japán és mexikói a dokumentáció szerinti, ezek a megfelelő napokon jelennek meg.
+- **Gólátlagok** a football-data.co.uk adataiból (2023-tól, ~700–1300 meccs ligánként).
+- **Nincs extra kvóta:** az API-Sports napi fixture-lekérése az összes ligát visszaadja, ezért a felvétel nem fogyaszt kérést. Szorzót továbbra is meccsenként 1 kérés ad.
+- **Rendezés (`StatsGrid.tsx`):** az új ligák prioritása a konfigurációból jön (`getSecondaryLeaguePriority`), a kézi lánc helyett.
+- **Adatalap:** ezeken a ligákon szezon-előzmény még nincs (az API-Sports ingyenes csomagja nem engedi), a modell ligaátlagból és klub-priorból számol, a felület "Ligaátlag + prior" feliratot mutat. A football-data.co.uk CSV-k szezon-előzménynek való bekötése külön csomag.
+- **Nem vettük fel** a backteszten gyenge ligákat (Lengyelország, Ausztria, USA és Argentína a naivnál alig jobb), és nem töröltük a már meglévőket.
+- **Tesztek:** 4 új teszt (`leagueConfig.test.ts`); összesen 28 fájlban 277 / 277 zöld.
+
 ## [1.28.1] - 2026-10-22
 
 ### Javítva (Fixed) - A magyarázat következetessége (`matchExplanationService.ts`, `MatchDetailModal.tsx`)
