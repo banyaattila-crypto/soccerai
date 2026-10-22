@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.33.1] - 2026-10-22
+
+### Módosítva (Changed) - Nagy komponensek szétvágása (F-15 része)
+Viselkedés-változás nélküli szerkezeti tisztítás, helyi buildben a valós adatokkal ellenőrizve (szűrőpanel megnyitása, mutató-legördülő, Eredmények kártyák).
+- **`grid/StatsFilterPanel.tsx`:** a Mérkőzés fül kinyíló szűrőpanelje (bajnokságok, gyorskapcsolók, piac, mutatók) külön komponens; a két közel azonos mutató-legördülő egy `MetricDropdown` komponensre épül. A panel belső állapota (nyitott legördülő, liga-görgetés) a panelbe költözött, így a panel bezárásakor a nyitott legördülő nem marad nyitva.
+- **`results/ResultEntryCard.tsx`:** az Eredmények & Audit nézet mérkőzéskártyája külön komponens. A kártyán az audit-összeg felirata pontosítva: sérülést jelez, nem hamisítás-biztos.
+- `StatsGrid.tsx` 1223 -> 930 sor, `ResultsView.tsx` 1081 -> 917 sor.
+
+### Korlátok
+- A két fájl még mindig ~900 sor; a további bontás (fejléc/KPI, eszköztár, lista) nyitva. A `MatchDetailModal`, `BankrollView` (868 sor) érintetlen.
+- Tartós rate limit: a proxy memóriabeli korlátja példányonként él. A Vercel Firewall rate limit szabályt abban a fiókban kell létrehozni, amelyik a soccerai-pro projektet tartja; a most csatlakoztatott Vercel-fiókban csak a `v0-football-prediction-platform` projekt van, ezért ott nem módosítottam semmit.
+
 ## [1.33.0] - 2026-10-22
 
 ### Eltávolítva (Removed) - Mintaadat
