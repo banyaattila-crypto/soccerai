@@ -65,6 +65,8 @@ A v1.25.0-ig a modell 3 napos ablakból illeszkedett (a szimulációban rosszabb
 - A v1.27.1 hangolása (ξ, K) a modell log-loss-át 1,0004-ről 0,9982-re javította; a rés a piachoz (0,9776) kb. 0,02 maradt. Utólagos kalibráció (döntetlen-korrekció, hőmérséklet) nem javít.
 - Következmény: valós szorzónál az EV és a Kelly a piaci referenciához (Pinnacle, ennek híján az átlag) mér; az "él" így ár-előny a bukmékerek között, nem modell-előny. Piaci referencia nélküli piacra (BTTS, kombinált, félidő) nincs EV.
 
+- Kísérletek (v1.27.1 után): a hazai/idegenbeli erősség szétválasztása rontja, a feljutó-prior nem javítja a holdout log-loss-t; részletek: `docs/backtest-experiments.md`.
+
 **Korlátok:** egy szezon holdout (N = 1752), Pinnacle árak; az élő oddsok API-Sports bukmékerekből jönnek. BTTS-re nincs piaci adat a CSV-kben.
 
 ### Leletek állapota
@@ -169,7 +171,8 @@ soccerai/
 ## 6. Javasolt következő csomagok
 
 1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó szerveroldali előmelegítés (cron).
-2. **Modell-javítás a piac ellen (a backtest a mérce):** a hiperparaméter-hangolás (ξ, K) megvolt (v1.27.1), a rés a piachoz kb. 0,02 log-loss maradt. Kipróbálandó (strukturális): xG-alapú bemenet (nem csak gólok), hiányzó játékosok/forma, hazai/vendég külön erősség, szezonok közötti átvitel (kis mintájú csapatok). Minden változtatás elfogadási kritériuma: a backtest holdout log-loss-ának javulása és pozitív CLV.
+2. **Modell-javítás a piac ellen (a backtest a mérce):** a ξ/K hangolás megvolt (v1.27.1), a hazai/idegenbeli szétválasztás és a feljutó-prior kipróbálva és elutasítva (`docs/backtest-experiments.md`). A rés a piachoz kb. 0,02 log-loss maradt, szerkezeti változtatással nem záródik. További javulás csak új információs forrástól várható (xG, felállás/sérülés); ez adatforrás-vizsgálatot igényel (elérhetőség, jogi feltételek, költség).
+2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** a legpontosabb elérhető valószínűség a de-vigelt piaci ár (modell súlya 0). Jelenleg a rács és a kártyák a modell valószínűségét mutatják akkor is, ha ismert valós szorzó; érdemes ilyenkor a piaci (konszenzus) valószínűséget megjeleníteni, "piaci ár alapján" jelöléssel. A modell ott ad hozzáadott értéket, ahol nincs piaci ár.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
 4. **Higiénia (F-14, F-15):** mock lusta betöltése, üres `catch`-ek, nagy komponensek szétvágása, CSP.
 
