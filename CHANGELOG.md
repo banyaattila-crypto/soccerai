@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.28.1] - 2026-10-22
+
+### Javítva (Fixed) - A magyarázat következetessége (`matchExplanationService.ts`, `MatchDetailModal.tsx`)
+A v1.28.0 élő ellenőrzésén (OFI – Bayer Leverkusen, Európa Liga) a részletező 1X2 doboza a piaci esélyeket mutatta (hazai 7%, döntetlen 12%, vendég 81%; a modell: 28% / 26% / 46%), a szakértői magyarázat viszont még a modell értékeit és a "közel azonos játékerő" megfogalmazást használta.
+- **Piaci forrás a szövegben:** ha a valószínűségek piaci alapúak, az összefoglaló ezt jelzi, megadja a modell eltérő becslését, és a tipp esélye a piaci érték.
+- **Megalapozatlan értékállítások törölve:** a kiemelt tipp indoklásából kikerült a "szilárd pozitív várható érték", a "kiemelkedő értéket nyújt", a "legstabilabb matematikai él" és a "legértékesebb opció", mert a backtest szerint a modell-EV hozama negatív. A szöveg most nem állít piaci előnyt.
+- **Tesztek:** 2 új teszt; összesen 27 fájlban 270 / 270 zöld.
+
 ## [1.28.0] - 2026-10-22
 
 ### Hozzáadva (Added) - Piaci valószínűség megjelenítése valós szorzónál
