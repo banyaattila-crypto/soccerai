@@ -1,10 +1,10 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.26.0` (SemVer 2.0.0)
+**Aktuális verzió:** `v1.26.1` (SemVer 2.0.0)
 **Kiadás neve:** Szezon-alapú Modell: Pontosabb Esélyek
 **Dátum:** 2026. október 22.
-**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 234/234 teszt zöld (25 tesztfájl), production build hibátlan
+**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 237/237 teszt zöld (25 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
 **Élő URL:** https://soccerai-pro.vercel.app
 **Helyi szerver:** `http://localhost:3000` (`npm run dev`)
@@ -20,7 +20,7 @@ A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép hely
 - **v1.25.0 (Design csomag):** a felület nem állít többet, mint amit az adat megenged: érzékenységi sáv, őszinte adatminőség-felirat, szimulált ár jelölése, döntés-központú állapotsor, megbízhatósági diagram, tőkegörbe, akadálymentesség.
 - **v1.26.0 (Adat- és modell csomag):** a modell a teljes szezon-előzményből tanul, egységes a skála, az EV kerekítetlen valószínűséggel számol, a gólmátrix 12x12, és egynapos mintából többé nem készül "illesztett" modell.
 
-**Nyitott feltétel:** a v1.26.0 szezon-lekérését és a `regularTime` mező meglétét az élő API-n még nem ellenőriztük (a változat deploy-a előtt). Az első telepítés után ellenőrizendő: a modellek létrejönnek-e ligánként, és hány kérés fogy a 10/perc keretből.
+**Élő ellenőrzés (2026-10-22, v1.26.0):** a szezon-lekérés és a `regularTime` mező működik (PL 70 + 380, CL 189 meccs; a hosszabbításos kupameccseknél a `fullTime` tartalmazza a hosszabbítást, a `regularTime` a 90 percet). Az ellenőrzés két hibát talált, ezeket a v1.26.1 javítja (részleges modell tartósulása, átmeneti hiba hibacache-be kerülése). Élő modellek: PL (450 meccs), BL1 (360), CL (243).
 
 ---
 
@@ -75,7 +75,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 | :--- | :--- |
 | Frontend | React 19, TypeScript ~6.0 (strict), Vite 8 |
 | Stílus | Tailwind CSS v4, sötét téma |
-| Tesztek | Vitest 5.0.5: 234 teszt, 25 fájl |
+| Tesztek | Vitest 5.0.5: 237 teszt, 25 fájl |
 | Lint | Oxlint (`--deny-warnings`) |
 | PWA | Web App Manifest + Service Worker (network-first navigáció) |
 | Adat | Football-Data.org v4 (ingyenes csomag, 10 kérés/perc), API-Sports v3, Vercel serverless proxy |
@@ -141,7 +141,7 @@ soccerai/
 
 ## 6. Javasolt következő csomagok
 
-1. **Élő ellenőrzés és finomhangolás (azonnal a v1.26.0 deploy után):** a szezon-lekérés működése ligánként, a kérésszám a 10/perc kereten belül, a `regularTime` mező megléte kupameccseknél, az első betöltés ideje.
+1. **Élő finomhangolás:** az első betöltés lassúsága és a 10 kérés/perc keret: a ligák egy része csak a következő 10 perces frissítésre készül el. Megfontolandó a lekérések szétterítése vagy egy gyors újrapróbálás a pihenő lejárta után.
 2. **Piaccal súlyozás és valós backtest (F-04, F-07):**
    - Valós oddsnál a modell és a de-vigelt piaci valószínűség keverése, a Kelly shrinkelt valószínűségből.
    - Walk-forward backtest múltbeli szezonokon, záró oddsokkal (RPS, log-loss, valós CLV); a mintaadat kivezetése.
@@ -156,7 +156,7 @@ soccerai/
 ```bash
 npm ci          # reprodukálható telepítés
 npm run dev     # fejlesztői szerver (3000)
-npm test        # 234 teszt
+npm test        # 237 teszt
 npx tsc -b      # típusellenőrzés
 npx oxlint --deny-warnings
 npm run build   # production build

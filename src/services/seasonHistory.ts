@@ -88,11 +88,13 @@ export function toFinishedResults(matches: FootballDataHistoryMatch[]): Finished
   return out;
 }
 
-async function fetchSeason(
-  code: string,
-  season: number,
-  apiKey: string
-): Promise<FootballDataHistoryMatch[] | null> {
+interface SeasonFetchResult {
+  matches: FootballDataHistoryMatch[] | null;
+  /** Az utolsó HTTP státusz (0: hálózati hiba vagy kvótavédelem miatt nem is próbáltuk) */
+  status: number;
+}
+
+async function fetchSeason(code: string, season: number, apiKey: string): Promise<SeasonFetchResult> {
   const proxyUrl = `/api/matches?competition=${encodeURIComponent(code)}&status=FINISHED&season=${season}`;
   const endpoints = [proxyUrl];
   if (apiKey.trim()) {
@@ -101,28 +103,34 @@ async function fetchSeason(
     );
   }
 
+  let status = 0;
   for (const url of endpoints) {
-    if (checkFootballDataQuota().isRateLimited) return null;
+    if (checkFootballDataQuota().isRateLimited) return { matches: null, status: 0 };
     try {
       const headers: Record<string, string> = {};
       if (apiKey.trim()) headers['X-Auth-Token'] = apiKey.trim();
       const res = await fetch(url, { headers });
+      status = res.status;
       recordFootballDataCall(res.status, res.headers);
       if (res.ok) {
         const data = await res.json();
-        if (data && Array.isArray(data.matches)) return data.matches as FootballDataHistoryMatch[];
+        if (data && Array.isArray(data.matches)) {
+          return { matches: data.matches as FootballDataHistoryMatch[], status };
+        }
       }
     } catch {
       // hálózati hiba: próbáljuk a következő végpontot
     }
   }
-  return null;
+  return { matches: null, status };
 }
 
 export interface CompetitionHistory {
   results: FinishedMatchResult[];
   /** true, ha a kvóta vagy hiba miatt nem sikerült minden szükséges szezont lekérni */
   partial: boolean;
+  /** true, ha a liga adata ténylegesen nem elérhető (403/404): érdemes hosszabb időre kihagyni */
+  unavailable: boolean;
 }
 
 /**
@@ -137,25 +145,29 @@ export async function fetchCompetitionHistory(
   const current = getSeasonStartYear(code, now);
   let results: FinishedMatchResult[] = [];
   let partial = false;
+  let unavailable = false;
 
   const cur = await fetchSeason(code, current, apiKey);
-  if (cur) results = results.concat(toFinishedResults(cur));
-  else partial = true;
+  if (cur.matches) results = results.concat(toFinishedResults(cur.matches));
+  else {
+    partial = true;
+    unavailable = cur.status === 403 || cur.status === 404;
+  }
 
   if (results.length < TARGET_HISTORY_MATCHES && !partial) {
     const prev = await fetchSeason(code, current - 1, apiKey);
-    if (prev) results = results.concat(toFinishedResults(prev));
+    if (prev.matches) results = results.concat(toFinishedResults(prev.matches));
     else partial = true;
   }
 
-  return { results, partial };
+  return { results, partial, unavailable };
 }
 
 // ---------------------------------------------------------------------------
 // Modell-előkészítés ligánként (cache + hibacache + időkeret)
 // ---------------------------------------------------------------------------
 
-const FAIL_PREFIX = 'soccerai_dc_history_fail_v1_';
+const FAIL_PREFIX = 'soccerai_dc_history_fail_v2_';
 const FAIL_TTL_MS = 6 * 60 * 60 * 1000;
 
 function isFailureCached(code: string, nowMs: number): boolean {
@@ -201,13 +213,16 @@ export async function ensureLeagueModels(
     if (Date.now() - started > budgetMs) continue;
     if (checkFootballDataQuota().isRateLimited) continue;
 
-    const { results, partial } = await fetchCompetitionHistory(code, apiKey);
+    const { results, partial, unavailable } = await fetchCompetitionHistory(code, apiKey);
     if (results.length >= MIN_FIT_MATCHES) {
       const fitted = fitDixonColesModel(results, code);
-      saveLeagueModel(fitted);
+      // Részleges előzményből (kvóta/hiba miatt hiányzik az előző szezon) készült modellt nem tartósítunk:
+      // ez a futás használja, de a következő frissítéskor teljes adatból újraillesztjük.
+      if (!partial || results.length >= TARGET_HISTORY_MATCHES) saveLeagueModel(fitted);
       models[code] = fitted;
-    } else if (!partial || !checkFootballDataQuota().isRateLimited) {
-      // Nem kvóta-probléma: a liga nem ad elég mintát (vagy nem elérhető), ne próbálkozzunk újra azonnal
+    } else if (unavailable || !partial) {
+      // Csak a tényleg nem elérhető (403/404), vagy teljes lekérés mellett is kevés mintájú ligát hibacache-eljük.
+      // Kvóta-, hálózati és 5xx hibát SOSEM: azok átmenetiek.
       cacheFailure(code, Date.now());
     }
   }

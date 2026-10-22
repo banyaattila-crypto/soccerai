@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.26.1] - 2026-10-22
+
+### Javítva (Fixed) - Éles ellenőrzés utáni javítás (`seasonHistory.ts`)
+A v1.26.0 élő oldalon végzett ellenőrzése két hibát talált (a szezon-lekérés és a `regularTime` mező egyébként működik: PL 70 + 380, CL 189 meccs, a hosszabbításos kupameccseknél a `fullTime` valóban a hosszabbítást is tartalmazza, a `regularTime` a 90 perces eredményt).
+- **Részleges modell 24 órára tartósult:** ha az előző szezon lekérése kvóta (429) miatt elmaradt, a csak az aktuális szezonból illesztett modell (pl. La Liga 89 meccs) 24 órára elmentődött. Mostantól a részleges előzményből készült modell csak az adott futásra érvényes, a következő frissítéskor teljes adatból újraillesztődik.
+- **Átmeneti hiba hibacache-be került:** a Serie A 6 órára "nem elérhetőnek" lett jelölve, pedig elérhető. Mostantól csak a tényleges 403/404, illetve teljes lekérés melletti kevés minta kerül hibacache-be (kulcs: `soccerai_dc_history_fail_v2_`); a 429, a hálózati és az 5xx hiba átmeneti, nem cache-elődik.
+- **Tesztek:** 3 új teszt (429, 403, részleges előzmény); összesen 25 fájlban 237 / 237 zöld.
+
 ## [1.26.0] - 2026-10-22
 
 ### Javítva & Továbbfejlesztve (Fixed & Enhanced) - Szezon-alapú Modell (Adat- és modell csomag)

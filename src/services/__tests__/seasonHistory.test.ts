@@ -144,3 +144,75 @@ describe('ensureLeagueModels (mockolt fetch)', () => {
     expect(models.EL).toBeNull();
   });
 });
+
+describe('ensureLeagueModels: átmeneti hibák nem cache-elődnek tartósan', () => {
+  function fakeStorage() {
+    const data: Record<string, string> = {};
+    return {
+      data,
+      api: {
+        getItem: (k: string) => (k in data ? data[k] : null),
+        setItem: (k: string, v: string) => {
+          data[k] = v;
+        },
+        removeItem: (k: string) => {
+          delete data[k];
+        },
+        key: (i: number) => Object.keys(data)[i] ?? null,
+        get length() {
+          return Object.keys(data).length;
+        },
+      },
+    };
+  }
+  const teams = Array.from({ length: 12 }, (_, i) => `Csapat ${i}`);
+  const history: FootballDataHistoryMatch[] = [];
+  for (let i = 0; i < 12; i++) {
+    for (let j = 0; j < 12; j++) {
+      if (i === j) continue;
+      history.push({
+        utcDate: '2026-09-01T18:30:00Z',
+        status: 'FINISHED',
+        homeTeam: { name: teams[i] },
+        awayTeam: { name: teams[j] },
+        score: { duration: 'REGULAR', fullTime: { home: (i + j) % 4, away: (i * j) % 3 } },
+      });
+    }
+  }
+  const ok = { ok: true, status: 200, headers: new Headers(), json: async () => ({ matches: history }) };
+
+  it('429-es válasz nem kerül hibacache-be (átmeneti)', async () => {
+    const store = fakeStorage();
+    vi.stubGlobal('localStorage', store.api);
+    vi.stubGlobal('fetch', async () => ({ ok: false, status: 429, headers: new Headers(), json: async () => ({}) }));
+    const models = await ensureLeagueModels(['SA'], '', 5000);
+    vi.unstubAllGlobals();
+    expect(models.SA).toBeNull();
+    expect(Object.keys(store.data).some((k) => k.includes('history_fail'))).toBe(false);
+  });
+
+  it('403-as (nem elérhető) liga hibacache-be kerül', async () => {
+    const store = fakeStorage();
+    vi.stubGlobal('localStorage', store.api);
+    vi.stubGlobal('fetch', async () => ({ ok: false, status: 403, headers: new Headers(), json: async () => ({}) }));
+    await ensureLeagueModels(['EL'], '', 5000);
+    vi.unstubAllGlobals();
+    expect(Object.keys(store.data).some((k) => k.includes('history_fail'))).toBe(true);
+  });
+
+  it('részleges előzményből (az előző szezon kvóta miatt hiányzik) a modell nem tartósul', async () => {
+    const store = fakeStorage();
+    vi.stubGlobal('localStorage', store.api);
+    let n = 0;
+    vi.stubGlobal('fetch', async () => {
+      n++;
+      return n === 1
+        ? ok
+        : { ok: false, status: 429, headers: new Headers(), json: async () => ({}) };
+    });
+    const models = await ensureLeagueModels(['PD'], '', 5000);
+    vi.unstubAllGlobals();
+    expect(models.PD).not.toBeNull(); // erre a futásra használható
+    expect(Object.keys(store.data).some((k) => k.startsWith('soccerai_dc_model_v2_'))).toBe(false);
+  });
+});
