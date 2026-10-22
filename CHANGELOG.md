@@ -3,6 +3,11 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.26.3] - 2026-10-22
+
+### Javítva (Fixed) - A főliga-lekérés hibájának újrapróbálása (`App.tsx`)
+A v1.26.2 élő ellenőrzése: ha a Football-Data fő lekérése is 429-et kapott (az ingyenes kulcs keretét a deploy utáni üres edge-cache mellett a lekérések elfogyasztják), az app csak az API-Sports adatait mutatta, és nem próbálkozott újra. Mostantól a sikertelen főliga-lekérés és az üres eredmény is ütemezett újrapróbálást indít (65 mp, legfeljebb 8 alkalom), és a felület jelzi az állapotot.
+
 ## [1.26.2] - 2026-10-22
 
 ### Javítva (Fixed) - Modell-építés automatikus újrapróbálása

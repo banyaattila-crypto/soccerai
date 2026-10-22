@@ -177,10 +177,28 @@ export function App() {
       setIsLoading(true);
       setApiErrorNotice(null);
       try {
+        let mainFailed = false;
         const liveMainPromise = fetchLiveMatches(fbKey, forceRefresh).catch((e) => {
           console.warn('Football-Data.org hiba:', e);
+          mainFailed = true;
           return [] as Match[];
         });
+
+        // Átmeneti hiba (kvótapihenő) vagy hiányzó ligamodellek esetén automatikus újrapróbálás a pihenő után
+        const scheduleRetry = (needed: boolean) => {
+          if (modelRetryTimerRef.current) {
+            clearTimeout(modelRetryTimerRef.current);
+            modelRetryTimerRef.current = null;
+          }
+          if (needed && modelRetryCountRef.current < MAX_MODEL_RETRIES) {
+            modelRetryCountRef.current += 1;
+            modelRetryTimerRef.current = setTimeout(() => {
+              loadMatchesRef.current?.(source, fbKey, sportsKey, secEnabled, true);
+            }, MODEL_RETRY_DELAY_MS);
+          } else if (!needed) {
+            modelRetryCountRef.current = 0;
+          }
+        };
 
         const liveSecondaryPromise = secEnabled
           ? fetchApiSportsMatches(sportsKey, undefined, forceRefresh).catch((e) => {
@@ -223,27 +241,18 @@ export function App() {
             ? ` (${liveMain.length} főbajnokság + ${liveSecondary.length} egyéb európai & másodosztályú liga)`
             : '';
           const pendingModels = getPendingLeagueModelCount();
-          const modelText =
-            pendingModels > 0
-              ? ` Modell-építés folyamatban: ${pendingModels} liga még hátra, automatikus újrapróbálás.`
-              : '';
+          const modelText = mainFailed
+            ? ' A Football-Data főligák betöltése átmenetileg nem sikerült (kvótapihenő), automatikus újrapróbálás.'
+            : pendingModels > 0
+            ? ` Modell-építés folyamatban: ${pendingModels} liga még hátra, automatikus újrapróbálás.`
+            : '';
           setApiSuccessNotice(
             `Sikeres szinkronizáció! ${combined.length} valós mérkőzés elérhető${secText}.${modelText}`
           );
 
-          if (modelRetryTimerRef.current) {
-            clearTimeout(modelRetryTimerRef.current);
-            modelRetryTimerRef.current = null;
-          }
-          if (pendingModels > 0 && modelRetryCountRef.current < MAX_MODEL_RETRIES) {
-            modelRetryCountRef.current += 1;
-            modelRetryTimerRef.current = setTimeout(() => {
-              loadMatchesRef.current?.(source, fbKey, sportsKey, secEnabled, true);
-            }, MODEL_RETRY_DELAY_MS);
-          } else if (pendingModels === 0) {
-            modelRetryCountRef.current = 0;
-          }
+          scheduleRetry(mainFailed || pendingModels > 0);
         } else {
+          scheduleRetry(true);
           // NEM helyettesítünk be kamu meccseket!
           setMatches([]);
           setIsDemoMode(false);
