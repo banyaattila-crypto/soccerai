@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.24.8] - 2026-10-22
+
+### Javítva & Továbbfejlesztve (Fixed & Enhanced) - Intelligens Scanner Megjelenítés
+- **Üres Scanner Nézet Megszüntetése (`ScannerView.tsx`):**
+  - **Dinamikus Alapértelmezett Preset:** Korábban a Scanner megnyitásakor mindig a `💎 +EV Értéktippek` (`best_ev`) volt aktív, ami valós, élő bukmékeri oddsok nélkül (szimulált oddsok vagy demó mód esetén) szigorúan 0 találatot mutatott. Mostantól, ha nincsenek aktív valós +EV oddsok, a Scanner automatikusan a **`🎯 Kiemelt MI Tippek`** (`ai_picks`) nézetet nyitja meg, így a felület sosem indul üres képernyővel.
+  - **Intelligens Időszak-kezelés:** Ha a mai napon nincsenek még meg nem kezdett mérkőzések, a rendszer automatikusan az **`Összes Nyitott Meccs`** nézetre vált, megelőzve a mérkőzésmentes napok miatti téves 0 találatot.
+  - **Interaktív Tájékoztató & Gyorsváltók:** Ha a felhasználó a `+EV` szűrőre kattint valós bukméker oddsok hiányában, a felület világosan elmagyarázza a szimulált vs. valós oddsok közötti különbséget, és egyetlen kattintással elérhetővé teszi az MI tippek vagy az összes mérkőzés megtekintését.
+
 ## [1.24.7] - 2026-10-22
 
 ### Letisztítás & Továbbfejlesztve (Clean UI & Enhanced) - Alsó Lábléc Integrálása az About Menübe

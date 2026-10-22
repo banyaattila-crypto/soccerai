@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.24.7';
-export const APP_RELEASE_NAME = 'Alsó Lábléc Integrálása az About Menübe és Maximális Képernyőtisztaság';
+export const APP_VERSION = '1.24.8';
+export const APP_RELEASE_NAME = 'Intelligens Scanner Megjelenítés és Valós Odds Tájékoztató';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';

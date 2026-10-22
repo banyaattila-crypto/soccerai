@@ -7,6 +7,7 @@ import {
   ScannerPreset,
   ScannerSortBy,
 } from '../services/scannerService';
+import { getRelativeDateStr } from '../utils/dateUtils';
 import {
   Radar,
   Zap,
@@ -39,10 +40,34 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onAddToBetSlip,
   betSlipItems,
 }) => {
-  // Állapotok
-  const [activePreset, setActivePreset] = useState<ScannerPreset>('best_ev');
+  // Összes lehetőség kinyerése
+  const allOpportunities = useMemo(() => {
+    return extractOpportunitiesFromMatches(matches);
+  }, [matches]);
+
+  // KPI mutatók
+  const positiveEvCount = useMemo(() => {
+    return allOpportunities.filter((o) => o.expectedValue > 0).length;
+  }, [allOpportunities]);
+
+  const highOverCount = useMemo(() => {
+    return allOpportunities.filter((o) => o.market === 'OVER_25' && o.probability >= 65).length;
+  }, [allOpportunities]);
+
+  // Ellenőrizzük, hogy vannak-e még nyitott meccsek ma
+  const hasOpenMatchesToday = useMemo(() => {
+    const today = getRelativeDateStr(0);
+    return matches.some((m) => m.kickoffDate === today && m.status !== 'FINISHED');
+  }, [matches]);
+
+  // Állapotok: Intelligens alapértelmezés (ha nincsenek valós +EV oddsok, azonnal a Kiemelt MI Tippek jelennek meg)
+  const [activePreset, setActivePreset] = useState<ScannerPreset>(() => {
+    return positiveEvCount > 0 ? 'best_ev' : 'ai_picks';
+  });
   const [activeSubTab, setActiveSubTab] = useState<'opportunities' | 'league_radar'>('opportunities');
-  const [dayFilter, setDayFilter] = useState<'today' | 'tomorrow' | 'all' | 'yesterday'>('today');
+  const [dayFilter, setDayFilter] = useState<'today' | 'tomorrow' | 'all' | 'yesterday'>(() => {
+    return hasOpenMatchesToday ? 'today' : 'all';
+  });
   const [statusFilter, setStatusFilter] = useState<'open_only' | 'all' | 'finished'>('open_only');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedLeague, setSelectedLeague] = useState<string>('ALL');
@@ -50,11 +75,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   const [minOdds, setMinOdds] = useState<number>(1.40);
   const [onlyRealOdds, setOnlyRealOdds] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<ScannerSortBy>('ev');
-
-  // Összes lehetőség kinyerése
-  const allOpportunities = useMemo(() => {
-    return extractOpportunitiesFromMatches(matches);
-  }, [matches]);
 
   // Szűrt és rendezett lehetőségek
   const filteredOpportunities = useMemo(() => {
@@ -86,15 +106,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     });
     return Array.from(map.values());
   }, [matches]);
-
-  // KPI mutatók
-  const positiveEvCount = useMemo(() => {
-    return allOpportunities.filter((o) => o.expectedValue > 0).length;
-  }, [allOpportunities]);
-
-  const highOverCount = useMemo(() => {
-    return allOpportunities.filter((o) => o.market === 'OVER_25' && o.probability >= 65).length;
-  }, [allOpportunities]);
 
   const presets: { id: ScannerPreset; label: string; icon: React.ReactNode }[] = [
     { id: 'best_ev', label: '💎 +EV Értéktippek', icon: <Zap className="w-3.5 h-3.5" /> },
@@ -550,14 +561,54 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
               })}
             </div>
           ) : (
-            <div className="p-8 text-center bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2">
+            <div className="p-8 text-center bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
               <Radar className="w-8 h-8 text-slate-600 mx-auto" />
-              <div className="text-sm font-bold text-slate-400">
+              <div className="text-sm font-bold text-slate-300">
                 Nem található a szűrésnek megfelelő fogadási lehetőség
               </div>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Próbáld meg csökkenteni a minimum esély küszöböt, vagy válts az „Összes Lehetőség” presetre.
-              </p>
+              {activePreset === 'best_ev' && positiveEvCount === 0 ? (
+                <div className="max-w-md mx-auto space-y-3 text-xs text-slate-400">
+                  <p className="leading-relaxed">
+                    A <strong className="text-amber-400">💎 +EV (értéktipp)</strong> kereső valós, élő bukmékeri szorzókat (API-Sports) igényel. Jelenleg a modell szimulált szorzói aktívak, amelyekre nem képzünk mesterséges piaci arbitrázst.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2 pt-1">
+                    <button
+                      onClick={() => setActivePreset('ai_picks')}
+                      className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-colors cursor-pointer text-xs"
+                    >
+                      🎯 Váltás a Kiemelt MI Tippekre
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActivePreset('all');
+                        setDayFilter('all');
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold transition-colors cursor-pointer text-xs"
+                    >
+                      📋 Összes Meccs Megtekintése
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    {dayFilter === 'today'
+                      ? 'A mai napra jelenleg nincs aktív meccs a kiválasztott szűrőkkel.'
+                      : 'Próbáld meg csökkenteni a minimum esély küszöböt, vagy válts az „Összes Lehetőség” presetre.'}
+                  </p>
+                  {dayFilter !== 'all' && (
+                    <button
+                      onClick={() => {
+                        setDayFilter('all');
+                        setStatusFilter('open_only');
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Összes Nyitott Meccs Mutatása
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
