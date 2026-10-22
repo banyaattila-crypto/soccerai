@@ -3,6 +3,7 @@ import { Match, BetSlipItem } from '../types/football';
 import { Sparkles, Plus, Check, ChevronRight, Zap, LayoutGrid, Flame, ShieldCheck, Info } from 'lucide-react';
 import { OddsSourceBadge, OddsSourceRibbon, resolveOddsSourceState } from './OddsSourceBadge';
 import { getDataQualityInfo, getProbabilityRange } from '../utils/modelConfidence';
+import { isMarketAnchoredMarket } from '../services/marketBlend';
 
 interface TopPicksProps {
   matches: Match[];
@@ -39,7 +40,9 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
   const isRealActive = !isSimulated && !isExpired;
   const oddsState = resolveOddsSourceState({ isSimulated, isExpired });
   const dq = getDataQualityInfo(match);
-  const range = getProbabilityRange(match, pick.market);
+  // Ha a valószínűség piaci (de-vigelt) alapú, a modell-érzékenységi sáv nem értelmezhető
+  const isMarketBased = match.probabilitySource === 'market' && isMarketAnchoredMarket(pick.market);
+  const range = isMarketBased ? undefined : getProbabilityRange(match, pick.market);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -183,7 +186,9 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
           {/* Valószínűség & Fair ár indikátor */}
           <div className="mt-3 space-y-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-medium">Becsült modell esély:</span>
+              <span className="text-slate-400 font-medium">
+                {isMarketBased ? 'Piaci esély (de-vigelt):' : 'Becsült modell esély:'}
+              </span>
               <span className="font-extrabold text-emerald-400">{pick.probability}%</span>
             </div>
             <div className="relative w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">

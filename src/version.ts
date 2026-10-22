@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.27.1';
-export const APP_RELEASE_NAME = 'Backtesten Hangolt Modell-paraméterek';
+export const APP_VERSION = '1.28.0';
+export const APP_RELEASE_NAME = 'Piaci Valószínűség Valós Szorzónál';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,11 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'A modell hiperparaméterei (időlecsengés ξ = 0,0015, regularizáció K = 5) a valós walk-forward backtesten hangolva, a holdout szezonon ellenőrizve',
-    'Holdout 1X2 log-loss: 1,0004 → 0,9982 (piac: 0,9776, naiv: 1,0718); a rés a piachoz kb. 0,02, ezt nem zárja be a paraméterhangolás',
-    'Utólagos kalibráció (döntetlen-korrekció, hőmérséklet) nem javít: a modell átlagosan jól kalibrált',
-    'Újrafuttatható hangolás: npx tsx scripts/backtest-tune.ts',
-    '259 / 259 zöld teszt (27 tesztfájl)',
+    'Ahol van valós bukmékeri szorzó, az 1X2 és az Over/Under 2.5 esély a de-vigelt piaci ár (a backtest szerint ez a legpontosabb elérhető becslés: log-loss 0,9776 vs. modell 0,9982)',
+    'A modell értékei megmaradnak mellette ("Modell: x%"), a listákon "Piaci ár" jelvény jelzi a forrást',
+    'A meccs-részletező EV-oszlopa a piaci konszenzushoz mér (Pinnacle fair); a nyers modell-EV, amelynek hozama a backtesten −12,5% volt, kikerült. BTTS-re nincs EV',
+    'Új odds betöltésekor a listák azonnal frissülnek (hálózati kérés nélkül)',
+    'A predikciónapló a modell saját valószínűségét rögzíti, nem a piaci felülírást',
+    '268 / 268 zöld teszt (27 tesztfájl)',
   ],
 };

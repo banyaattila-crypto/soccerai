@@ -95,6 +95,14 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     {match.kickoffTime}
                   </span>
                 )}
+                {match.probabilitySource === 'market' && (
+                  <span
+                    className="text-[10px] text-blue-200 font-bold bg-blue-500/15 px-1.5 py-0.5 rounded-md border border-blue-500/40"
+                    title="Az 1X2 és az Over/Under 2.5 esély a valós bukmékeri szorzókból (de-vigelt piaci ár), nem a modellből"
+                  >
+                    Piaci ár
+                  </span>
+                )}
                 {match.quantAnalysis && (
                   <span className="text-[11px] text-slate-400 font-mono font-bold bg-slate-900 px-1.5 py-0.5 rounded-md border border-slate-800">
                     {match.quantAnalysis.dataQuality}-szint

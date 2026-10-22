@@ -599,3 +599,91 @@ describe('Valós Bukméker Oddsok, Lejárat (TTL) és Szimulált Ár Védelem Re
     });
   });
 });
+
+describe('Piaci valószínűség megjelenítése valós szorzónál', () => {
+  const FIXTURE = 555123;
+  const KEY = `soccerai_odds_cache_${FIXTURE}`;
+  const base = (): Match => ({
+    id: `match_${FIXTURE}`,
+    apiSportsFixtureId: FIXTURE,
+    leagueId: 'pl',
+    leagueName: 'Premier League',
+    leagueCountry: 'Anglia',
+    leagueFlag: '',
+    kickoffTime: '17:30',
+    kickoffDate: '2026-10-20',
+    status: 'UPCOMING',
+    homeTeam: { id: 'ars', name: 'Arsenal', shortName: 'ARS', logo: '', xgAvg: 2.1 },
+    awayTeam: { id: 'che', name: 'Chelsea', shortName: 'CHE', logo: '', xgAvg: 1.2 },
+    probabilities: {
+      homeWin: 62,
+      draw: 20,
+      awayWin: 18,
+      bttsYes: 60,
+      over15: 85,
+      over25: 66,
+      over35: 38,
+      fhOver05: 74,
+    },
+    odds: { home: 1.9, draw: 3.9, away: 4.6, bttsYes: 1.8, over25: 1.7 },
+  });
+  const odds = (timestamp: number): FixtureRealOdds => ({
+    fixtureId: FIXTURE,
+    updatedAt: '15:30',
+    expiresAt: new Date(timestamp + ODDS_CACHE_TTL_MS).toISOString(),
+    ttlMinutes: 60,
+    isExpired: false,
+    bookmakers: [{ name: 'Pinnacle', home: 2.1, draw: 3.5, away: 3.6, over25: 1.85, under25: 2.05 }],
+    bestOdds: {
+      home: { odd: 2.1, bookmaker: 'Pinnacle' },
+      draw: { odd: 3.5, bookmaker: 'Pinnacle' },
+      away: { odd: 3.6, bookmaker: 'Pinnacle' },
+      over25: { odd: 1.85, bookmaker: 'Pinnacle' },
+      under25: { odd: 2.05, bookmaker: 'Pinnacle' },
+    },
+  });
+
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
+
+  it('érvényes valós szorzónál a megjelenített 1X2 és O/U piaci alapú, a modell értékei megmaradnak', () => {
+    const now = 1700000000000;
+    localStorage.setItem(KEY, JSON.stringify({ timestamp: now - 10 * 60 * 1000, data: odds(now - 10 * 60 * 1000) }));
+    const [m] = attachCachedRealOddsToMatches([base()], now);
+
+    expect(m.probabilitySource).toBe('market');
+    expect(m.modelProbabilities?.homeWin).toBe(62);
+    // a Pinnacle de-vigelt hazai esélye ~46%, nem a modell 62%-a
+    expect(m.probabilities.homeWin).toBeLessThan(50);
+    expect(m.probabilities.homeWin + m.probabilities.draw + m.probabilities.awayWin).toBe(100);
+    // a BTTS marad a modellé (nincs piaci referencia)
+    expect(m.probabilities.bttsYes).toBe(60);
+  });
+
+  it('idempotens: újra-csatolásnál ugyanaz az eredmény, és nem halmozódik', () => {
+    const now = 1700000000000;
+    localStorage.setItem(KEY, JSON.stringify({ timestamp: now - 10 * 60 * 1000, data: odds(now - 10 * 60 * 1000) }));
+    const once = attachCachedRealOddsToMatches([base()], now);
+    const twice = attachCachedRealOddsToMatches(once, now);
+    expect(twice[0].probabilities).toEqual(once[0].probabilities);
+    expect(twice[0].modelProbabilities?.homeWin).toBe(62);
+  });
+
+  it('lejárt szorzónál visszaáll a modell valószínűsége', () => {
+    const now = 1700000000000;
+    localStorage.setItem(KEY, JSON.stringify({ timestamp: now - 10 * 60 * 1000, data: odds(now - 10 * 60 * 1000) }));
+    const attached = attachCachedRealOddsToMatches([base()], now);
+    expect(attached[0].probabilitySource).toBe('market');
+
+    const later = now + 2 * 60 * 60 * 1000; // a TTL lejárt
+    const expired = attachCachedRealOddsToMatches(attached, later);
+    expect(expired[0].probabilitySource).toBe('model');
+    expect(expired[0].probabilities.homeWin).toBe(62);
+  });
+
+  it('szorzó nélkül a modell marad', () => {
+    const [m] = attachCachedRealOddsToMatches([base()], 1700000000000);
+    expect(m.probabilitySource).toBe('model');
+    expect(m.probabilities.homeWin).toBe(62);
+  });
+});

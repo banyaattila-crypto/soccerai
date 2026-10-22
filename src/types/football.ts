@@ -126,7 +126,11 @@ export interface Match {
   awayScore?: number;
   homeHalfTimeScore?: number;
   awayHalfTimeScore?: number;
+  /** A megjelenített valószínűségek: valós szorzónál az 1X2 és az O/U 2.5 piaci (de-vigelt) alapú, egyébként modell */
   probabilities: MarketProbabilities;
+  /** A modell eredeti valószínűségei, ha a `probabilities` piaci alapú (probabilitySource = 'market') */
+  modelProbabilities?: MarketProbabilities;
+  probabilitySource?: 'model' | 'market';
   odds: MatchOdds;
   aiPick?: {
     market: PickMarket;

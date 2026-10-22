@@ -10,7 +10,8 @@ import {
 } from './predictionEngine';
 import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
 import { normalizeTeamName } from '../utils/teamUtils';
-import { marketFairFromBookmakers, blendedMarketPct } from './marketBlend';
+import { marketFairFromBookmakers, blendedMarketPct, applyMarketProbabilities } from './marketBlend';
+import { eventBus } from '../utils/eventBus';
 import {
   computeExpectedGoalsFromModel,
   loadLeagueModel,
@@ -842,6 +843,7 @@ export async function fetchFixtureOdds(
       cacheKey,
       JSON.stringify({ timestamp: nowMs, data: result })
     );
+    eventBus.emit('odds_cache_updated');
   } catch (err) {
     console.warn('Nem sikerült elmenteni az odds cache-t (helyfelszabadítás indul):', err);
     try {
@@ -960,6 +962,12 @@ export function attachCachedRealOddsToMatches(
       quantAnalysis: inputMatch.quantAnalysis ? { ...inputMatch.quantAnalysis } : undefined,
     };
 
+    // Idempotencia: mindig a modell eredeti valószínűségeiből indulunk (újra-csatolásnál a piaci felülírás nem halmozódik)
+    const baseProbabilities = inputMatch.modelProbabilities ?? inputMatch.probabilities;
+    match.probabilities = baseProbabilities;
+    match.modelProbabilities = undefined;
+    match.probabilitySource = 'model';
+
     const fId = match.apiSportsFixtureId || resolveApiSportsFixtureId(match);
     if (!fId) {
       if (match.aiPick) {
@@ -997,6 +1005,15 @@ export function attachCachedRealOddsToMatches(
       // Az EV/Kelly a piaci referenciához (Pinnacle, ennek híján az átlag) mér: a backtest szerint a nyers
       // modell-EV hozama negatív, a piac a pontosabb előrejelző.
       const marketFair = marketFairFromBookmakers(cached.bookmakers);
+
+      // Ahol van valós szorzó, a megjelenített 1X2 és O/U 2.5 valószínűség a de-vigelt piaci ár (backtest: ez a
+      // legpontosabb elérhető becslés); a modell eredeti értékei a `modelProbabilities`-ben maradnak.
+      const marketProbabilities = applyMarketProbabilities(baseProbabilities, marketFair);
+      if (marketProbabilities) {
+        match.modelProbabilities = baseProbabilities;
+        match.probabilities = marketProbabilities;
+        match.probabilitySource = 'market';
+      }
       const { aiPick, quantAnalysis } = buildMatchQuantAndPick({
         homeTeamName: match.homeTeam.name,
         awayTeamName: match.awayTeam.name,

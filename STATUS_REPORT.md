@@ -1,10 +1,10 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.27.1` (SemVer 2.0.0)
-**Kiadás neve:** Backtesten Hangolt Modell-paraméterek
+**Aktuális verzió:** `v1.28.0` (SemVer 2.0.0)
+**Kiadás neve:** Piaci Valószínűség Valós Szorzónál
 **Dátum:** 2026. október 22.
-**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 259/259 teszt zöld (27 tesztfájl), production build hibátlan
+**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 268/268 teszt zöld (27 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
 **Élő URL:** https://soccerai-pro.vercel.app
 **Helyi szerver:** `http://localhost:3000` (`npm run dev`)
@@ -15,12 +15,13 @@
 
 A SoccerAI PRO magyar nyelvű kvantitatív futball-elemző: Dixon–Coles-alapú esélyszámítás, λ-rács robusztussági szűrő, Shin de-vig, negyed-Kelly, pre-match predikciónapló és saját bankroll-követő.
 
-A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép helyes, de a modell bemeneti adata vékony volt. Négy lépésben reagáltunk (időrendben):
+A 2026-10-22-i külső kódaudit megállapította, hogy a számítási gép helyes, de a modell bemeneti adata vékony volt. Öt lépésben reagáltunk (időrendben):
 
 - **v1.25.0 (Design csomag):** a felület nem állít többet, mint amit az adat megenged: érzékenységi sáv, őszinte adatminőség-felirat, szimulált ár jelölése, döntés-központú állapotsor, megbízhatósági diagram, tőkegörbe, akadálymentesség.
 - **v1.26.0 (Adat- és modell csomag):** a modell a teljes szezon-előzményből tanul, egységes a skála, az EV kerekítetlen valószínűséggel számol, a gólmátrix 12x12, és egynapos mintából többé nem készül "illesztett" modell.
 - **v1.27.0 (Piaccal súlyozás és valós backtest):** a pontosságot először valós piaci adaton mértük (lásd 2/B). A modell jobb a naiv gyakoriságnál, de rosszabb a záró piacnál, a nyers "+EV" jelek hozama negatív. Ezért valós szorzónál az EV és a Kelly a piaci referenciához mér, a Módszertan a valós backtestet mutatja.
 - **v1.27.1 (Hangolt paraméterek):** az időlecsengés (ξ = 0,0015) és a regularizáció (K = 5) a valós backtesten hangolva; holdout log-loss 1,0004 → 0,9982. A rés a piachoz kb. 0,02 maradt.
+- **v1.28.0 (Piaci valószínűség):** ahol van valós szorzó, az 1X2 és az O/U 2.5 esély a de-vigelt piaci ár (a legpontosabb elérhető becslés), a modell értéke mellette látszik; a meccs-részletező EV-je a piaci konszenzushoz mér.
 
 **Élő ellenőrzések (2026-10-22):**
 - **v1.26.0:** a szezon-lekérés és a `regularTime` mező működik (PL 70 + 380, CL 189 meccs; hosszabbításos kupameccseknél a `fullTime` tartalmazza a hosszabbítást, a `regularTime` a 90 percet). Az ellenőrzés hibákat talált, ezeket külön javítások zárták: részleges modell tartósulása és átmeneti hiba hibacache-be kerülése (v1.26.1); új deploy után a 10 kérés/perces keret miatt csak az első liga modellje készült el (v1.26.2: automatikus újrapróbálás); a sikertelen főliga-lekérés nem próbálkozott újra (v1.26.3).
@@ -99,7 +100,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 | :--- | :--- |
 | Frontend | React 19, TypeScript ~6.0 (strict), Vite 8 |
 | Stílus | Tailwind CSS v4, sötét téma |
-| Tesztek | Vitest 5.0.5: 259 teszt, 27 fájl |
+| Tesztek | Vitest 5.0.5: 268 teszt, 27 fájl |
 | Lint | Oxlint (`--deny-warnings`) |
 | Szkriptek | `tsx` (backtest és hangolás: `scripts/backtest.ts`, `scripts/backtest-tune.ts`) |
 | PWA | Web App Manifest + Service Worker (network-first navigáció) |
@@ -122,7 +123,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 1. **Napi Top Tippek (`TopPicks`):** λ-rács szűrőn átment jelöltek, érzékenységi sávval, adatminőség-felirattal, döntés-központú állapotsorral.
 2. **Mérkőzésrács (`StatsGrid`):** UCL, UEL, UECL és 15+ bajnokság, "Csak Élő" gyorsszűrő.
 3. **Meccs-részletező (`MatchDetailModal`):** szakértői magyarázat, ScoreLab H2H, Poisson-mátrix, őszinte adatminőség.
-4. **Scanner (`ScannerView`):** "+EV" csak valós, érvényes áron, a piaci referenciához mérve (ár-előny); 8 preset; liga-radar.
+4. **Scanner (`ScannerView`):** (az EV a piaci referenciához mér) "+EV" csak valós, érvényes áron, a piaci referenciához mérve (ár-előny); 8 preset; liga-radar.
 5. **Eredmények és audit (`ResultsView`):** pre-match, write-once napló, piaconkénti bontás.
 6. **Tétnapló (`BankrollView`):** szelvények, auto-kiértékelés, tőkegörbe és drawdown.
 7. **Módszertan (`MethodologyView`, `BacktestSection`):** modell leírás, valós walk-forward backtest (pontosság-táblázat, fogadási szimuláció, megbízhatósági diagram, hangolási görbe).
@@ -172,7 +173,7 @@ soccerai/
 
 1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó szerveroldali előmelegítés (cron).
 2. **Modell-javítás a piac ellen (a backtest a mérce):** a ξ/K hangolás megvolt (v1.27.1), a hazai/idegenbeli szétválasztás és a feljutó-prior kipróbálva és elutasítva (`docs/backtest-experiments.md`). A rés a piachoz kb. 0,02 log-loss maradt, szerkezeti változtatással nem záródik. További javulás csak új információs forrástól várható (xG, felállás/sérülés); ez adatforrás-vizsgálatot igényel (elérhetőség, jogi feltételek, költség).
-2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** a legpontosabb elérhető valószínűség a de-vigelt piaci ár (modell súlya 0). Jelenleg a rács és a kártyák a modell valószínűségét mutatják akkor is, ha ismert valós szorzó; érdemes ilyenkor a piaci (konszenzus) valószínűséget megjeleníteni, "piaci ár alapján" jelöléssel. A modell ott ad hozzáadott értéket, ahol nincs piaci ár.
+2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** megvan (v1.28.0). Nyitott: a piaci alapú esély csak a már lekért szorzójú meccsekre jelenik meg (napi API-Sports kvóta); megfontolandó a szorzók előzetes, ütemezett lekérése a legfontosabb meccsekre.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
 4. **Higiénia (F-14, F-15):** mock lusta betöltése, üres `catch`-ek, nagy komponensek szétvágása, CSP.
 
@@ -183,7 +184,7 @@ soccerai/
 ```bash
 npm ci          # reprodukálható telepítés
 npm run dev     # fejlesztői szerver (3000)
-npm test        # 259 teszt
+npm test        # 268 teszt
 npx tsc -b      # típusellenőrzés
 npx oxlint --deny-warnings
 npm run build   # production build

@@ -116,6 +116,14 @@ export function App() {
   const [pinEnabled, setPinEnabled] = useState<boolean>(() => isPinEnabled());
   const [isLocked, setIsLocked] = useState<boolean>(() => isPinEnabled());
 
+  // Új valós oddsok kerültek a gyorsítótárba (pl. a meccs-részletezőben): a listák piaci valószínűségei azonnal frissülnek,
+  // hálózati kérés nélkül
+  useEffect(() => {
+    return eventBus.on('odds_cache_updated', () => {
+      setMatches((prev) => (prev.length > 0 ? attachCachedRealOddsToMatches(prev) : prev));
+    });
+  }, []);
+
   useEffect(() => {
     const unsubState = eventBus.on('pin_state_changed', () => {
       const enabled = isPinEnabled();

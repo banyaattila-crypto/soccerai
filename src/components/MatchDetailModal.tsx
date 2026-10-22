@@ -26,6 +26,7 @@ import { ScoreLabH2HCard } from './ScoreLabH2HCard';
 import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
 import { MatchExplanationCard } from './MatchExplanationCard';
 import { getDataQualityInfo } from '../utils/modelConfidence';
+import { marketFairFromBookmakers, blendedMarketPct, applyMarketProbabilities } from '../services/marketBlend';
 
 interface MatchDetailModalProps {
   match: Match | null;
@@ -87,13 +88,19 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   // 2. Korai visszatérés (Guard) KIZÁRÓLAG a hookok lefutása után!
   if (!match) return null;
 
-  const p = match.probabilities;
+  const modelP = match.modelProbabilities ?? match.probabilities;
   const isFinished = match.status === 'FINISHED';
 
   // Valós bukmékeri oddsok kezelése (Pinnacle & Bet365)
   const fixtureId = resolveApiSportsFixtureId(match);
   const ttlStatus = getOddsTtlStatus(realOdds);
   const isRealOddsActive = ttlStatus.isReal && !ttlStatus.isExpired;
+
+  // Ahol van valós szorzó, az 1X2 és az O/U 2.5 valószínűség a de-vigelt piaci ár (backtest: ez a legpontosabb
+  // elérhető becslés); a modell értékei mellette megmaradnak.
+  const marketFair = realOdds && isRealOddsActive ? marketFairFromBookmakers(realOdds.bookmakers) : undefined;
+  const marketP = marketFair ? applyMarketProbabilities(modelP, marketFair) : null;
+  const p = marketP ?? modelP;
 
   const handleRefreshOdds = async () => {
     if (!fixtureId || loadingOdds) return;
@@ -589,19 +596,31 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   const bttsSource = isBest ? realOdds.bestOdds.bttsYes?.bookmaker : currentBookie?.name;
 
                   // EV kalkulációk
-                  const hEv = calcEv(p.homeWin, hOdd);
-                  const dEv = calcEv(p.draw, dOdd);
-                  const aEv = calcEv(p.awayWin, aOdd);
-                  const o25Ev = calcEv(p.over25, o25Odd);
-                  const u25Ev = calcEv(Math.max(1, 100 - p.over25), u25Odd);
-                  const bttsEv = calcEv(p.bttsYes, bttsOdd);
+                  // Az EV a piaci referenciához (Pinnacle fair, ennek híján az átlag) mér: a backtest szerint a nyers
+                  // modell-EV hozama negatív. Piaci referencia nélküli piacra (BTTS) nincs EV.
+                  const mk = (market: string) =>
+                    blendedMarketPct(market, { home: modelP.homeWin, draw: modelP.draw, away: modelP.awayWin, over25: modelP.over25 }, marketFair);
+                  const hP = mk('1');
+                  const dP = mk('X');
+                  const aP = mk('2');
+                  const oP = mk('OVER_25');
+                  const uP = mk('UNDER_25');
+                  const evOf = (pct: number | null, odd?: number) => (pct === null ? null : calcEv(pct, odd));
+                  const hEv = evOf(hP, hOdd);
+                  const dEv = evOf(dP, dOdd);
+                  const aEv = evOf(aP, aOdd);
+                  const o25Ev = evOf(oP, o25Odd);
+                  const u25Ev = evOf(uP, u25Odd);
+                  const bttsEv = null;
 
-                  const fairHome = (100 / Math.max(1, p.homeWin)).toFixed(2);
-                  const fairDraw = (100 / Math.max(1, p.draw)).toFixed(2);
-                  const fairAway = (100 / Math.max(1, p.awayWin)).toFixed(2);
-                  const fairOver25 = (100 / Math.max(1, p.over25)).toFixed(2);
-                  const fairUnder25 = (100 / Math.max(1, 100 - p.over25)).toFixed(2);
-                  const fairBtts = (100 / Math.max(1, p.bttsYes)).toFixed(2);
+                  const fairOf = (pct: number | null, fallbackPct: number) =>
+                    (100 / Math.max(1, pct ?? fallbackPct)).toFixed(2);
+                  const fairHome = fairOf(hP, modelP.homeWin);
+                  const fairDraw = fairOf(dP, modelP.draw);
+                  const fairAway = fairOf(aP, modelP.awayWin);
+                  const fairOver25 = fairOf(oP, modelP.over25);
+                  const fairUnder25 = fairOf(uP, Math.max(1, 100 - modelP.over25));
+                  const fairBtts = (100 / Math.max(1, modelP.bttsYes)).toFixed(2);
 
                   const renderRow = (
                     label: string,
@@ -669,7 +688,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     <div className="space-y-1.5">
                       <div className="grid grid-cols-12 text-[10px] uppercase font-bold text-slate-400 px-2.5 pb-0.5">
                         <div className="col-span-4">Piac / Kimenetel</div>
-                        <div className="col-span-3 text-center">Modell Fair</div>
+                        <div className="col-span-3 text-center">Piaci Fair</div>
                         <div className="col-span-3 text-center">Bukméker</div>
                         <div className="col-span-2 text-right">Érték (+EV)</div>
                       </div>
@@ -679,7 +698,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                       {renderRow(`${match.awayTeam.shortName || match.awayTeam.name} (2)`, fairAway, aOdd, aEv, aSource)}
                       {renderRow('2.5 Gól Felett', fairOver25, o25Odd, o25Ev, o25Source)}
                       {renderRow('2.5 Gól Alatt', fairUnder25, u25Odd, u25Ev, u25Source)}
-                      {bttsOdd && renderRow('Mindkét Csapat Lő (BTTS)', fairBtts, bttsOdd, bttsEv, bttsSource)}
+                      {bttsOdd && renderRow('Mindkét Csapat Lő (BTTS, modell fair)', fairBtts, bttsOdd, bttsEv, bttsSource)}
                     </div>
                   );
                 })()}
@@ -695,7 +714,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   </span>
                   <span className="text-emerald-400 font-semibold flex items-center gap-1">
                     <Zap className="w-3 h-3 text-amber-400" />
-                    Zöld kiemelés: Pozitív Várható Érték (+EV)
+                    Zöld kiemelés: ár-előny a piaci konszenzushoz (+EV)
                   </span>
                 </div>
               </div>
@@ -713,22 +732,27 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           <div className="space-y-2">
             <div className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
               <span>1X2 Végeredmény Esélyek</span>
-              <span className="text-[10px] text-slate-500">Modell becslés</span>
+              <span className="text-[10px] text-slate-500">
+                {marketP ? 'Piaci ár alapján (de-vigelt)' : 'Modell becslés'}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <div className="text-slate-400 text-[11px]">Hazai (1)</div>
                 <div className="text-base font-extrabold text-emerald-400">{p.homeWin}%</div>
+                {marketP && <div className="text-[10px] text-slate-400">Modell: {modelP.homeWin}%</div>}
                 <div className="text-[10px] text-slate-500 font-mono">Odds: {match.odds.home.toFixed(2)}</div>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <div className="text-slate-400 text-[11px]">Döntetlen (X)</div>
                 <div className="text-base font-extrabold text-slate-300">{p.draw}%</div>
+                {marketP && <div className="text-[10px] text-slate-400">Modell: {modelP.draw}%</div>}
                 <div className="text-[10px] text-slate-500 font-mono">Odds: {match.odds.draw.toFixed(2)}</div>
               </div>
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <div className="text-slate-400 text-[11px]">Vendég (2)</div>
                 <div className="text-base font-extrabold text-teal-400">{p.awayWin}%</div>
+                {marketP && <div className="text-[10px] text-slate-400">Modell: {modelP.awayWin}%</div>}
                 <div className="text-[10px] text-slate-500 font-mono">Odds: {match.odds.away.toFixed(2)}</div>
               </div>
             </div>
@@ -751,6 +775,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
                 <span className="text-[10px] text-slate-400 block">&gt; 2.5 Gól</span>
                 <span className="text-sm font-bold text-white">{p.over25}%</span>
+                {marketP && <span className="text-[10px] text-slate-400 block">Modell: {modelP.over25}%</span>}
               </div>
               <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
                 <span className="text-[10px] text-slate-400 block">1.F &gt; 0.5 Gól</span>

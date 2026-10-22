@@ -98,3 +98,52 @@ describe('blendedMarketPct', () => {
     expect(2.1 * p - 1).toBeLessThan(0); // a referencia saját árán az árrés miatt negatív
   });
 });
+
+import { applyMarketProbabilities, isMarketAnchoredMarket } from '../marketBlend';
+import { calculateMarketProbabilities } from '../predictionEngine';
+
+describe('applyMarketProbabilities', () => {
+  const model = calculateMarketProbabilities(1.9, 1.1, 1.0, -0.1);
+  const fair = { p1x2: [0.5, 0.26, 0.24], pOver25: 0.55 };
+
+  it('a backtest-hangolt súllyal (0) az 1X2 és az O/U 2.5 a piaci referencia', () => {
+    const out = applyMarketProbabilities(model, fair)!;
+    expect(out.homeWin).toBe(50);
+    expect(out.draw).toBe(26);
+    expect(out.awayWin).toBe(24);
+    expect(out.over25).toBe(55);
+  });
+
+  it('az 1X2 egész százalékai pontosan 100-ra jönnek ki', () => {
+    const out = applyMarketProbabilities(model, { p1x2: [0.4567, 0.2733, 0.27] })!;
+    expect(out.homeWin + out.draw + out.awayWin).toBe(100);
+  });
+
+  it('megőrzi a gólpiacok monotonitását és a kombinált piac korlátait', () => {
+    for (const over of [0.2, 0.55, 0.9]) {
+      const out = applyMarketProbabilities(model, { pOver25: over })!;
+      expect(out.over35).toBeLessThanOrEqual(out.over25);
+      expect(out.over25).toBeLessThanOrEqual(out.over15);
+      expect(out.bttsAndOver25!).toBeLessThanOrEqual(Math.min(out.bttsYes, out.over25));
+      // a nem érintett mezők (BTTS, félidő) a modell értékei maradnak
+      expect(out.bttsYes).toBe(model.bttsYes);
+      expect(out.fhOver05).toBe(model.fhOver05);
+    }
+  });
+
+  it('az exact mezők a piaci értékekhez igazodnak; a bemenetet nem módosítja', () => {
+    const before = JSON.stringify(model);
+    const out = applyMarketProbabilities(model, fair)!;
+    expect(out.exact!.homeWin).toBeCloseTo(50, 1);
+    expect(out.exact!.over25).toBeCloseTo(55, 1);
+    expect(JSON.stringify(model)).toBe(before);
+  });
+
+  it('piaci referencia nélkül null; a piacosztályozás', () => {
+    expect(applyMarketProbabilities(model, {})).toBeNull();
+    expect(isMarketAnchoredMarket('1')).toBe(true);
+    expect(isMarketAnchoredMarket('OVER_25')).toBe(true);
+    expect(isMarketAnchoredMarket('BTTS_YES')).toBe(false);
+    expect(isMarketAnchoredMarket('FH_OVER_05')).toBe(false);
+  });
+});

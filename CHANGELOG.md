@@ -3,6 +3,21 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.28.0] - 2026-10-22
+
+### Hozzáadva (Added) - Piaci valószínűség megjelenítése valós szorzónál
+A valós backtest szerint (holdout 1X2 log-loss: Pinnacle záró ár 0,9776, modell 0,9982) a legpontosabb elérhető valószínűség a de-vigelt piaci ár. Ahol az app ismeri a valós szorzót, ezt mutatja.
+- **Piaci alapú valószínűség (`marketBlend.ts`, `apiSportsClient.ts`):** az `applyMarketProbabilities` az 1X2 és az Over/Under 2.5 esélyt a piaci referenciából (Pinnacle fair, ennek híján a bukmékerek átlaga) számolja, a modell súlya a backtest hangolta 0. Az 1X2 egész százalékai pontosan 100-ra jönnek ki; az Over 1.5/2.5/3.5 monotonitása és a kombinált piac korlátai megmaradnak; a BTTS és a félidős piac a modellé marad. A modell eredeti értékei a `Match.modelProbabilities`-ben, a forrás a `Match.probabilitySource`-ban ('market' | 'model') van.
+- **Idempotens csatolás:** az `attachCachedRealOddsToMatches` mindig a modell eredeti valószínűségéből indul, ezért újra-csatolásnál nem halmozódik a felülírás, és lejárt szorzónál visszaáll a modell értéke.
+- **Azonnali frissítés (`odds_cache_updated` esemény, `App.tsx`):** ha új odds kerül a gyorsítótárba (pl. a meccs-részletezőben), a listák valószínűségei hálózati kérés nélkül frissülnek.
+- **Meccs-részletező (`MatchDetailModal.tsx`):** a 1X2 és az O/U 2.5 doboz "Piaci ár alapján (de-vigelt)" feliratot kap, a modell értéke mellette látszik. Az odds-összehasonlító táblázat oszlopa "Piaci Fair", az EV a piaci konszenzushoz mér; a nyers modell-EV (a backtesten −12,5% hozam) kikerült, BTTS-re nincs EV.
+- **Kártyák:** a TopPicks "Piaci esély (de-vigelt)" feliratot mutat, a modell-érzékenységi sáv piaci alapú esélynél rejtett (nem értelmezhető); a kártyalistán "Piaci ár" jelvény.
+- **Predikciónapló (`predictionAuditService.ts`):** a pillanatkép a modell saját valószínűségét rögzíti, nem a piaci felülírást, hogy a kalibrációs mérés a modellt mérje.
+- **Tesztek:** 9 új teszt (`marketBlend.test.ts`, `realOddsExpirationRegression.test.ts`); összesen 27 fájlban 268 / 268 zöld.
+
+### Korlát
+- A piaci alapú esély csak azokra a meccsekre jelenik meg, amelyekhez a valós szorzó már le van kérve (a meccs-részletező megnyitásakor, napi API-Sports kvótával). A többi meccsen továbbra is a modell esélye látszik, ahogy eddig.
+
 ## [1.27.1] - 2026-10-22
 
 ### Továbbfejlesztve (Enhanced) - Backtesten hangolt modell-paraméterek

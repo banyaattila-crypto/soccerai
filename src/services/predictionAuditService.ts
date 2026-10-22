@@ -193,7 +193,8 @@ export function recordPreMatchPredictions(
         reasoning: match.aiPick.reasoning,
       },
       modelSnapshot: {
-        probabilities: { ...match.probabilities },
+        // A modell saját valószínűségei (nem a piaci felülírás): a kalibrációs mérés a modellt méri
+        probabilities: { ...(match.modelProbabilities ?? match.probabilities) },
         robustnessVerdict: match.quantAnalysis?.robustnessVerdict,
         dataQuality: match.quantAnalysis?.dataQuality,
       },

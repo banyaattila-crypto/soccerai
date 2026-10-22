@@ -9,7 +9,8 @@
  * w = 1: tiszta modell; w = 0: tiszta piac.
  */
 
-import { devigShin } from './predictionEngine';
+import { devigShin, normalizeIntegerPercentages } from './predictionEngine';
+import type { MarketProbabilities } from '../types/football';
 
 /**
  * A modell súlya a 3-utas (1X2) keverékben. A backtest (`src/data/backtestReport.json`) hangolta;
@@ -150,4 +151,67 @@ export function blendedMarketPct(
     return (market === 'OVER_25' ? b[0] : b[1]) * 100;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Megjelenítendő valószínűségek: piaci ár alapján, ha van valós szorzó
+// ---------------------------------------------------------------------------
+
+/**
+ * Piaci (de-vigelt) alapú valószínűségek az 1X2 és az Over/Under 2.5 piacra. A backtest szerint a záró piac a
+ * legpontosabb elérhető előrejelzés (log-loss 0,9776 vs. modell 0,9982), ezért ahol van valós szorzó, ezt mutatjuk.
+ * A többi mező (BTTS, 1,5 / 3,5, félidő) modell-eredetű marad, de a gólpiacok monotonitása és a kombinált piac
+ * Fréchet-korlátai megmaradnak. Piaci referencia hiányában null.
+ */
+export function applyMarketProbabilities(
+  p: MarketProbabilities,
+  fair: MarketFair,
+  wTri: number = MARKET_BLEND_MODEL_WEIGHT_1X2,
+  wTot: number = MARKET_BLEND_MODEL_WEIGHT_TOTALS
+): MarketProbabilities | null {
+  if (!fair.p1x2 && fair.pOver25 === undefined) return null;
+  const out: MarketProbabilities = { ...p, exact: p.exact ? { ...p.exact } : undefined };
+  const r2 = (x: number) => Math.round(x * 10000) / 100;
+
+  if (fair.p1x2) {
+    const model = [
+      (p.exact?.homeWin ?? p.homeWin) / 100,
+      (p.exact?.draw ?? p.draw) / 100,
+      (p.exact?.awayWin ?? p.awayWin) / 100,
+    ];
+    const b = blendLogPool(model, fair.p1x2, wTri);
+    const [h, d, a] = normalizeIntegerPercentages(b);
+    out.homeWin = h;
+    out.draw = d;
+    out.awayWin = a;
+    if (out.exact) {
+      out.exact.homeWin = r2(b[0]);
+      out.exact.draw = r2(b[1]);
+      out.exact.awayWin = r2(b[2]);
+    }
+  }
+
+  if (fair.pOver25 !== undefined) {
+    const overModel = (p.exact?.over25 ?? p.over25) / 100;
+    const b = blendLogPool([overModel, 1 - overModel], [fair.pOver25, 1 - fair.pOver25], wTot);
+    const over25 = Math.min(99, Math.max(1, Math.round(b[0] * 100)));
+    out.over25 = over25;
+    out.over15 = Math.max(p.over15, over25); // O3.5 <= O2.5 <= O1.5
+    out.over35 = Math.min(p.over35, over25);
+    if (out.bttsAndOver25 !== undefined) {
+      out.bttsAndOver25 = Math.min(out.bttsAndOver25, over25, out.bttsYes);
+    }
+    if (out.exact) {
+      out.exact.over25 = r2(b[0]);
+      out.exact.over15 = Math.max(out.exact.over15, r2(b[0]));
+      out.exact.over35 = Math.min(out.exact.over35, r2(b[0]));
+      out.exact.bttsAndOver25 = Math.min(out.exact.bttsAndOver25, r2(b[0]), out.exact.bttsYes);
+    }
+  }
+  return out;
+}
+
+/** Az adott piacra a megjelenített valószínűség piaci alapú-e (1X2, Over/Under 2.5)? */
+export function isMarketAnchoredMarket(market: string): boolean {
+  return ['1', 'X', '2', 'HOME_WIN', 'DRAW', 'AWAY_WIN', 'OVER_25', 'UNDER_25'].includes(market);
 }
