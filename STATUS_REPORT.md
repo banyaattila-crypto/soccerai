@@ -1,10 +1,10 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.31.0` (SemVer 2.0.0)
-**Kiadás neve:** Időben Lefutó Élő Meccsek
+**Aktuális verzió:** `v1.32.0` (SemVer 2.0.0)
+**Kiadás neve:** Keményített Proxy és Dátumos Kártyák
 **Dátum:** 2026. október 22.
-**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 292/292 teszt zöld (30 tesztfájl), production build hibátlan
+**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 303/303 teszt zöld (33 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
 **Élő URL:** https://soccerai-pro.vercel.app
 **Helyi szerver:** `http://localhost:3000` (`npm run dev`)
@@ -80,17 +80,17 @@ A v1.25.0-ig a modell 3 napos ablakból illeszkedett (a szimulációban rosszabb
 | F-02 | Magas | Skála-inkonzisztencia (+21% / +10% gólszám) | Javítva (v1.26.0) |
 | F-03 | Magas | Az EV és a Kelly egész %-ból számolt | Javítva (v1.26.0) |
 | F-04 | Magas | A kalibrációs kapu mintaadatra és szintetikus oddsra épül | Javítva (v1.27.0): a Módszertan a valós backtestet mutatja; a régi `calibrationService` függvények megmaradnak, de a nézet nem használja |
-| F-05 | Magas | Proxy rate limit memóriában, `Origin` nélküli kérés engedett | Nyitva |
-| F-06 | Közepes | A "tamper-evident" hash 53 bites, kulcs nélküli, kliensoldali | Nyitva |
+| F-05 | Magas | Proxy rate limit memóriában, `Origin` nélküli kérés engedett | Részben (v1.32.0): Origin/Sec-Fetch-Site/Referer kell; a tartós rate limit nyitva (Vercel Firewall) |
+| F-06 | Közepes | A "tamper-evident" hash 53 bites, kulcs nélküli, kliensoldali | Részben (v1.32.0): SHA-256, pontosított felirat; szerveroldali HMAC-napló nincs |
 | F-07 | Közepes | A "Hitelesített ROI" szimulált oddsra számol | Részben (v1.27.0): a felirat jelzi, hogy kalibrációs mutató, nem piaci hozam |
 | F-08 | Közepes | `isFitted` már a kézi priorra is igaz volt | Javítva (v1.26.0) |
 | F-09 | Közepes | `\|\|` felülírta a 0 értékű ρ-t és hazai előnyt | Javítva (v1.26.0) |
 | F-10 | Közepes | `MAXG=8`: nagy λ-nál a mátrix tömege vész | Javítva (v1.26.0, 12x12) |
 | F-11 | Közepes | A proxy `competition=` végpontját a kliens nem használta | Javítva (v1.26.0) |
 | F-12 | Közepes | A `fullTime` ET/tizenegyes esetén nem 90 perces | Javítva (`regularTime`), élőben ellenőrizve: a mező létezik, a `fullTime` tartalmazza a hosszabbítást |
-| F-13 | Közepes | A PIN kliensoldali képernyőzár, nem védelem | Nyitva |
-| F-14 | Alacsony | `MOCK_MATCHES` a fő bundle-ben; forced auto-refresh | Nyitva |
-| F-15 | Alacsony | 26 üres `catch {}`, nagy komponensek, CSP hiánya | Nyitva |
+| F-13 | Közepes | A PIN kliensoldali képernyőzár, nem védelem | Javítva (v1.32.0): a felirat képernyőzárként pontos |
+| F-14 | Alacsony | `MOCK_MATCHES` a fő bundle-ben; forced auto-refresh | Javítva (v1.32.0, lusta import); az automatikus frissítés v1.31.0 óta adaptív |
+| F-15 | Alacsony | 26 üres `catch {}`, nagy komponensek, CSP hiánya | Részben (v1.32.0): CSP és fejlécek, a `catch`-ek indokolva; a nagy komponensek szétvágása nyitva |
 
 Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális készültség 7; biztonság 5; tesztelhetőség 8; karbantarthatóság 5,5; dokumentáció 6; telepíthetőség 8. **Döntés: B, feltételesen érdemes folytatni.**
 
@@ -102,7 +102,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 | :--- | :--- |
 | Frontend | React 19, TypeScript ~6.0 (strict), Vite 8 |
 | Stílus | Tailwind CSS v4, sötét téma |
-| Tesztek | Vitest 5.0.5: 292 teszt, 30 fájl |
+| Tesztek | Vitest 5.0.5: 303 teszt, 33 fájl |
 | Lint | Oxlint (`--deny-warnings`) |
 | Szkriptek | `tsx` (backtest és hangolás: `scripts/backtest.ts`, `scripts/backtest-tune.ts`) |
 | PWA | Web App Manifest + Service Worker (network-first navigáció) |
@@ -188,7 +188,7 @@ soccerai/
 ```bash
 npm ci          # reprodukálható telepítés
 npm run dev     # fejlesztői szerver (3000)
-npm test        # 292 teszt
+npm test        # 303 teszt
 npx tsc -b      # típusellenőrzés
 npx oxlint --deny-warnings
 npm run build   # production build

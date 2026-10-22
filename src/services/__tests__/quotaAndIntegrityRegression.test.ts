@@ -513,3 +513,17 @@ describe('Bet Slip Item Status & Integrity Validation (getItemInvalidReason)', (
     expect(getItemInvalidReason(futureItem)).toBeNull();
   });
 });
+
+describe('audit ellenőrző összeg formátuma', () => {
+  it('az új összeg SHA-256 alapú (audit2-, 64 hex), a régi formátumú rekord továbbra is ellenőrizhető', async () => {
+    const { computeRecordHash, verifyRecordHash } = await import('../predictionAuditService');
+    const data = { matchId: 'm1', kickoffTimestamp: 1790000000000, loggedAt: '2026-10-22T10:00:00.000Z', market: '1X2_HOME', probability: 0.5, odds: 2.1 };
+    const h = computeRecordHash(data);
+    expect(h).toMatch(/^audit2-[0-9a-f]{64}$/);
+    expect(verifyRecordHash(data, h)).toBe(true);
+    expect(verifyRecordHash({ ...data, odds: 2.2 }, h)).toBe(false);
+    // 53 bites, régi formátum (v1.32.0 előtti rekord): elfogadott, de módosításra érvénytelen
+    const legacy = 'audit-' + '0'.repeat(14);
+    expect(verifyRecordHash(data, legacy)).toBe(false);
+  });
+});

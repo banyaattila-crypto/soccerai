@@ -71,9 +71,37 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function isOriginAllowed(origin: string | undefined): boolean {
-  // Same-origin böngésző kéréseknél az Origin fejléc gyakran üres
-  if (!origin) return true;
+  if (!origin) return false;
   return ALLOWED_ORIGINS.has(origin) || VERCEL_PREVIEW_REGEX.test(origin);
+}
+
+function headerValue(headers: Record<string, string | string[] | undefined>, name: string): string | undefined {
+  const v = headers[name];
+  return Array.isArray(v) ? v[0] : v;
+}
+
+function originOf(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Böngészőből érkező, saját oldalról induló kérés-e. Az `Origin` fejléc same-origin GET-nél gyakran hiányzik, ezért
+ * ilyenkor a böngésző `Sec-Fetch-Site` fejlécét, régi böngészőknél a `Referer` forrását nézzük. Egyik sem hiányozhat:
+ * a fejléc nélküli (pl. curl-szerű) hívás nem jut a szerveroldali API-kulcshoz. Ez nem hitelesítés, a fejlécek
+ * nem böngészőből hamisíthatók; a szándékos visszaélés ellen a Vercel Firewall rate limit a megfelelő eszköz.
+ */
+function isRequestAllowed(headers: Record<string, string | string[] | undefined>): boolean {
+  const origin = headerValue(headers, 'origin');
+  if (origin) return isOriginAllowed(origin);
+  const site = headerValue(headers, 'sec-fetch-site');
+  if (site) return site === 'same-origin' || site === 'same-site' || site === 'none';
+  const refererOrigin = originOf(headerValue(headers, 'referer'));
+  return refererOrigin ? isOriginAllowed(refererOrigin) : false;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -81,9 +109,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? req.headers['origin'][0]
     : req.headers['origin'];
 
-  if (!isOriginAllowed(originHeader)) {
+  if (!isRequestAllowed(req.headers)) {
     return res.status(403).json({
-      error: 'Hozzáférés megtagadva: nem engedélyezett Origin (CORS védelem).',
+      error: 'Hozzáférés megtagadva: nem engedélyezett vagy hiányzó Origin (CORS védelem).',
     });
   }
 

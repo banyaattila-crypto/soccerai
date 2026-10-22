@@ -92,7 +92,7 @@ function formatHungarianDateHeader(dateStr: string, todayStr: string, yesterdayS
       return `${prefix}${formatted.charAt(0).toUpperCase() + formatted.slice(1)}`;
     }
   } catch {
-    // fallback
+    // A dátumformázás nem sikerült: lent a nyers dátumszöveg a tartalék
   }
   return `${prefix}${dateStr}`;
 }
@@ -539,7 +539,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Audit napló importálása JSON fájlból kriptográfiai ellenőrzéssel"
+                title="Audit napló importálása JSON fájlból; az ellenőrző összeg a sérült vagy módosított rekordokat kiszűri"
               >
                 <Upload className="w-3.5 h-3.5 text-blue-400" />
                 <span>Audit Import</span>

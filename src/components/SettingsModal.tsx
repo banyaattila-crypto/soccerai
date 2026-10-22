@@ -377,7 +377,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               {pinActive ? (
                 <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  PIN Védelem Aktív
+                  Képernyőzár Aktív
                 </span>
               ) : (
                 <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-medium">
@@ -387,7 +387,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
 
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Védi a bankrollt, szelvényeket és a fogadási stratégiát az illetéktelen betekintéstől. Bekapcsoláskor oldalfrissítéskor és a fejléc lakat ikonjával azonnal zárolható.
+              Képernyőzár: elrejti a bankrollt, a szelvényeket és a stratégiát a mellettad ülők elől. Bekapcsoláskor oldalfrissítéskor és a fejléc lakat ikonjával azonnal zárolható. Nem titkosítja az eszközön tárolt adatokat, és a böngésző adataihoz hozzáférőt nem állítja meg.
             </p>
 
             {pinSuccessNotice && (

@@ -1,3 +1,4 @@
+import { formatKickoffShort } from '../../utils/kickoffFormat';
 import { isMatchLive } from '../../utils/matchStatus';
 import React from 'react';
 import { Match, BetSlipItem, FocusMarket } from '../../types/football';
@@ -100,8 +101,11 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                   </span>
                 ) : (
                   <span className="font-mono text-amber-400 font-bold bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 text-xs">
-                    {match.kickoffTime}
+                    {formatKickoffShort(match)}
                   </span>
+                )}
+                {(isLive || match.liveStale) && !isFinished && (
+                  <span className="font-mono text-[11px] text-slate-400 whitespace-nowrap">{formatKickoffShort(match)}</span>
                 )}
                 {match.probabilitySource === 'market' && (
                   <span

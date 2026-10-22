@@ -77,6 +77,6 @@ export function clearArchivedFinishedMatches(): void {
   try {
     localStorage.removeItem(HISTORY_STORAGE_KEY);
   } catch {
-    // ignore
+    // A localStorage nem írható (privát mód, megtelt tár): a funkció a mentés nélkül is működik, csak nem marad meg újratöltés után
   }
 }

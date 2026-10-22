@@ -176,7 +176,7 @@ export async function fetchLiveMatches(
         }
       }
     } catch {
-      // ignore
+      // Sérült gyorsítótár-bejegyzés: figyelmen kívül hagyjuk, a hálózati lekérés pótolja
     }
 
     throw new Error(

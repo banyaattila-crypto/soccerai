@@ -135,7 +135,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
         const saved = localStorage.getItem('soccerai_favorite_matches');
         if (saved) return new Set(JSON.parse(saved));
       } catch {
-        // Fallback
+        // Sérült vagy hiányzó tárolt adat: az alapértelmezett (üres) állapottal folytatjuk
       }
     }
     return new Set();
@@ -150,7 +150,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       try {
         localStorage.setItem('soccerai_favorite_matches', JSON.stringify(Array.from(next)));
       } catch {
-        // Fallback
+        // A localStorage nem írható (privát mód, megtelt tár): a funkció a mentés nélkül is működik, csak nem marad meg újratöltés után
       }
       return next;
     });

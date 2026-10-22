@@ -3,6 +3,23 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.32.0] - 2026-10-22
+
+### Hozzáadva (Added) - Dátum a kártyákon
+Minden mérkőzéskártyán (kompakt lista, kártya, táblázat, Napi Top Tippek) a dátum is látszik az időpont mellett (`formatKickoffShort`, pl. "10. 22. 21:00"); élő és lefújt meccsnél is.
+
+### Biztonság (Security) - F-05, F-06, F-13, F-14, F-15
+- **F-05 Proxy (`api/matches.ts`, `api/apisports.ts`):** az `Origin` nélküli kérés eddig átment. Most Origin hiányában a `Sec-Fetch-Site` (same-origin, same-site, none) vagy az engedett `Referer` kell; fejléc nélküli (curl-szerű) kérés 403-at kap, így nem éri el a szerveroldali API-kulcsot. Ez nem hitelesítés (nem böngészőből a fejlécek hamisíthatók); a memóriabeli rate limit példányonként él, tartós korlátot a Vercel Firewall rate limit adhat.
+- **F-06 Audit ellenőrző összeg:** SHA-256 (`audit2-` + 64 hex) a régi 53 bites helyett (`src/utils/sha256.ts`, szinkron, WebCrypto-val egyező); a régi (`audit-`) rekordok változatlanul érvényesek. A feliratok pontosítva: a kulcs nélküli, kliensoldali összeg sérülést jelez, szándékos hamisítás ellen nem véd. Szerveroldali HMAC-napló nincs.
+- **F-13 PIN:** a felirat "Képernyőzár": elrejti a felületet, de nem titkosítja az eszközön tárolt adatokat (a "PIN Törlése" visszaállítás sem kér PIN-t).
+- **F-14 Mintaadat:** a `MOCK_MATCHES` lusta importtal töltődik (`src/data/leagues.ts` kiemelve), a fő csomag 463,9 kB-ról 443,8 kB-ra csökkent.
+- **F-15 CSP és higiénia:** `vercel.json` biztonsági fejlécekkel (CSP, nosniff, Referrer-Policy, X-Frame-Options, Permissions-Policy); a CSP-t helyi, a fejlécekkel kiszolgált buildben ellenőriztem (nincs szabálysértés). A 22 `catch` blokk mind megjegyzéssel jelzi, miért lehet csendes (localStorage / gyorsítótár tartalék).
+
+### Korlátok
+- A nagy komponensek szétvágása (F-15 része) és a tartós, szerveroldali rate limit nyitva maradt.
+- A `VERCEL_PREVIEW_REGEX` (`soccerai*.vercel.app`) bárki által regisztrálható névre is illik; a pontosításhoz a csapat Vercel-azonosítója kell.
+- **Tesztek:** 11 új teszt (SHA-256, ellenőrző összeg formátum, proxy-védelem, dátumformátum); összesen 33 fájlban 303 / 303 zöld.
+
 ## [1.31.0] - 2026-10-22
 
 ### Javítva (Fixed) - Élő meccsek időben leállnak

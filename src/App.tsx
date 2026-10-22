@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
-import { MOCK_MATCHES, LEAGUES } from './data/mockMatches';
+import { LEAGUES } from './data/leagues';
+
+/** A mintaadat (szimulációs mód, induló archívum) csak szükség esetén töltődik be, nem része a fő csomagnak. */
+const loadMockMatches = (): Promise<Match[]> => import('./data/mockMatches').then((m) => m.MOCK_MATCHES);
 import { fetchLiveMatches, getPendingLeagueModelCount } from './services/footballDataApi';
 import {
   fetchApiSportsMatches,
@@ -60,17 +63,8 @@ import {
 } from './services/predictionAuditService';
 
 export function App() {
-  const [matches, setMatches] = useState<Match[]>(() => {
-    try {
-      const savedDs = localStorage.getItem('focitipp_datasource');
-      if (savedDs === 'builtin') {
-        return MOCK_MATCHES;
-      }
-    } catch {
-      // ignore
-    }
-    return [];
-  });
+  // Szimulációs módban a mintameccsek az első betöltéskor (loadMatches) érkeznek, lusta importtal
+  const [matches, setMatches] = useState<Match[]>([]);
   // Alapértelmezett fül: Napi Top Tippek ('picks')
   const [activeTab, setActiveTab] = useState<AppTab>('picks');
   const [dayFilter, setDayFilter] = useState<DayFilter>('today');
@@ -93,7 +87,7 @@ export function App() {
     try {
       localStorage.setItem('soccerai_betslip_draft', JSON.stringify(betSlipItems));
     } catch {
-      // ignore
+      // A localStorage nem írható (privát mód, megtelt tár): a funkció a mentés nélkül is működik, csak nem marad meg újratöltés után
     }
   }, [betSlipItems]);
 
@@ -177,13 +171,14 @@ export function App() {
     ) => {
       if (source === 'builtin') {
         // Kizárólag akkor töltünk be mintát, ha a felhasználó kifejezetten a Szimulációs Módot választotta!
-        setMatches(MOCK_MATCHES);
+        const mockMatches = await loadMockMatches();
+        setMatches(mockMatches);
         setIsDemoMode(true);
         setApiSuccessNotice(null);
         setApiErrorNotice(null);
         // Mintamódban is biztosítjuk az eredmények megőrzését és audit zárását
-        persistFinishedMatchesToHistory(MOCK_MATCHES);
-        settleAuditPredictions(MOCK_MATCHES);
+        persistFinishedMatchesToHistory(mockMatches);
+        settleAuditPredictions(mockMatches);
         return;
       }
 
@@ -298,7 +293,7 @@ export function App() {
   useEffect(() => {
     // Ha az archív előzménytár még teljesen üres, feltöltjük az induló lezárt mérkőzésekkel
     if (getArchivedFinishedMatches().length === 0) {
-      persistFinishedMatchesToHistory(MOCK_MATCHES);
+      void loadMockMatches().then(persistFinishedMatchesToHistory);
     }
     loadMatches(dataSource, apiKey, apiSportsKey, enableSecondary, false);
   }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches]);

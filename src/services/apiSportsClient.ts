@@ -521,7 +521,7 @@ export async function fetchApiSportsMatches(
         }
       }
     } catch {
-      // ignore
+      // Sérült gyorsítótár-bejegyzés: figyelmen kívül hagyjuk, a hálózati lekérés pótolja
     }
 
     console.warn('API-Sports meccsek lekérése sikertelen:', lastError?.message);

@@ -1,3 +1,4 @@
+import { formatKickoffShort } from '../utils/kickoffFormat';
 import React, { useState, useMemo } from 'react';
 import { Match, BetSlipItem } from '../types/football';
 import { Sparkles, Plus, Check, ChevronRight, Zap, LayoutGrid, Flame, ShieldCheck, Info } from 'lucide-react';
@@ -87,7 +88,7 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span>{match.leagueFlag}</span>
               <span className="truncate">{match.leagueName}</span>
               <span className="text-slate-600">&bull;</span>
-              <span className="text-emerald-400 font-bold">{match.kickoffTime}</span>
+              <span className="text-emerald-400 font-bold">{formatKickoffShort(match)}</span>
             </span>
 
             <div className="flex items-center gap-1.5 shrink-0">
@@ -592,7 +593,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                         <span>{m.leagueFlag}</span>
                         <span className="truncate">{m.leagueName}</span>
                         <span>&bull;</span>
-                        <span className="text-emerald-400 font-mono">{m.kickoffTime}</span>
+                        <span className="text-emerald-400 font-mono">{formatKickoffShort(m)}</span>
                       </div>
                       <div className="text-xs font-bold text-white truncate mt-0.5 group-hover:text-emerald-200">
                         {m.homeTeam.name} – {m.awayTeam.name}

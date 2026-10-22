@@ -184,7 +184,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock }) => {
             </div>
           </div>
           <p className="text-xs text-slate-400 max-w-xs">
-            Add meg a 6-jegyű PIN kódodat a bankroll és a predikciók feloldásához.
+            Add meg a 6-jegyű PIN kódodat a bankroll és a predikciók megjelenítéséhez.
           </p>
         </div>
 

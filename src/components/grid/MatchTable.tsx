@@ -1,3 +1,4 @@
+import { formatKickoffShort } from '../../utils/kickoffFormat';
 import { isMatchLive } from '../../utils/matchStatus';
 import React from 'react';
 import { Match, BetSlipItem, FocusMarket } from '../../types/football';
@@ -148,9 +149,12 @@ export const MatchTable: React.FC<MatchTableProps> = ({
                       Lefújva · frissül
                     </span>
                   ) : (
-                    <span className="font-semibold text-slate-300 text-xs">
-                      {match.kickoffTime}
+                    <span className="font-semibold text-slate-300 text-xs whitespace-nowrap">
+                      {formatKickoffShort(match)}
                     </span>
+                  )}
+                  {(isMatchLive(match) || match.liveStale) && (
+                    <div className="text-[10px] font-mono text-slate-400 mt-1 whitespace-nowrap">{formatKickoffShort(match)}</div>
                   )}
                 </td>
 

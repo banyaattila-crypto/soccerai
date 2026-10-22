@@ -54,7 +54,7 @@ function loadState(key: string, defaultDailyLimit: number): StoredQuotaState {
       return parsed;
     }
   } catch {
-    // ignore
+    // Sérült vagy hiányzó tárolt adat: az alapértelmezett (üres) állapottal folytatjuk
   }
   return {
     backoffUntilMs: 0,
@@ -69,7 +69,7 @@ function saveState(key: string, state: StoredQuotaState): void {
   try {
     localStorage.setItem(key, JSON.stringify(state));
   } catch {
-    // ignore
+    // A localStorage nem írható (privát mód, megtelt tár): a funkció a mentés nélkül is működik, csak nem marad meg újratöltés után
   }
 }
 
@@ -266,6 +266,6 @@ export function resetQuotaStateForTesting(): void {
     localStorage.removeItem(STORAGE_KEY_FD_QUOTA);
     localStorage.removeItem(STORAGE_KEY_AS_QUOTA);
   } catch {
-    // ignore
+    // A localStorage nem írható (privát mód, megtelt tár): a funkció a mentés nélkül is működik, csak nem marad meg újratöltés után
   }
 }

@@ -1,3 +1,4 @@
+import { formatKickoffShort } from '../../utils/kickoffFormat';
 import { isMatchLive } from '../../utils/matchStatus';
 import React from 'react';
 import { Match, BetSlipItem } from '../../types/football';
@@ -98,8 +99,8 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
                       FT
                     </span>
                     {(match.kickoffDate || match.kickoffTime) && (
-                      <span className="text-[9px] font-mono text-slate-500 hidden sm:inline mt-0.5">
-                        {match.kickoffDate ? match.kickoffDate.slice(5) : ''}
+                      <span className="text-[9px] font-mono text-slate-500 mt-0.5 whitespace-nowrap">
+                        {formatKickoffShort(match)}
                       </span>
                     )}
                   </>
@@ -109,10 +110,11 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
                       {match.minute ? `${match.minute}'` : 'ÉLŐ'}
                     </span>
+                    <span className="text-[9px] font-mono text-slate-500 mt-0.5 whitespace-nowrap">{formatKickoffShort(match)}</span>
                   </>
                 ) : (
                   <span className="font-mono font-bold text-xs sm:text-sm text-amber-400/90 bg-slate-950 px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-800">
-                    {match.kickoffTime}
+                    {formatKickoffShort(match)}
                   </span>
                 )}
               </div>

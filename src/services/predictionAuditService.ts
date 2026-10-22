@@ -1,6 +1,7 @@
 import { Match, PredictionAuditRecord, VerifiedAuditStats } from '../types/football';
 import { evaluatePickWon } from './betEvaluation';
 import { eventBus } from '../utils/eventBus';
+import { sha256Hex } from '../utils/sha256';
 
 export const STORAGE_KEY_AUDIT_LOG = 'soccerai_prediction_audit_log_v2';
 export const AUDIT_BASE_STAKE = 10000; // 10 000 Ft alaptét a hitelesített ROI és nyereség számításához
@@ -42,19 +43,34 @@ export function isMatchBeforeKickoff(match: Match, nowMs: number = Date.now()): 
   return nowMs < kickoffTs + 30000;
 }
 
-/**
- * Determinisztikus ellenőrző aláírás (tamper-evident hash) előállítása.
- * Biztosítja, hogy a rögzítés időpontja, a meccs kezdése és a kiválasztott piac megmásíthatatlan legyen.
- */
-export function computeRecordHash(data: {
+type RecordHashInput = {
   matchId: string;
   kickoffTimestamp: number;
   loggedAt: string;
   market: string;
   probability: number;
   odds: number;
-}): string {
-  const str = `${data.matchId}|${data.kickoffTimestamp}|${data.loggedAt}|${data.market}|${data.probability}|${data.odds}`;
+};
+
+function recordHashPayload(data: RecordHashInput): string {
+  return `${data.matchId}|${data.kickoffTimestamp}|${data.loggedAt}|${data.market}|${data.probability}|${data.odds}`;
+}
+
+/**
+ * Determinisztikus ellenőrző összeg (SHA-256, `audit2-` előtaggal) a rögzítés időpontjáról, a meccs kezdéséről,
+ * a piacról, a valószínűségről és a szorzóról.
+ *
+ * FIGYELEM: kulcs nélküli, kliensoldali összeg. Véletlen sérülést és a naplófájl óvatlan szerkesztését jelzi, de aki
+ * ismeri a képletet, új összeget is számolhat egy módosított rekordhoz. Valódi hamisítás-védelemhez szerveroldali,
+ * kulcsos (HMAC) napló kellene; ezt a rendszer jelenleg nem nyújtja.
+ */
+export function computeRecordHash(data: RecordHashInput): string {
+  return `audit2-${sha256Hex(recordHashPayload(data))}`;
+}
+
+/** A v1.32.0 előtt rögzített rekordok 53 bites összege (`audit-` előtag): csak visszafelé kompatibilitásból fogadjuk el. */
+function computeLegacyRecordHash(data: RecordHashInput): string {
+  const str = recordHashPayload(data);
   let hash1 = 0xdeadbeef;
   let hash2 = 0x41c64e6d;
   for (let i = 0; i < str.length; i++) {
@@ -72,6 +88,12 @@ export function computeRecordHash(data: {
     .toString(16)
     .padStart(14, '0');
   return `audit-${hex}`;
+}
+
+/** Egyezik-e a tárolt összeg az újraszámolttal (új SHA-256 vagy régi formátum). */
+export function verifyRecordHash(data: RecordHashInput, stored: string): boolean {
+  if (stored.startsWith('audit2-')) return stored === computeRecordHash(data);
+  return stored === computeLegacyRecordHash(data);
 }
 
 /**
@@ -483,20 +505,20 @@ export function importAuditLogFromJson(jsonStr: string): AuditImportResult {
         continue;
       }
 
-      // 2. Kriptográfiai integritás ellenőrzése (Tamper-evident hash)
-      const expectedHash = computeRecordHash({
+      // 2. Integritás-ellenőrzés (kulcs nélküli ellenőrző összeg: sérülést jelez, nem hamisítás-biztos)
+      const hashOk = verifyRecordHash({
         matchId: r.matchId,
         kickoffTimestamp: r.kickoffTimestamp,
         loggedAt: r.loggedAt,
         market: r.pick.market,
         probability: r.pick.probability,
         odds: r.pick.odds,
-      });
+      }, r.auditHash);
 
-      if (expectedHash !== r.auditHash) {
-        console.warn(`Audit integritási hiba a ${r.id} rekordnál: az aláírás hamisított vagy sérült!`);
+      if (!hashOk) {
+        console.warn(`Audit integritási hiba a ${r.id} rekordnál: az ellenőrző összeg nem egyezik (módosított vagy sérült rekord)!`);
         rejectedCount++;
-        errors.push(`Hamisított aláírás a meccsnél (${r.matchId}): érvénytelen hash.`);
+        errors.push(`Érvénytelen ellenőrző összeg a meccsnél (${r.matchId}): a rekord módosított vagy sérült.`);
         continue;
       }
 
