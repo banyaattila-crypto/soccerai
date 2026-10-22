@@ -50,7 +50,7 @@ export interface FittedDixonColesModel {
 
 // v2: az új (μ-alapú, egységes skálájú) illesztés. A v1 modellek 3 napos ablakból készültek, ezeket nem használjuk tovább.
 const STORAGE_PREFIX = 'soccerai_dc_model_v2_';
-const PRIOR_STRENGTH = 14; // pszeudo-megfigyelés (várható gól egységben); a szimulációban K≈14 adta a legjobb out-of-sample log-loss-t
+const PRIOR_STRENGTH = 5; // pszeudo-megfigyelés (várható gól egységben); a valós backtest (5 liga, tune 2024/25) K≈4-6 mellett adta a legjobb log-loss-t
 const GAMMA_MIN = 1.05;
 const GAMMA_MAX = 1.7;
 const MU_MIN = 0.3;
@@ -70,10 +70,12 @@ const MODEL_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 órás gyorsítótár
 export function fitDixonColesModel(
   matches: FinishedMatchResult[],
   leagueCode: string,
-  xi: number = 0.0025,
+  xi: number = 0.0015,
   maxIter: number = 35,
   /** Az "ma" időpontja az időlecsengéshez (ms). Backtestnél a predikció dátuma, hogy ne legyen előretekintés. */
-  asOfMs: number = Date.now()
+  asOfMs: number = Date.now(),
+  /** A csapaterősség 1,0 felé húzásának erőssége (pszeudo-megfigyelés); backtestnél hangolható */
+  priorStrength: number = PRIOR_STRENGTH
 ): FittedDixonColesModel {
   const validMatches = matches.filter(
     (m) =>
@@ -238,8 +240,8 @@ export function fitDixonColesModel(
   for (let iter = 0; iter < maxIter; iter++) {
     // A) Alpha (támadóerősség)
     for (const k of teamKeys) {
-      let num = PRIOR_STRENGTH;
-      let denom = PRIOR_STRENGTH;
+      let num = priorStrength;
+      let denom = priorStrength;
       for (const m of weightedMatches) {
         if (m.homeKey === k) {
           num += m.weight * m.homeGoals;
@@ -254,8 +256,8 @@ export function fitDixonColesModel(
 
     // B) Beta (védelmi gyengeség)
     for (const k of teamKeys) {
-      let num = PRIOR_STRENGTH;
-      let denom = PRIOR_STRENGTH;
+      let num = priorStrength;
+      let denom = priorStrength;
       for (const m of weightedMatches) {
         if (m.homeKey === k) {
           // Hazaiként a kapott gól a vendég gólja

@@ -3,6 +3,17 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.27.1] - 2026-10-22
+
+### Továbbfejlesztve (Enhanced) - Backtesten hangolt modell-paraméterek
+A modell és a piac közötti rés (0,02 log-loss) csökkentésének első, olcsó lépése: a hiperparaméterek hangolása a valós walk-forward backtesten.
+- **Hangolás (`scripts/backtest-tune.ts`):** 5 ξ × 5 K rács (majd finomítás) a hangolási szezonon (2024/25), ellenőrzés a holdout szezonon (2025/26). A javulás sima, széles fennsíkon van (ξ = 0,001–0,002, K = 4–6), tehát nem túlillesztés.
+- **Új alapértékek (`dixonColesFitting.ts`):** ξ = 0,0025 → **0,0015** (lassabb időlecsengés), K = 14 → **5** (kisebb húzás az 1,0 felé: a valós ligákban nagyobb az erősség-szórás, mint a szintetikus tesztligában). A `fitDixonColesModel` új `priorStrength`, a `walkForward` új `priorStrength` opciót kapott.
+- **Hatás (holdout, N = 1752):** 1X2 log-loss 1,0004 → **0,9982**, Brier 0,5966 → 0,5951, RPS 0,2042 → 0,2037. A piac 0,9776, a naiv 1,0718, tehát a rés a piachoz kb. 0,02 maradt. A nyers modell "+EV" fogadásainak hozama továbbra is negatív (EV > 2%: állított +18,1%, valós −12,5%, z = −3,07).
+- **Utólagos kalibráció nem segít:** a döntetlen-korrekció (d) és a hőmérséklet (τ) a hangolási szezonon d = 0,975, τ = 1,00-ra állt be, a holdouton nincs javulás (0,9982 → 0,9983). A modell átlagosan jól kalibrált (döntetlen: 25,2% vs. 25,5% tényleges).
+- **Ismert mellékhatás:** az Over/Under 2.5 log-loss kissé romlott (0,6855 → 0,6890), mert a hangolás az 1X2-re történt. Mivel a piaccal súlyozásban a modell súlya 0, ez a megjelenített O/U valószínűségeket érinti, az EV-t nem.
+- **A backtest-jelentés újragenerálva** (`docs/backtest-report.md`, `src/data/backtestReport.json`); a Módszertan nézet ezt mutatja.
+
 ## [1.27.0] - 2026-10-22
 
 ### Hozzáadva & Javítva (Added & Fixed) - Piaccal súlyozás és valós backtest (F-04, F-07)

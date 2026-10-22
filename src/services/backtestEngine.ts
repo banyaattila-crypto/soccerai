@@ -184,13 +184,16 @@ export interface WalkForwardOptions {
   /** Csak az ezen időpont utáni meccsekre készül predikció (az előtte lévők csak tanítanak) */
   predictFromTs: number;
   xi: number;
+  /** A csapaterősség 1,0 felé húzásának erőssége (K) */
+  priorStrength: number;
 }
 
 export const DEFAULT_WALK_FORWARD: WalkForwardOptions = {
   refitEveryDays: 7,
   minTrainMatches: 100,
   predictFromTs: 0,
-  xi: 0.0025,
+  xi: 0.0015,
+  priorStrength: 5,
 };
 
 const DAY_MS = 24 * 3600 * 1000;
@@ -231,7 +234,7 @@ export function walkForward(
             date: new Date(x.ts).toISOString().slice(0, 10),
           }));
         if (train.length < opt.minTrainMatches) continue;
-        model = fitDixonColesModel(train, league, opt.xi, 35, m.ts);
+        model = fitDixonColesModel(train, league, opt.xi, 35, m.ts, opt.priorStrength);
         fittedAt = m.ts;
       }
 

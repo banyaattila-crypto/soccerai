@@ -1,8 +1,8 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.27.0` (SemVer 2.0.0)
-**Kiadás neve:** Piaccal Súlyozás és Valós Backtest
+**Aktuális verzió:** `v1.27.1` (SemVer 2.0.0)
+**Kiadás neve:** Backtesten Hangolt Modell-paraméterek
 **Dátum:** 2026. október 22.
 **Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 259/259 teszt zöld (27 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
@@ -53,12 +53,13 @@ A v1.25.0-ig a modell 3 napos ablakból illeszkedett (a szimulációban rosszabb
 | Forrás (holdout, 1X2) | Log-loss | Brier | RPS |
 | :--- | ---: | ---: | ---: |
 | Naiv (gyakoriság) | 1,0718 | 0,6483 | 0,2293 |
-| Modell (Dixon–Coles) | 1,0004 | 0,5966 | 0,2042 |
+| Modell (Dixon–Coles, hangolt: ξ = 0,0015, K = 5) | 0,9982 | 0,5951 | 0,2037 |
 | **Piac (Pinnacle záró, Shin)** | **0,9776** | **0,5822** | **0,1976** |
 
 - A modell valódi információt hordoz (jobb a naivnál), de **a záró piacnál rosszabb**, mind az öt ligában.
 - A keverési súly hangolásakor a log-loss a modell súlyával monoton nő: az optimum 0, a modell a piachoz képest nem ad pluszinformációt.
-- A nyers modell "+EV" fogadásai a nyitó Pinnacle szorzón: állított EV +21,5%, valós ROI **−16,0%** (1950 fogadás, z = −3,97, CLV −6,3%). Minden kimenetelre fogadva −6,1% (az árrés).
+- A nyers modell "+EV" fogadásai a nyitó Pinnacle szorzón: állított EV +18,1%, valós ROI **−12,5%** (1805 fogadás, z = −3,07, CLV −5,9%; a v1.27.0-ban, hangolás előtt: −16,0%). Minden kimenetelre fogadva −6,1% (az árrés).
+- A v1.27.1 hangolása (ξ, K) a modell log-loss-át 1,0004-ről 0,9982-re javította; a rés a piachoz (0,9776) kb. 0,02 maradt. Utólagos kalibráció (döntetlen-korrekció, hőmérséklet) nem javít.
 - Következmény: valós szorzónál az EV és a Kelly a piaci referenciához (Pinnacle, ennek híján az átlag) mér; az "él" így ár-előny a bukmékerek között, nem modell-előny. Piaci referencia nélküli piacra (BTTS, kombinált, félidő) nincs EV.
 
 **Korlátok:** egy szezon holdout (N = 1752), Pinnacle árak; az élő oddsok API-Sports bukmékerekből jönnek. BTTS-re nincs piaci adat a CSV-kben.
@@ -104,7 +105,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 
 - λ_hazai = μ · γ · α_i · β_j; λ_vendég = μ · α_j · β_i. α és β átlaga 1,0; μ a liga gólszintje, γ a hazai előny (1,05–1,7).
 - Bayes-i regularizáció (K=14) az 1,0 felé; ρ kis mintán a −0,10 felé húz.
-- Időlecsengés: ξ = 0,0025/nap. Illesztés legalább 60 meccsből, szükség esetén az előző szezon bevonásával.
+- Időlecsengés: ξ = 0,0015/nap. Illesztés legalább 60 meccsből, szükség esetén az előző szezon bevonásával.
 - Modell-cache 24 óra (`soccerai_dc_model_v2_*`), hibacache 6 óra, 15 mp időkeret az első betöltésnél.
 
 ---
@@ -163,7 +164,7 @@ soccerai/
 ## 6. Javasolt következő csomagok
 
 1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó szerveroldali előmelegítés (cron).
-2. **Modell-javítás a piac ellen (a backtest a mérce):** a modell a záró piacnál 0,02 log-loss-szal rosszabb. Kipróbálandó: hiányzó játékosok/forma bevonása, jobb időlecsengés (ξ hangolás a backtesten), liga-specifikus hazai előny, kétlépcsős (támadás/védelem) erősség-modell, xG-alapú bemenet. Minden változtatás elfogadási kritériuma: a backtest holdout log-loss-ának javulása és pozitív CLV.
+2. **Modell-javítás a piac ellen (a backtest a mérce):** a hiperparaméter-hangolás (ξ, K) megvolt (v1.27.1), a rés a piachoz kb. 0,02 log-loss maradt. Kipróbálandó (strukturális): xG-alapú bemenet (nem csak gólok), hiányzó játékosok/forma, hazai/vendég külön erősség, szezonok közötti átvitel (kis mintájú csapatok). Minden változtatás elfogadási kritériuma: a backtest holdout log-loss-ának javulása és pozitív CLV.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
 4. **Higiénia (F-14, F-15):** mock lusta betöltése, üres `catch`-ek, nagy komponensek szétvágása, CSP.
 
