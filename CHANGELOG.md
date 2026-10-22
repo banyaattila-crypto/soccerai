@@ -3,6 +3,11 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.30.1] - 2026-10-22
+
+### Javítva (Fixed) - Régi becslések a gyorsítótárban (`apiSportsClient.ts`)
+A v1.30.0 élő ellenőrzésén az újratöltés után is a régi, ligaátlagos becslések látszottak (minden mexikói meccs 45/27/28), mert a napi menetrend gyorsítótára (45 perc) a deploy előtt számolt meccseket őrizte. A gyorsítótár kulcsa `v3`-ra vált, a régi bejegyzéseket a takarítás törli. A gyorsítótár ürítése után élőben ellenőrizve: Atlas – Club América 23/25/52, Puebla – Monterrey 23/25/52, Toluca – Club Tijuana 63/21/16, Pachuca – Cruz Azul 35/28/37, Santos Laguna – Pumas 31/26/43 (csapatonként eltérő, adatminőség B, 1131 meccses modell).
+
 ## [1.30.0] - 2026-10-22
 
 ### Hozzáadva & Javítva - Csapatonkénti becslés az API-Sports ligákon

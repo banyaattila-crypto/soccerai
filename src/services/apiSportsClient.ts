@@ -23,7 +23,8 @@ import {
 } from './quotaService';
 
 export const API_SPORTS_DEFAULT_KEY = '';
-export const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v2';
+// v3: a v1.30.0 csapatonkénti (pillanatkép) modelljei előtt számolt, ligaátlagos becslések ne maradjanak a gyorsítótárban
+export const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v3';
 const FIXTURE_LOOKUP_KEY = 'soccerai_fixture_lookup_v1';
 export const ODDS_CACHE_PREFIX = 'soccerai_odds_cache_';
 export const CACHE_TTL_MS = 45 * 60 * 1000; // 45 perces intelligens gyorsítótár

@@ -1,7 +1,7 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.30.0` (SemVer 2.0.0)
+**Aktuális verzió:** `v1.30.1` (SemVer 2.0.0)
 **Kiadás neve:** Csapatonkénti Becslés az Új Ligákon
 **Dátum:** 2026. október 22.
 **Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 284/284 teszt zöld (29 tesztfájl), production build hibátlan
