@@ -52,7 +52,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
               onClick={onGoToGrid}
               className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all cursor-pointer"
             >
-              📊 Mérkőzés Rács
+              📊 Mérkőzés
             </button>
           </div>
         </div>
@@ -64,7 +64,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
             <h3>1. Valószínűségi Hőtérkép Színkódok</h3>
           </div>
           <p className="text-xs text-slate-400">
-            A Mérkőzés Rácsban minden piaci cella (1X2, BTTS, Over 1.5/2.5/3.5, 1. félidő) a matematikai modell által számított százalékos esély alapján kap színkódot:
+            A Mérkőzés fülön minden piaci cella (1X2, BTTS, Over 1.5/2.5/3.5, 1. félidő) a matematikai modell által számított százalékos esély alapján kap színkódot:
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs">

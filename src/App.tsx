@@ -6,6 +6,8 @@ import {
   fetchApiSportsMatches,
   API_SPORTS_DEFAULT_KEY,
   attachCachedRealOddsToMatches,
+  LIVE_CACHE_TTL_MS,
+  CACHE_TTL_MS,
 } from './services/apiSportsClient';
 import { Header, AppTab } from './components/Header';
 import { HeroKpi } from './components/HeroKpi';
@@ -16,6 +18,7 @@ import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatLocalDate, getRelativeDateStr } from './utils/dateUtils';
 import { normalizeTeamName } from './utils/teamUtils';
 import { eventBus } from './utils/eventBus';
+import { isMatchLive, markStaleLive } from './utils/matchStatus';
 import { isPinEnabled } from './services/pinService';
 import { PinLockScreen } from './components/PinLockScreen';
 
@@ -152,7 +155,7 @@ export function App() {
   const modelRetryCountRef = useRef(0);
   const modelRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadMatchesRef = useRef<
-    ((source: 'builtin' | 'api', fbKey: string, sportsKey?: string, secEnabled?: boolean, forceRefresh?: boolean) => Promise<void>) | null
+    ((source: 'builtin' | 'api', fbKey: string, sportsKey?: string, secEnabled?: boolean, forceRefresh?: boolean, apiSportsMaxAgeMs?: number) => Promise<void>) | null
   >(null);
 
   useEffect(() => {
@@ -168,7 +171,9 @@ export function App() {
       fbKey: string,
       sportsKey: string = apiSportsKey,
       secEnabled: boolean = enableSecondary,
-      forceRefresh: boolean = false
+      forceRefresh: boolean = false,
+      /** Automatikus frissítésnél a másodlagos (API-Sports) gyorsítótár maximális kora; megadva nem kényszerítjük a lekérést */
+      apiSportsMaxAgeMs?: number
     ) => {
       if (source === 'builtin') {
         // Kizárólag akkor töltünk be mintát, ha a felhasználó kifejezetten a Szimulációs Módot választotta!
@@ -209,7 +214,7 @@ export function App() {
         };
 
         const liveSecondaryPromise = secEnabled
-          ? fetchApiSportsMatches(sportsKey, undefined, forceRefresh).catch((e) => {
+          ? fetchApiSportsMatches(sportsKey, undefined, forceRefresh && apiSportsMaxAgeMs === undefined, apiSportsMaxAgeMs).catch((e) => {
               console.warn('API-Sports másodosztályok lekérési hiba:', e);
               return [] as Match[];
             })
@@ -235,7 +240,7 @@ export function App() {
         if (combined.length > 0) {
           // Valós gyorsítótárazott bukmékeri oddsok és lejárati idők hozzácsatolása
           const enhanced = attachCachedRealOddsToMatches(combined);
-          setMatches(enhanced);
+          setMatches(markStaleLive(enhanced));
           setIsDemoMode(false);
           setApiErrorNotice(null);
           
@@ -334,18 +339,30 @@ export function App() {
     }
   };
 
-  // Automatikus háttérfrissítés 10 percenként, ha a fül látható/aktív
+  // Élő (vagy a lefújásra váró) meccsek: a lista 1 percenként újraértékeli, mely "élő" státusz lett elavult
+  useEffect(() => {
+    const tick = setInterval(() => {
+      setMatches((prev) => markStaleLive(prev));
+    }, 60 * 1000);
+    return () => clearInterval(tick);
+  }, []);
+
+  // Automatikus háttérfrissítés, ha a fül látható/aktív: 3 percenként, ha van élő (vagy még le nem fújt) meccs,
+  // egyébként 10 percenként. A football-data lekérés a proxy 2 perces cache-éből jön; az API-Sports gyorsítótára
+  // élő meccsnél 6 perc, egyébként 45 perc, így a napi 100 kérés nem fogy el.
+  const hasLiveOrPending = useMemo(() => matches.some((m) => m.status === 'LIVE'), [matches]);
   useEffect(() => {
     if (dataSource !== 'api') return;
 
+    const everyMs = hasLiveOrPending ? 3 * 60 * 1000 : 10 * 60 * 1000;
     const interval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        loadMatches('api', apiKey, apiSportsKey, enableSecondary, true);
+        loadMatches('api', apiKey, apiSportsKey, enableSecondary, true, hasLiveOrPending ? LIVE_CACHE_TTL_MS : CACHE_TTL_MS);
       }
-    }, 10 * 60 * 1000);
+    }, everyMs);
 
     return () => clearInterval(interval);
-  }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches]);
+  }, [dataSource, apiKey, apiSportsKey, enableSecondary, loadMatches, hasLiveOrPending]);
 
   const handleRefresh = () => {
     loadMatches(dataSource, apiKey, apiSportsKey, enableSecondary, true);
@@ -491,7 +508,7 @@ export function App() {
   const todayDateStr = useMemo(() => formatLocalDate(), []);
 
   const todayMatches = useMemo(() => {
-    const t = matches.filter((m) => m.kickoffDate === todayDateStr || m.status === 'LIVE');
+    const t = matches.filter((m) => m.kickoffDate === todayDateStr || isMatchLive(m));
     return t.length > 0 ? t : matches;
   }, [matches, todayDateStr]);
 
@@ -534,7 +551,7 @@ export function App() {
   }, [yesterdayDateStr, matches]);
 
   const liveMatchCount = useMemo(
-    () => matches.filter((m) => m.status === 'LIVE').length,
+    () => matches.filter((m) => isMatchLive(m)).length,
     [matches]
   );
 

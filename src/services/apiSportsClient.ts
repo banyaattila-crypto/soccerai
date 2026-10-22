@@ -28,6 +28,8 @@ export const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v3';
 const FIXTURE_LOOKUP_KEY = 'soccerai_fixture_lookup_v1';
 export const ODDS_CACHE_PREFIX = 'soccerai_odds_cache_';
 export const CACHE_TTL_MS = 45 * 60 * 1000; // 45 perces intelligens gyorsítótár
+/** Élő meccsek alatt ennyi ideig érvényes a menetrend-gyorsítótár (a proxy élő adatnál 7 percig cache-el) */
+export const LIVE_CACHE_TTL_MS = 6 * 60 * 1000;
 export const ODDS_CACHE_TTL_MS = 60 * 60 * 1000; // 60 perces odds gyorsítótár
 
 export interface ApiSportsLeagueConfig {
@@ -442,7 +444,9 @@ export function pruneOldApiSportsCache(keepDateStr: string, aggressive = false):
 export async function fetchApiSportsMatches(
   apiKey: string = API_SPORTS_DEFAULT_KEY,
   targetDate?: string,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
+  /** A gyorsítótár maximális kora (ms); élő meccsek alatt rövidebb, hogy a lefújás időben megjelenjen */
+  maxAgeMs: number = CACHE_TTL_MS
 ): Promise<Match[]> {
   const dateStr = targetDate || formatLocalDate();
   const cacheKeyWithDate = `${CACHE_KEY}_${dateStr}`;
@@ -457,7 +461,7 @@ export async function fetchApiSportsMatches(
       const cached = localStorage.getItem(cacheKeyWithDate);
       if (cached) {
         const { timestamp, data } = JSON.parse(cached);
-        if ((Date.now() - timestamp < CACHE_TTL_MS || quota.isRateLimited) && Array.isArray(data) && data.length > 0) {
+        if ((Date.now() - timestamp < maxAgeMs || quota.isRateLimited) && Array.isArray(data) && data.length > 0) {
           if (quota.isRateLimited) {
             console.warn(`API-Sports kvótakorlát aktív (${quota.retryAfterSeconds}s), meglévő gyorsítótár használata.`);
           }

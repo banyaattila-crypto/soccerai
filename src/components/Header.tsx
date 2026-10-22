@@ -52,8 +52,8 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     tab: 'grid',
-    label: 'Mérkőzés Rács',
-    shortLabel: 'Rács',
+    label: 'Mérkőzés',
+    shortLabel: 'Mérkőzés',
     icon: <LayoutGrid className="w-3.5 h-3.5 shrink-0" />,
   },
   {

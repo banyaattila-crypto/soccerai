@@ -1,3 +1,4 @@
+import { isMatchLive } from '../../utils/matchStatus';
 import React from 'react';
 import { Match, BetSlipItem } from '../../types/football';
 import { CheckCircle2, ChevronRight, Star } from 'lucide-react';
@@ -29,7 +30,7 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
       {matches.map((match) => {
         const p = match.probabilities;
         const isFinished = match.status === 'FINISHED';
-        const isLive = match.status === 'LIVE';
+        const isLive = isMatchLive(match);
 
         // 1. Mutató számítás
         const val1 = metric1.getValue(p);

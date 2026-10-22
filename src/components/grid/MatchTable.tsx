@@ -1,3 +1,4 @@
+import { isMatchLive } from '../../utils/matchStatus';
 import React from 'react';
 import { Match, BetSlipItem, FocusMarket } from '../../types/football';
 import { getProbabilityColorClass } from '../../services/predictionEngine';
@@ -134,10 +135,17 @@ export const MatchTable: React.FC<MatchTableProps> = ({
                         </span>
                       )}
                     </div>
-                  ) : match.status === 'LIVE' ? (
+                  ) : isMatchLive(match) ? (
                     <span className="inline-flex items-center gap-1 font-bold text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                       ÉLŐ
+                    </span>
+                  ) : match.liveStale ? (
+                    <span
+                      className="font-bold text-[10px] text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded border border-dashed border-slate-600"
+                      title="A mérkőzés a kezdés óta eltelt idő alapján véget ért; a végeredményt a forrás még nem jelentette"
+                    >
+                      Lefújva · frissül
                     </span>
                   ) : (
                     <span className="font-semibold text-slate-300 text-xs">

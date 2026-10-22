@@ -70,6 +70,18 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
+/** Az API-Sports állapotkódjai, amelyek zajló mérkőzést jelölnek (első/második félidő, szünet, hosszabbítás, tizenegyesek). */
+const LIVE_STATUS_CODES = new Set(['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE', 'INT']);
+
+function hasLiveFixtures(data: unknown): boolean {
+  const response = (data as { response?: unknown } | null)?.response;
+  if (!Array.isArray(response)) return false;
+  return response.some((f) => {
+    const short = (f as { fixture?: { status?: { short?: string } } })?.fixture?.status?.short;
+    return typeof short === 'string' && LIVE_STATUS_CODES.has(short);
+  });
+}
+
 function isOriginAllowed(origin: string | undefined): boolean {
   if (!origin) return true;
   return ALLOWED_ORIGINS.has(origin) || VERCEL_PREVIEW_REGEX.test(origin);
@@ -181,8 +193,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (apiRes.ok) {
-      // 30 perces Edge gyorsítótár a napi 100 kérés védelmére csak sikeres (2xx) válasznál
-      res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+      // Élő mérkőzést tartalmazó menetrendnél rövidebb (7 perces) Edge gyorsítótár, hogy a lefújás időben
+      // megjelenjen; egyébként 30 perc a napi 100 kérés védelmére. Csak sikeres (2xx) válasznál.
+      if (hasLiveFixtures(data)) {
+        res.setHeader('Cache-Control', 's-maxage=420, stale-while-revalidate=60');
+      } else {
+        res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+      }
     } else {
       // Átmeneti upstream hiba (pl. 429 Too Many Requests, 500, 502, 503) esetén szigorúan no-store
       res.setHeader('Cache-Control', 'no-store');

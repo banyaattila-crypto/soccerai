@@ -387,7 +387,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
             <span className="font-extrabold text-white block">Ma nincs ajánlott tipp</span>
             <p className="text-xs leading-relaxed">
               A modell egyik mérkőzésen sem talált olyan jelöltet, amely átment volna a λ-rács robusztussági
-              szűrőn. A nem-ajánlás is eredmény: kényszerített tipp nincs. A teljes mérkőzésrácsban a
+              szűrőn. A nem-ajánlás is eredmény: kényszerített tipp nincs. A Mérkőzés fülön a
               valószínűségek ettől függetlenül megtekinthetők.
             </p>
             {onSwitchToGrid && (
@@ -395,7 +395,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                 onClick={onSwitchToGrid}
                 className="mt-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold cursor-pointer"
               >
-                Teljes rács megnyitása ({matches.length})
+                Összes mérkőzés megnyitása ({matches.length})
               </button>
             )}
           </div>
@@ -430,7 +430,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                 className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Teljes Rács ({matches.length})</span>
+                <span>Összes mérkőzés ({matches.length})</span>
               </button>
             )}
           </div>
@@ -568,7 +568,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                   onClick={onSwitchToGrid}
                   className="btn-link text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer"
                 >
-                  <span>Összes mérkőzés a Rácsban</span>
+                  <span>Összes mérkőzés</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               )}

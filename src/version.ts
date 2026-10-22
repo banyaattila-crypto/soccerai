@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.30.1';
-export const APP_RELEASE_NAME = 'Friss Becslés a Deploy Után';
+export const APP_VERSION = '1.31.0';
+export const APP_RELEASE_NAME = 'Időben Lefutó Élő Meccsek';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,8 +16,9 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Az API-Sports menetrend-gyorsítótár új kulcsot kap: a v1.30.0 előtt számolt, ligaátlagos becslések (pl. Liga MX: mind 45/27/28) nem maradnak meg a gyorsítótárban',
-    'Élőben ellenőrizve: Atlas – Club América 23/25/52, Toluca – Club Tijuana 63/21/16 (korábban mindkettő 45/27/28)',
-    '284 / 284 zöld teszt (29 tesztfájl)',
+    'A lefújt meccs nem marad "ÉLŐ": a kezdéstől számított 150 perc után a lista "Lefújva · frissül" jelölést kap, és nem számít élőnek (a státusz érintetlen, az elszámolás a forrás végeredményére vár)',
+    'Gyorsabb frissítés élő meccsnél: 3 percenként (egyébként 10), a proxy élő adatnál 7 percig cache-el, az API-Sports kvóta védve marad',
+    'A "Mérkőzés Rács" fül neve "Mérkőzés"',
+    '292 / 292 zöld teszt (30 tesztfájl)',
   ],
 };

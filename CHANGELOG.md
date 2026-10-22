@@ -3,6 +3,21 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.31.0] - 2026-10-22
+
+### Javítva (Fixed) - Élő meccsek időben leállnak
+A lefújt meccsek órákig "ÉLŐ" jelzéssel maradtak, mert a forrás státusza csak a következő sikeres lekéréskor változik, a lekérések pedig gyorsítótárból jöttek (kliens 45 perc, proxy 30 perc, automatikus frissítés 10 perc).
+- **Időalapú védelem (`src/utils/matchStatus.ts`):** az `LIVE` státuszú meccs a kezdéstől számított 150 perc után elavultnak számít (`liveStale`): nem számít élőnek (KPI, szűrő, jelvény), helyette szaggatott "Lefújva · frissül" jelvény látszik. A státuszt nem írjuk át `FINISHED`-re, mert az elszámolás csak valódi végeredménnyel történhet. A lista percenként újraértékeli az állapotot.
+- **Adaptív frissítés (`App.tsx`):** élő (vagy még le nem fújt) meccs mellett 3 percenként, egyébként 10 percenként frissít. Az API-Sports menetrend gyorsítótára élő meccsnél 6 perc (`LIVE_CACHE_TTL_MS`), egyébként 45 perc, így a napi 100 kérés nem fogy el.
+- **Proxy (`api/apisports.ts`):** ha a válasz zajló mérkőzést tartalmaz (1H, 2H, HT, ET, BT, P, LIVE, INT), `s-maxage=420`, egyébként marad az `s-maxage=1800`.
+
+### Módosítva (Changed)
+- A "Mérkőzés Rács" fül neve "Mérkőzés"; a kapcsolódó feliratok (Kiemelt tippek, Módszertan) is követik.
+- **Tesztek:** 8 új teszt (élő-státusz segédek, proxy élő TTL); összesen 30 fájlban 292 / 292 zöld.
+
+### Korlátok
+- Az API-Sports ingyenes csomagja (100 kérés/nap) miatt az élő adat legjobb esetben is ~7 perces felbontású; a football-data oldali státusz a proxy 2 perces cache-éből jön.
+
 ## [1.30.1] - 2026-10-22
 
 ### Javítva (Fixed) - Régi becslések a gyorsítótárban (`apiSportsClient.ts`)

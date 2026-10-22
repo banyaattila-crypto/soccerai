@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Match, DayFilter, ViewMode, BetSlipItem, FocusMarket, PickMarket } from '../types/football';
 import { quarterKelly } from '../services/predictionEngine';
 import { getSecondaryLeaguePriority } from '../services/apiSportsClient';
+import { isMatchLive } from '../utils/matchStatus';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import { useEventBus } from '../utils/eventBus';
 import {
@@ -163,7 +164,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   });
 
   const liveMatchesCount = useMemo(
-    () => matches.filter((m) => m.status === 'LIVE').length,
+    () => matches.filter((m) => isMatchLive(m)).length,
     [matches]
   );
 
@@ -351,7 +352,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       }
 
       // Csak élő mérkőzések
-      if (onlyLiveMatches && match.status !== 'LIVE') {
+      if (onlyLiveMatches && !isMatchLive(match)) {
         return false;
       }
 

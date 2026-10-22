@@ -183,6 +183,32 @@ describe('Vercel Edge API Proxy Cache-Control Regression Tests', () => {
       expect(res.headers['cache-control']).not.toContain('no-store');
     });
 
+    it('élő mérkőzést tartalmazó menetrendnél rövid (7 perces) s-maxage-et ad, lefújtnál 30 percet', async () => {
+      const call = async (statusShort: string) => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: async () => ({ response: [{ fixture: { id: 1, status: { short: statusShort } } }] }),
+        } as unknown as Response);
+        const req = {
+          method: 'GET',
+          headers: {
+            origin: 'https://soccerai-pro.vercel.app',
+            'x-apisports-key': 'dummy-apisports-key',
+            'x-forwarded-for': '10.0.1.' + Math.floor(Math.random() * 200),
+          },
+          query: { date: '2026-10-22' },
+        };
+        const res = createMockResponse();
+        await apisportsHandler(req, res);
+        return res.headers['cache-control'] as string;
+      };
+      expect(await call('2H')).toContain('s-maxage=420');
+      expect(await call('HT')).toContain('s-maxage=420');
+      expect(await call('FT')).toContain('s-maxage=1800');
+      expect(await call('NS')).toContain('s-maxage=1800');
+    });
+
     it('sets Cache-Control: no-store on upstream 429 Too Many Requests', async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,

@@ -119,6 +119,8 @@ export interface Match {
   kickoffDate: string; // YYYY-MM-DD
   utcDate?: string; // Teljes ISO 8601 UTC időbélyeg (kezdési időpont auditáláshoz)
   status: MatchStatus;
+  /** true: a forrás még "élőnek" jelzi, de a kezdés óta eltelt idő alapján már véget ért (a státusz nem módosul, az elszámolás a forrás lefújás-jelentésére vár) */
+  liveStale?: boolean;
   minute?: number;
   homeTeam: Team;
   awayTeam: Team;
