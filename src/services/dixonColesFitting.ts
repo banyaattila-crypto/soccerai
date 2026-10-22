@@ -29,6 +29,11 @@ export interface TeamRating {
   goalsScored: number;
   goalsConceded: number;
   matchesPlayed: number;
+  /** Hazai/idegenbeli szorzók (csak ha a modell szétválasztással készült; hiányuk = 1,0). */
+  homeAttackMult?: number;
+  awayAttackMult?: number;
+  homeDefenseMult?: number;
+  awayDefenseMult?: number;
   homeScored: number;
   homeConceded: number;
   awayScored: number;
@@ -75,7 +80,9 @@ export function fitDixonColesModel(
   /** Az "ma" időpontja az időlecsengéshez (ms). Backtestnél a predikció dátuma, hogy ne legyen előretekintés. */
   asOfMs: number = Date.now(),
   /** A csapaterősség 1,0 felé húzásának erőssége (pszeudo-megfigyelés); backtestnél hangolható */
-  priorStrength: number = PRIOR_STRENGTH
+  priorStrength: number = PRIOR_STRENGTH,
+  /** A hazai/idegenbeli szétválasztás regularizációja (pszeudo-megfigyelés); 0 = kikapcsolva */
+  homeAwaySplitStrength: number = 0
 ): FittedDixonColesModel {
   const validMatches = matches.filter(
     (m) =>
@@ -235,7 +242,25 @@ export function fitDixonColesModel(
     };
   });
 
-  // Bayes-regularizáció: PRIOR_STRENGTH várható gólnyi pszeudo-megfigyelés 1,0 körül.
+  // Hazai/idegenbeli szétválasztás (opcionális, homeAwaySplitStrength > 0): csapatonként 4 szorzó,
+  // amelyek 1,0 felé húznak (erős regularizáció), és páronként geometriai átlaguk 1,0:
+  //   uh_i / ua_i: a csapat támadása otthon / idegenben a saját általános (α_i) szintjéhez képest
+  //   dh_i / da_i: a csapat védelmi gyengesége otthon / idegenben a saját általános (β_i) szintjéhez képest
+  //   λ_hazai  = μ · γ · α_i·uh_i · β_j·da_j
+  //   λ_vendég = μ · α_j·ua_j · β_i·dh_i
+  const uh: Record<string, number> = {};
+  const ua: Record<string, number> = {};
+  const dh: Record<string, number> = {};
+  const da: Record<string, number> = {};
+  for (const k of teamKeys) {
+    uh[k] = 1.0;
+    ua[k] = 1.0;
+    dh[k] = 1.0;
+    da[k] = 1.0;
+  }
+  const useSplit = homeAwaySplitStrength > 0;
+
+  // Bayes-regularizáció: priorStrength várható gólnyi pszeudo-megfigyelés 1,0 körül.
   // A (tapasztalati arány) = (gól + K) / (várható gól-expozíció + K), így adat nélkül pontosan 1,0.
   for (let iter = 0; iter < maxIter; iter++) {
     // A) Alpha (támadóerősség)
@@ -245,10 +270,10 @@ export function fitDixonColesModel(
       for (const m of weightedMatches) {
         if (m.homeKey === k) {
           num += m.weight * m.homeGoals;
-          denom += m.weight * mu * gamma * beta[m.awayKey];
+          denom += m.weight * mu * gamma * uh[k] * beta[m.awayKey] * da[m.awayKey];
         } else if (m.awayKey === k) {
           num += m.weight * m.awayGoals;
-          denom += m.weight * mu * beta[m.homeKey];
+          denom += m.weight * mu * ua[k] * beta[m.homeKey] * dh[m.homeKey];
         }
       }
       alpha[k] = Math.max(0.2, num / denom);
@@ -262,13 +287,52 @@ export function fitDixonColesModel(
         if (m.homeKey === k) {
           // Hazaiként a kapott gól a vendég gólja
           num += m.weight * m.awayGoals;
-          denom += m.weight * mu * alpha[m.awayKey];
+          denom += m.weight * mu * alpha[m.awayKey] * ua[m.awayKey] * dh[k];
         } else if (m.awayKey === k) {
           num += m.weight * m.homeGoals;
-          denom += m.weight * mu * gamma * alpha[m.homeKey];
+          denom += m.weight * mu * gamma * alpha[m.homeKey] * uh[m.homeKey] * da[k];
         }
       }
       beta[k] = Math.max(0.2, num / denom);
+    }
+
+    // B2) Hazai/idegenbeli szorzók (csak ha be van kapcsolva)
+    if (useSplit) {
+      const K = homeAwaySplitStrength;
+      for (const k of teamKeys) {
+        let nUh = K;
+        let dUh = K;
+        let nUa = K;
+        let dUa = K;
+        let nDh = K;
+        let dDh = K;
+        let nDa = K;
+        let dDa = K;
+        for (const m of weightedMatches) {
+          if (m.homeKey === k) {
+            nUh += m.weight * m.homeGoals;
+            dUh += m.weight * mu * gamma * alpha[k] * beta[m.awayKey] * da[m.awayKey];
+            nDh += m.weight * m.awayGoals;
+            dDh += m.weight * mu * alpha[m.awayKey] * ua[m.awayKey] * beta[k];
+          } else if (m.awayKey === k) {
+            nUa += m.weight * m.awayGoals;
+            dUa += m.weight * mu * alpha[k] * beta[m.homeKey] * dh[m.homeKey];
+            nDa += m.weight * m.homeGoals;
+            dDa += m.weight * mu * gamma * alpha[m.homeKey] * uh[m.homeKey] * beta[k];
+          }
+        }
+        uh[k] = nUh / dUh;
+        ua[k] = nUa / dUa;
+        dh[k] = nDh / dDh;
+        da[k] = nDa / dDa;
+        // páronként geometriai átlag 1,0: az általános szintet α/β viszi, a szorzók csak az eltérést
+        const gu = Math.sqrt(uh[k] * ua[k]);
+        const gd = Math.sqrt(dh[k] * da[k]);
+        uh[k] /= gu;
+        ua[k] /= gu;
+        dh[k] /= gd;
+        da[k] /= gd;
+      }
     }
 
     // C) Liga gólszintje (μ) és hazai előny (γ), azonos időbeli súlyozással
@@ -279,8 +343,8 @@ export function fitDixonColesModel(
     for (const m of weightedMatches) {
       sumHome += m.weight * m.homeGoals;
       sumAway += m.weight * m.awayGoals;
-      expHomeBase += m.weight * alpha[m.homeKey] * beta[m.awayKey];
-      expAwayBase += m.weight * alpha[m.awayKey] * beta[m.homeKey];
+      expHomeBase += m.weight * alpha[m.homeKey] * uh[m.homeKey] * beta[m.awayKey] * da[m.awayKey];
+      expAwayBase += m.weight * alpha[m.awayKey] * ua[m.awayKey] * beta[m.homeKey] * dh[m.homeKey];
     }
     if (expAwayBase > 0 && sumAway > 0) {
       mu = Math.min(MU_MAX, Math.max(MU_MIN, sumAway / expAwayBase));
@@ -311,10 +375,10 @@ export function fitDixonColesModel(
     let ll = 0;
     for (const m of weightedMatches) {
       const { lh, la } = computeDixonColesExpectedGoals({
-        attackHome: alpha[m.homeKey],
-        defenseHome: beta[m.homeKey],
-        attackAway: alpha[m.awayKey],
-        defenseAway: beta[m.awayKey],
+        attackHome: alpha[m.homeKey] * uh[m.homeKey],
+        defenseHome: beta[m.homeKey] * dh[m.homeKey],
+        attackAway: alpha[m.awayKey] * ua[m.awayKey],
+        defenseAway: beta[m.awayKey] * da[m.awayKey],
         avgAwayGoals: mu,
         homeAdvantage: gamma,
       });
@@ -333,6 +397,14 @@ export function fitDixonColesModel(
     teamsOut[k] = {
       attack: Math.round(alpha[k] * 1000) / 1000,
       defense: Math.round(beta[k] * 1000) / 1000,
+      ...(useSplit
+        ? {
+            homeAttackMult: Math.round(uh[k] * 1000) / 1000,
+            awayAttackMult: Math.round(ua[k] * 1000) / 1000,
+            homeDefenseMult: Math.round(dh[k] * 1000) / 1000,
+            awayDefenseMult: Math.round(da[k] * 1000) / 1000,
+          }
+        : {}),
       goalsScored: s.goalsScored,
       goalsConceded: s.goalsConceded,
       matchesPlayed: s.homeMatches + s.awayMatches,
@@ -523,7 +595,9 @@ export function computeExpectedGoalsFromModel(
   fallbackHomeAvg: number = 1.45,
   fallbackAwayAvg: number = 1.15,
   /** false: a kézi klub-priorok kikapcsolva (backtestnél, mert a mai priorok a múltra előretekintést jelentenének) */
-  usePriors: boolean = true
+  usePriors: boolean = true,
+  /** Ha a csapat sem a modellben, sem a kézi priorok között nincs (pl. feljutó): ennek az erősségnek vesszük (alap: 1,0) */
+  unknownTeamPrior?: { attack: number; defense: number }
 ): {
   homeXg: number;
   awayXg: number;
@@ -562,10 +636,14 @@ export function computeExpectedGoalsFromModel(
   if (usePriors && !hRating) hRating = getClubPriorRating(homeTeamName);
   if (usePriors && !aRating) aRating = getClubPriorRating(awayTeamName);
 
-  const homeAttack = hRating ? hRating.attack : 1.0;
-  const homeDefense = hRating ? hRating.defense : 1.0;
-  const awayAttack = aRating ? aRating.attack : 1.0;
-  const awayDefense = aRating ? aRating.defense : 1.0;
+  // Hazai/idegenbeli szorzók (ha a modell szétválasztással készült): a hazai csapat otthoni támadása és
+  // védelme, a vendég idegenbeli támadása és védelme
+  const uAtt = unknownTeamPrior?.attack ?? 1.0;
+  const uDef = unknownTeamPrior?.defense ?? 1.0;
+  const homeAttack = hRating ? hRating.attack * (hRating.homeAttackMult ?? 1) : uAtt;
+  const homeDefense = hRating ? hRating.defense * (hRating.homeDefenseMult ?? 1) : uDef;
+  const awayAttack = aRating ? aRating.attack * (aRating.awayAttackMult ?? 1) : uAtt;
+  const awayDefense = aRating ? aRating.defense * (aRating.awayDefenseMult ?? 1) : uDef;
 
   const avgH = model?.avgHomeGoals ?? fallbackHomeAvg;
   const avgA = model?.avgAwayGoals ?? fallbackAwayAvg;

@@ -186,6 +186,10 @@ export interface WalkForwardOptions {
   xi: number;
   /** A csapaterősség 1,0 felé húzásának erőssége (K) */
   priorStrength: number;
+  /** Hazai/idegenbeli szétválasztás regularizációja (0 = ki) */
+  homeAwaySplitStrength: number;
+  /** Ismeretlen (pl. feljutó) csapat erőssége; hiányában 1,0 */
+  unknownTeamPrior?: { attack: number; defense: number };
 }
 
 export const DEFAULT_WALK_FORWARD: WalkForwardOptions = {
@@ -194,6 +198,7 @@ export const DEFAULT_WALK_FORWARD: WalkForwardOptions = {
   predictFromTs: 0,
   xi: 0.0015,
   priorStrength: 5,
+  homeAwaySplitStrength: 0,
 };
 
 const DAY_MS = 24 * 3600 * 1000;
@@ -234,11 +239,11 @@ export function walkForward(
             date: new Date(x.ts).toISOString().slice(0, 10),
           }));
         if (train.length < opt.minTrainMatches) continue;
-        model = fitDixonColesModel(train, league, opt.xi, 35, m.ts, opt.priorStrength);
+        model = fitDixonColesModel(train, league, opt.xi, 35, m.ts, opt.priorStrength, opt.homeAwaySplitStrength);
         fittedAt = m.ts;
       }
 
-      const est = computeExpectedGoalsFromModel(model, m.home, m.away, 1.45, 1.15, false);
+      const est = computeExpectedGoalsFromModel(model, m.home, m.away, 1.45, 1.15, false, opt.unknownTeamPrior);
       const mat = calculateDixonColesMatrix(est.homeXg, est.awayXg, model.rho);
       const mk = extractMarketsFromMatrix(mat);
       records.push({
