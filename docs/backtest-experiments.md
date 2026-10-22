@@ -33,6 +33,16 @@ Az ismeretlen csapat erőssége a modellben 1,0 (ligaátlag). Gyengébb kezdeti 
 
 Holdout: 0,9980, 0,9980, 0,9981, 0,9982 (alap: 0,9981). A hangolási szezonon enyhe javulás látszik (0,9895 → 0,9874), a holdouton nincs. **Nem adoptáltuk.**
 
+## 5. Kisebb ligák: közelebb van-e a modell a piachoz? (nincs bizonyíték)
+
+16 "extra liga" (football-data.co.uk) és kontrollként a top-5, mind ugyanazzal a záró referenciával (a bukmékerek átlaga, AvgC), walk-forward, hangolt paraméterekkel (`npx tsx scripts/backtest-extra.ts`, részletes táblázat: `docs/backtest-extra-leagues.md`). Hipotézis: a kisebb ligák piaca gyengébb, ezért ott kisebb a modell–piac rés.
+
+- A rés (modell − piac log-loss, holdout 2025-07-től) a top-5-ön 0,013–0,034, az extra ligákon 0,008–0,043. Nem szisztematikusan kisebb.
+- Egy liga hibája kb. ±0,014 (N ≈ 300, a meccsenkénti log-loss-különbség szórása ≈ 0,25), ezért a ligák közti különbségek jórészt zajok. Csak a norvég (0,042), svéd (0,043) és japán (0,038) rés látszik a top-5 felső sávja fölött.
+- Egyik ligán sem előzi meg a modell a piacot. A "piaci előny" hipotézist nem támasztja alá az adat.
+- **A modell mint önálló becslő** ott értékes, ahol nincs piaci ár: a naivhoz képest a log-loss-előnye Norvégiában 0,089, Brazíliában 0,046, Mexikóban 0,046, Finnországban 0,047, Japánban 0,050, Írországban 0,044, Dániában 0,042, Romániában 0,042, Svédországban 0,037. Gyenge (≈ 0–0,02) Lengyelországban (−0,001), Ausztriában (0,008), az USA-ban (0,017) és Argentínában (0,018). Az orosz minta kicsi (176 meccs), nem értékelhető.
+- Korlát: az átlagos záró ár kevésbé éles, mint a Pinnacle, ezért a rés kissé alulbecsült.
+
 ## Reprodukció
 
 A 3. és 4. kísérlet kódja az `feat/home-away-split` ágon van (nem merge-elt): `fitDixonColesModel` 7. paramétere (`homeAwaySplitStrength`), a `computeExpectedGoalsFromModel` 7. paramétere (`unknownTeamPrior`) és a `scripts/backtest-structure.ts`. Futtatás az ágon: `npx tsx scripts/backtest-structure.ts`.

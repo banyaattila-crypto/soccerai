@@ -77,7 +77,15 @@ function firstOdds(row: Record<string, string>, groups: string[][]): number[] | 
   return undefined;
 }
 
-export function parseFootballDataCsv(text: string, league: string, season: string): BacktestMatch[] {
+/** Záró szorzó forrása: 'pinnacle' (éles, ha van) vagy 'avg' (a bukmékerek átlaga, minden ligán elérhető) */
+export type ClosePreference = 'pinnacle' | 'avg';
+
+export function parseFootballDataCsv(
+  text: string,
+  league: string,
+  season: string,
+  closePreference: ClosePreference = 'pinnacle'
+): BacktestMatch[] {
   const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return [];
   const header = splitCsvLine(lines[0]);
@@ -95,11 +103,11 @@ export function parseFootballDataCsv(text: string, league: string, season: strin
     if (!row.HomeTeam || !row.AwayTeam || !Number.isFinite(hg) || !Number.isFinite(ag) || isNaN(ts)) continue;
     if (row.FTHG === '' || row.FTAG === '') continue;
 
-    const c = firstOdds(row, [
-      ['PSCH', 'PSCD', 'PSCA'],
-      ['AvgCH', 'AvgCD', 'AvgCA'],
-      ['B365CH', 'B365CD', 'B365CA'],
-    ]);
+    const closeGroups =
+      closePreference === 'avg'
+        ? [['AvgCH', 'AvgCD', 'AvgCA'], ['B365CH', 'B365CD', 'B365CA']]
+        : [['PSCH', 'PSCD', 'PSCA'], ['AvgCH', 'AvgCD', 'AvgCA'], ['B365CH', 'B365CD', 'B365CA']];
+    const c = firstOdds(row, closeGroups);
     const o = firstOdds(row, [
       ['PSH', 'PSD', 'PSA'],
       ['B365H', 'B365D', 'B365A'],
@@ -125,6 +133,50 @@ export function parseFootballDataCsv(text: string, league: string, season: strin
       open1x2: o as [number, number, number] | undefined,
       closeOU: cou as [number, number] | undefined,
       openOU: ou as [number, number] | undefined,
+    });
+  }
+  return out;
+}
+
+/**
+ * A football-data.co.uk "extra ligák" fájljai (/new/XXX.csv): egy fájl sok szezon, oszlopok: Country, League,
+ * Season, Date, Time, Home, Away, HG, AG, Res, záró szorzók (PSC*, MaxC*, AvgC*, B365C*). Nyitó szorzó nincs.
+ * A 'season' mező a fájlban eltérő formátumú (pl. "2024" vagy "2024/2025"), ezért nem használjuk; a hívó dátum
+ * szerint osztja a szakaszokat.
+ */
+export function parseFootballDataExtraCsv(
+  text: string,
+  league: string,
+  closePreference: ClosePreference = 'avg'
+): BacktestMatch[] {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length < 2) return [];
+  const header = splitCsvLine(lines[0]).map((h) => h.trim());
+  const out: BacktestMatch[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = splitCsvLine(lines[i]);
+    const row: Record<string, string> = {};
+    header.forEach((h, idx) => {
+      row[h] = (cells[idx] ?? '').trim();
+    });
+    const hg = Number(row.HG);
+    const ag = Number(row.AG);
+    const ts = parseDate(row.Date ?? '', row.Time);
+    if (!row.Home || !row.Away || row.HG === '' || row.AG === '' || !Number.isFinite(hg) || !Number.isFinite(ag) || isNaN(ts)) continue;
+    const groups =
+      closePreference === 'avg'
+        ? [['AvgCH', 'AvgCD', 'AvgCA'], ['B365CH', 'B365CD', 'B365CA']]
+        : [['PSCH', 'PSCD', 'PSCA'], ['AvgCH', 'AvgCD', 'AvgCA'], ['B365CH', 'B365CD', 'B365CA']];
+    const c = firstOdds(row, groups);
+    out.push({
+      league,
+      season: row.Season ?? '',
+      ts,
+      home: row.Home,
+      away: row.Away,
+      hg,
+      ag,
+      close1x2: c as [number, number, number] | undefined,
     });
   }
   return out;

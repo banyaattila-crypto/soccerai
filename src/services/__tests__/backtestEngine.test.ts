@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseFootballDataCsv,
+  parseFootballDataExtraCsv,
   logLoss,
   brier,
   rps,
@@ -173,5 +174,31 @@ describe('reliabilityBins1x2', () => {
       expect(b.observedHitRate).toBeGreaterThanOrEqual(0);
       expect(b.observedHitRate).toBeLessThanOrEqual(100);
     });
+  });
+});
+
+describe('parseFootballDataExtraCsv', () => {
+  const HEADER = 'Country,League,Season,Date,Time,Home,Away,HG,AG,Res,PSCH,PSCD,PSCA,MaxCH,MaxCD,MaxCA,AvgCH,AvgCD,AvgCA';
+
+  it('az extra ligák formátumát értelmezi, az átlag záró szorzót preferálja', () => {
+    const csv = `﻿${HEADER}\nSweden,Allsvenskan,2026,19/10/2026,18:00,Degerfors,Kalmar,1,2,A,,,,3.1,3.3,2.4,2.95,3.13,2.32\n`;
+    const [m] = parseFootballDataExtraCsv(csv, 'SWE');
+    expect(m.league).toBe('SWE');
+    expect(m.home).toBe('Degerfors');
+    expect(m.ag).toBe(2);
+    expect(m.ts).toBe(Date.UTC(2026, 9, 19, 18, 0));
+    expect(m.close1x2).toEqual([2.95, 3.13, 2.32]);
+    expect(m.open1x2).toBeUndefined();
+  });
+
+  it('pinnacle előnyben részesítésnél a PSC-t használja, ha van', () => {
+    const csv = `${HEADER}\nRomania,Superliga,2012/2013,20/07/2012,16:30,A,B,6,2,H,1.51,4.24,7.59,1.55,4.25,7.59,1.47,3.85,6.43\n`;
+    expect(parseFootballDataExtraCsv(csv, 'ROU', 'pinnacle')[0].close1x2).toEqual([1.51, 4.24, 7.59]);
+    expect(parseFootballDataExtraCsv(csv, 'ROU', 'avg')[0].close1x2).toEqual([1.47, 3.85, 6.43]);
+  });
+
+  it('eredmény nélküli vagy hibás dátumú sort kihagy', () => {
+    const csv = `${HEADER}\nX,Y,2026,01/01/2026,,A,B,,,,,,,,,,,,\nX,Y,2026,nincs,,A,B,1,1,D,,,,,,,,,\n`;
+    expect(parseFootballDataExtraCsv(csv, 'X')).toHaveLength(0);
   });
 });
