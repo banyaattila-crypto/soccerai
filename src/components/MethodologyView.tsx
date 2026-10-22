@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { runChronologicalCalibrationAudit } from '../services/calibrationService';
+import { ReliabilityChart } from './ReliabilityChart';
 
 interface MethodologyViewProps {
   onGoToGrid: () => void;
@@ -331,6 +332,11 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
               <span className="text-xs font-bold text-white block">
                 Valószínűségi Megbízhatósági Görbe (Reliability Table)
               </span>
+              <p className="text-[11px] text-amber-200 bg-amber-500/10 border border-dashed border-amber-400/50 rounded-lg px-2.5 py-1.5">
+                Illusztratív mintaadatsor ({calibration.reliabilityBins.reduce((s, b) => s + b.count, 0)} mérkőzés a
+                tesztszakaszban). Nem az élő predikciónapló, ezért nem bizonyíték a modell pontosságára.
+              </p>
+              <ReliabilityChart bins={calibration.reliabilityBins} />
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px] text-left border border-slate-800 rounded-xl overflow-hidden">
                   <thead className="bg-slate-900 text-slate-400 font-mono uppercase text-[10px]">

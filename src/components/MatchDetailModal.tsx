@@ -25,6 +25,7 @@ import {
 import { ScoreLabH2HCard } from './ScoreLabH2HCard';
 import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
 import { MatchExplanationCard } from './MatchExplanationCard';
+import { getDataQualityInfo } from '../utils/modelConfidence';
 
 interface MatchDetailModalProps {
   match: Match | null;
@@ -342,8 +343,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800/80">
                   <span className="text-[10px] text-slate-400 block uppercase font-bold">Adatminőség</span>
                   <span className="text-sm font-black text-white">{match.quantAnalysis.dataQuality}-szint</span>
-                  <span className="text-[9px] text-slate-500 block">
-                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Szimulált bemenet' : 'Több forrásból'}
+                  <span
+                    className={`text-[10px] font-semibold block leading-tight ${getDataQualityInfo(match).toneClass}`}
+                    title={getDataQualityInfo(match).description}
+                  >
+                    {getDataQualityInfo(match).shortLabel}
+                  </span>
+                  <span className="text-[9px] text-slate-400 block">
+                    {!realOdds && match.aiPick?.isSimulatedOdds !== false ? 'Szimulált ár' : 'Valós ár'}
                   </span>
                 </div>
 

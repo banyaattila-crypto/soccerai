@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Match, TrackedBet, TrackedBetStatus, BankrollSummary } from '../types/football';
+import { EquityCurve } from './EquityCurve';
 import {
   getTrackedBets,
   getInitialBankroll,
@@ -412,6 +413,9 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 3b. Tőkegörbe és drawdown */}
+      <EquityCurve bets={bets} initialBankroll={initialCapital} />
 
       {/* 4. Műveleti és Szűrősáv */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3.5 rounded-2xl bg-mesh-card border border-slate-800">

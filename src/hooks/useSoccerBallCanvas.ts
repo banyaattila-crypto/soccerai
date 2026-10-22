@@ -198,6 +198,11 @@ export function useSoccerBallCanvas({
       }, textureUrl);
     }
 
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const handleVisibility = () => {
       isTabVisible = !document.hidden;
       if (isTabVisible) {
@@ -211,7 +216,7 @@ export function useSoccerBallCanvas({
     const render = (now: number) => {
       if (!isTabVisible) return;
 
-      const dt = Math.min(64, now - lastTime);
+      const dt = reduceMotion ? 0 : Math.min(64, now - lastTime);
       lastTime = now;
 
       let speed = 0.00039;

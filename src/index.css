@@ -300,3 +300,26 @@ button.btn-link,
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
+
+/* ==========================================================================
+   Akadálymentesség: kontraszt és mozgáscsökkentés (v1.25.0)
+   A szürke szöveg a sötét háttéren a WCAG AA (4.5:1) alá esett, ezért a
+   kis méretű szövegszíneket világosabbra állítjuk. Csak a szövegszínt érinti.
+   ========================================================================== */
+.text-slate-500 {
+  color: #8d9bb0;
+}
+.text-slate-600 {
+  color: #7c8ba1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

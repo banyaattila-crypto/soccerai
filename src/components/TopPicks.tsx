@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Match, BetSlipItem } from '../types/football';
-import { Sparkles, Plus, Check, ChevronRight, Zap, LayoutGrid, Flame, ShieldCheck } from 'lucide-react';
+import { Sparkles, Plus, Check, ChevronRight, Zap, LayoutGrid, Flame, ShieldCheck, Info } from 'lucide-react';
+import { OddsSourceBadge, OddsSourceRibbon, resolveOddsSourceState } from './OddsSourceBadge';
+import { getDataQualityInfo, getProbabilityRange } from '../utils/modelConfidence';
 
 interface TopPicksProps {
   matches: Match[];
@@ -35,6 +37,9 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
   const bookmakerName = pick.bookmakerName || match.realOdds?.bestOdds.home?.bookmaker;
   const ttlMinutes = pick.ttlMinutes ?? match.realOdds?.ttlMinutes;
   const isRealActive = !isSimulated && !isExpired;
+  const oddsState = resolveOddsSourceState({ isSimulated, isExpired });
+  const dq = getDataQualityInfo(match);
+  const range = getProbabilityRange(match, pick.market);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -70,6 +75,8 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
           style={{ transform: 'translateZ(10px)' }}
         />
 
+        <OddsSourceRibbon state={oddsState} />
+
         <div className="p-4 sm:p-5 pb-3">
           {/* Fejléc címke & Ligainfó */}
           <div className="flex items-center justify-between gap-2 mb-3">
@@ -81,22 +88,11 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
             </span>
 
             <div className="flex items-center gap-1.5 shrink-0">
-              {isRealActive && bookmakerName ? (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-blue-500/15 text-blue-300 border-blue-500/30 flex items-center gap-1">
-                  <span>🏢 {bookmakerName}</span>
-                  {ttlMinutes !== undefined && (
-                    <span className="text-[9px] text-blue-400 font-mono">⏳ {ttlMinutes}p</span>
-                  )}
-                </span>
-              ) : isExpired ? (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border bg-red-500/15 text-red-300 border-red-500/30">
-                  🔴 Lejárt
-                </span>
-              ) : (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-slate-800/80 text-slate-400 border-slate-700">
-                  🧪 Szimulált
-                </span>
-              )}
+              <OddsSourceBadge
+                state={oddsState}
+                bookmakerName={bookmakerName}
+                ttlMinutes={ttlMinutes}
+              />
               <span
                 className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border shrink-0 ${
                   idx === 0
@@ -168,15 +164,15 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
             </div>
             <div className="text-right shrink-0">
               <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">
-                {isRealActive ? '🎯 Bukméker Odds' : isExpired ? '🔴 Lejárt Odds' : '🧪 Szimulált Odds'}
+                {isRealActive ? 'Bukméker odds' : isExpired ? 'Lejárt odds' : 'Szimulált odds'}
               </span>
               <span
                 className={`text-base font-black px-2.5 py-0.5 rounded-lg border ${
                   isRealActive
                     ? 'text-emerald-300 bg-emerald-950/60 border-emerald-500/40 shadow-sm shadow-emerald-900/30'
                     : isExpired
-                    ? 'text-red-300 bg-red-950/40 border-red-500/30 line-through opacity-80'
-                    : 'text-amber-300 bg-amber-950/40 border-amber-500/30'
+                    ? 'text-red-300 bg-red-950/40 border-red-500/40 border-dotted line-through opacity-80'
+                    : 'text-amber-300 bg-amber-950/40 border-amber-500/50 border-dashed'
                 }`}
               >
                 {pick.odds.toFixed(2)}
@@ -190,12 +186,27 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span className="text-slate-400 font-medium">Becsült modell esély:</span>
               <span className="font-extrabold text-emerald-400">{pick.probability}%</span>
             </div>
-            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="relative w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              {range && (
+                <div
+                  className="absolute top-0 h-full bg-emerald-300/30"
+                  style={{ left: `${range.low}%`, width: `${Math.max(1, range.high - range.low)}%` }}
+                  aria-hidden="true"
+                />
+              )}
               <div
                 className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-500"
                 style={{ width: `${pick.probability}%` }}
               />
             </div>
+            {range && (
+              <p
+                className="text-[10px] text-slate-400 pt-0.5"
+                title={`Ha a várható gólok (λ) ±${Math.round(range.relativeLambdaError * 100)}%-kal eltérnek a becsléstől, a piac esélye ebben a sávban mozog. Forgatókönyv-sáv, nem statisztikai konfidencia-intervallum.`}
+              >
+                Érzékenységi sáv: <span className="font-mono text-slate-200">{range.low}–{range.high}%</span>
+              </p>
+            )}
             <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
               <span>Implikált esély: {impliedProb}%</span>
               <span className={isRealActive && edge > 0 ? 'text-emerald-400 font-semibold' : 'text-slate-400'}>
@@ -214,7 +225,7 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
 
           {/* Kvantitatív Robusztussági & Kelly sáv */}
           {match.quantAnalysis && (
-            <div className="mt-2.5 flex items-center justify-between gap-1 text-[10px] bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800">
+            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-1 gap-y-1 text-[10px] bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800">
               <span
                 className={`flex items-center gap-1 font-bold ${
                   verdict === 'ROBUSZTUS'
@@ -227,8 +238,8 @@ const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                 <ShieldCheck className="w-3 h-3" />
                 {verdict}
               </span>
-              <span className="text-slate-400">
-                Minőség: <strong className="text-slate-200">{match.quantAnalysis.dataQuality}</strong>
+              <span className="text-slate-400 truncate" title={dq.description}>
+                Adat: <strong className={dq.toneClass}>{dq.shortLabel}</strong>
               </span>
               <span className="text-slate-300 font-mono font-bold">
                 {isRealActive && pick.quarterKellyPct && pick.quarterKellyPct > 0
@@ -350,7 +361,43 @@ export const TopPicks: React.FC<TopPicksProps> = ({
   // További erős szignálok kompakt listához (max 6 db)
   const secondaryPicks = displayPicks.slice(3, 9);
 
-  if (mainTop3.length === 0) return null;
+  // Döntés-központú összegzés: van-e egyáltalán fogadható, valós áron értelmezhető tipp?
+  const decision = useMemo(() => {
+    const realActive = displayPicks.filter(
+      (m) => m.aiPick && m.aiPick.isSimulatedOdds === false && !m.aiPick.isOddsExpired
+    );
+    const withEdge = realActive.filter((m) => (m.aiPick?.expectedValue ?? 0) > 0);
+    return { realActive: realActive.length, withEdge: withEdge.length };
+  }, [displayPicks]);
+
+  if (mainTop3.length === 0) {
+    if (matches.length === 0) return null;
+    return (
+      <section className="py-6 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div
+            role="status"
+            className="p-5 rounded-2xl bg-mesh-card border border-slate-800 text-sm text-slate-300 space-y-1.5"
+          >
+            <span className="font-extrabold text-white block">Ma nincs ajánlott tipp</span>
+            <p className="text-xs leading-relaxed">
+              A modell egyik mérkőzésen sem talált olyan jelöltet, amely átment volna a λ-rács robusztussági
+              szűrőn. A nem-ajánlás is eredmény: kényszerített tipp nincs. A teljes mérkőzésrácsban a
+              valószínűségek ettől függetlenül megtekinthetők.
+            </p>
+            {onSwitchToGrid && (
+              <button
+                onClick={onSwitchToGrid}
+                className="mt-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold cursor-pointer"
+              >
+                Teljes rács megnyitása ({matches.length})
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-6 sm:py-8 bg-transparent w-full max-w-full overflow-hidden">
@@ -382,6 +429,38 @@ export const TopPicks: React.FC<TopPicksProps> = ({
               </button>
             )}
           </div>
+        </div>
+
+        {/* Döntés-központú állapotsor */}
+        <div
+          role="status"
+          className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs leading-relaxed ${
+            decision.withEdge > 0
+              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100'
+              : decision.realActive > 0
+              ? 'bg-slate-800/60 border-slate-700 text-slate-200'
+              : 'bg-amber-500/10 border-amber-500/40 border-dashed text-amber-100'
+          }`}
+        >
+          <Info className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+          <p>
+            {decision.withEdge > 0 ? (
+              <>
+                <strong>{decision.withEdge} tippen</strong> valós, érvényes áron pozitív elméleti él (+EV) látszik. Ez
+                modellbecslés, nem garancia: a kis mintán mért él többnyire zaj.
+              </>
+            ) : decision.realActive > 0 ? (
+              <>
+                <strong>Van valós ár ({decision.realActive} tipp), de pozitív elméleti él nincs.</strong> Ma nincs
+                értékfogadási ajánlás.
+              </>
+            ) : (
+              <>
+                <strong>Egyetlen tippnek sincs valós, érvényes bukmékeri ára.</strong> Az alábbi lista a modell
+                esélyeinek rangsora, nem fogadási ajánlás. Valós árat a meccs elemzési ablakában lehet lekérni.
+              </>
+            )}
+          </p>
         </div>
 
         {/* Szorzó Sáv Gyorsválasztó */}

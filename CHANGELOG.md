@@ -3,6 +3,23 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.25.0] - 2026-10-22
+
+### Hozzáadva & Továbbfejlesztve (Added & Enhanced) - Őszinte Felület (Design csomag)
+A külső kódaudit (2026-10-22) eredményei alapján: a felület többé ne állítson többet, mint amit a modell és az adat megenged.
+- **Érzékenységi sáv (`modelConfidence.ts`, `TopPicks.tsx`):** a tipp-kártyákon a modell-esély mellett a λ becsült hibájából számolt forgatókönyv-sáv látszik (nem statisztikai konfidencia-intervallum, ezt a tooltip is jelzi). Kis mintán a sáv szélesebb.
+- **Őszinte adatminőség-felirat:** az A/B/C betű mellett Szezon-illesztés / Részleges illesztés / Vékony minta / Ligaátlag + prior felirat a mögötte álló meccsszámmal (kártya és meccs-részletező).
+- **Szimulált és lejárt ár jelölése (`OddsSourceBadge.tsx`):** csíkozott sáv a kártya tetején, szaggatott/pontozott keretek, egységes jelvény. A különbség színvakon és kis méretben is látszik.
+- **Döntés-központú állapotsor:** a Top tippek fölött egy mondat mondja meg, van-e valós, érvényes áron pozitív elméleti él. Ha nincs, a lista kifejezetten nem fogadási ajánlás.
+- **Üres állapot:** ha egyetlen mérkőzés sem jut át a robusztussági szűrőn, a felület "Ma nincs ajánlott tipp" üzenetet ad a korábbi néma eltűnés helyett.
+- **Megbízhatósági diagram (`ReliabilityChart.tsx`):** SVG diagram a Módszertanban, az átlóval és a mintaelemszámmal arányos pontokkal. Kiírja, hogy az adatsor illusztratív minta, nem az élő napló.
+- **Tőkegörbe (`EquityCurve.tsx`, `equityCurve.ts`):** kumulált bankroll-görbe és maximális drawdown a Tétnaplóban, kis mintára figyelmeztetéssel.
+- **Akadálymentesség (`index.css`, `useSoccerBallCanvas.ts`):** a `text-slate-500/600` szövegszínek kontrasztja WCAG AA közelébe emelve; `prefers-reduced-motion` támogatás a CSS-animációkra és a 3D labdára; a diagramok `role="img"` és szöveges leírást kapnak.
+- **Tesztek:** 9 új teszt (`modelConfidence.test.ts`, `equityCurve.test.ts`); összesen 23 fájlban 219 / 219 zöld.
+
+### Ismert korlátok (nem ennek a kiadásnak a tárgya)
+- A modell adatalapja továbbra is a 3 napos API-ablak (audit F-01), és fennáll a λ-skála eltérés (F-02). Ezeket a következő, Adat- és modell csomag javítja. Az érzékenységi sáv ezért kis mintán szándékosan széles.
+
 ## [1.24.9] - 2026-10-22
 
 ### Hozzáadva & Továbbfejlesztve (Added & Enhanced) - Részletes Meccs Magyarázat és Szakértői Elemzés
