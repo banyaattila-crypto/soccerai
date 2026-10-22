@@ -119,7 +119,24 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
 
   const activeMarket = normalizeMarket(match.aiPick?.market);
   const pickOdds = match.aiPick?.odds ?? match.odds.home;
-  const pickProb = match.aiPick?.probability ?? homeWinP;
+  // Ha a valószínűségek piaci (de-vigelt) alapúak, a szöveg ezt mondja, és a tipp esélye is a piaci érték
+  const marketBased = match.probabilitySource === 'market';
+  const basis = marketBased ? 'a piaci ár' : 'a modell';
+  const Basis = marketBased ? 'A piaci ár' : 'A modell';
+  const pickProbRaw = match.aiPick?.probability ?? homeWinP;
+  const pickProb = marketBased
+    ? activeMarket === '1'
+      ? homeWinP
+      : activeMarket === 'X'
+      ? drawP
+      : activeMarket === '2'
+      ? awayWinP
+      : activeMarket === 'OVER_25'
+      ? over25P
+      : activeMarket === 'UNDER_25'
+      ? under25P
+      : pickProbRaw
+    : pickProbRaw;
   const pickLabel = match.aiPick?.marketLabel ?? `${homeShort} Győzelem (1)`;
 
   // 1. Címsor (Headline)
@@ -140,13 +157,19 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
 
   // 2. Átfogó Összefoglaló (Summary)
   let summary = '';
+  const mp = match.modelProbabilities;
+  const marketNote =
+    marketBased && mp
+      ? `A valós bukmékeri szorzók (piaci ár) szerint a ${homeName} ${homeWinP}%, a döntetlen ${drawP}%, a ${awayName} ${awayWinP}% (a modell saját becslése: ${mp.homeWin}% / ${mp.draw}% / ${mp.awayWin}%). A piaci ár a backtest szerint a pontosabb becslés. `
+      : '';
   if (homeWinP >= 55) {
-    summary = `A mérkőzés esélyese a hazai pályán fellépő ${homeName}, amely a statisztikai modellek alapján ${homeWinP}%-os valószínűséggel tarthatja otthon a három pontot. A hazai pálya faktora és a hatékonyabb helyzetkihasználás a vendégek felé billenti a mérleg nyelvét, miközben a ${awayName} csapatának kontrákra kell berendezkednie.`;
+    summary = `A mérkőzés esélyese a hazai pályán fellépő ${homeName}, amely ${marketBased ? 'a piaci ár' : 'a statisztikai modellek'} alapján ${homeWinP}%-os valószínűséggel tarthatja otthon a három pontot. A hazai pálya faktora és a hatékonyabb helyzetkihasználás a vendégek felé billenti a mérleg nyelvét, miközben a ${awayName} csapatának kontrákra kell berendezkednie.`;
   } else if (awayWinP >= 48) {
     summary = `Noha a ${homeName} játszik saját közönsége előtt, a játékoskeret minősége és a közelmúltbeli mutatók alapján a vendég ${awayName} számít esélyesebbnek (${awayWinP}% győzelmi esély). Amennyiben a vendégek rá tudják erőltetni akaratukat a hazaiakra, jó eséllyel megszerzik a győzelmet.`;
   } else {
-    summary = `Kifejezetten szoros és kétesélyes mérkőzés előtt állunk: a modell szerint a ${homeName} (${homeWinP}%) és a ${awayName} (${awayWinP}%) közel azonos játékerőt képvisel, miközben a döntetlen esélye is számottevő (${drawP}%). Ebben a párharcban az apró taktikai nüanszok és az egyéni villanások dönthetnek.`;
+    summary = `Kifejezetten szoros és kétesélyes mérkőzés előtt állunk: ${basis} szerint a ${homeName} (${homeWinP}%) és a ${awayName} (${awayWinP}%) közel azonos játékerőt képvisel, miközben a döntetlen esélye is számottevő (${drawP}%). Ebben a párharcban az apró taktikai nüanszok és az egyéni villanások dönthetnek.`;
   }
+  summary = marketNote + summary;
 
   // 3. Csapatdinamika és Forma (Team Dynamics)
   let teamDynamics = '';
@@ -184,15 +207,15 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
   let pickRationale = '';
   switch (activeMarket) {
     case '1':
-      pickRationale = `A rendszer a hazai győzelmet (${pickLabel}) jelöli meg a legértékesebb opcióként. A modell ${pickProb}%-os hazai győzelmi esélyt kalkulált, amihez a piacon kínált ${pickOdds.toFixed(2)}-es szorzó szilárd pozitív várható értéket képvisel. A ${homeShort} hazai pályán magasabb intenzitással játszik és stabilabb xG mutatókkal rendelkezik.`;
+      pickRationale = `A rendszer a hazai győzelmet (${pickLabel}) jelöli meg a legerősebb jelöltként. ${Basis} ${pickProb}%-os hazai győzelmi esélyt ad, a kínált szorzó ${pickOdds.toFixed(2)}. A ${homeShort} hazai pályán magasabb intenzitással játszik és stabilabb xG mutatókkal rendelkezik.`;
       break;
 
     case '2':
-      pickRationale = `A kiemelt tipp a vendéggyőzelem (${pickLabel}). A modell ${pickProb}% valószínűséget állapított meg a ${awayShort} javára, ami a ${pickOdds.toFixed(2)}-es odds mellett kiemelkedő értéket nyújt. A vendégcsapat hatékonyabb támadóegysége és formája felülmúlja a hazai pályaelőnyt.`;
+      pickRationale = `A kiemelt tipp a vendéggyőzelem (${pickLabel}). ${Basis} ${pickProb}% valószínűséget ad a ${awayShort} javára (szorzó: ${pickOdds.toFixed(2)}). A vendégcsapat hatékonyabb támadóegysége és formája felülmúlja a hazai pályaelőnyt.`;
       break;
 
     case 'X':
-      pickRationale = `A modell döntetlent (${pickLabel}) javasol. A két fél statisztikai mutatói és védelmi hatékonysága annyira szorosan korrelál (${drawP}% döntetlen valószínűség), hogy a magas piaci odds (${pickOdds.toFixed(2)}) mellett a pontosztozkodás kínálja a legkedvezőbb aszimmetrikus megtérülést.`;
+      pickRationale = `A rendszer döntetlent (${pickLabel}) jelöl meg. A két fél statisztikai mutatói és védelmi hatékonysága annyira szorosan korrelál (${drawP}% döntetlen valószínűség), hogy a pontosztozkodás reális kimenetel (szorzó: ${pickOdds.toFixed(2)}).`;
       break;
 
     case 'BTTS':
@@ -224,7 +247,7 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
       break;
 
     default:
-      pickRationale = `A kiemelt piac: ${pickLabel} (${pickOdds.toFixed(2)} odds, ${pickProb}% valószínűség). A többváltozós kvantitatív szűrő ezen a piacon mutatta ki a legstabilabb matematikai élt a bukmékeri konszenzussal szemben.`;
+      pickRationale = `A kiemelt piac: ${pickLabel} (${pickOdds.toFixed(2)} odds, ${pickProb}% valószínűség). A többváltozós kvantitatív szűrő ezen a piacon talált stabil jelöltet; ez nem jelent igazolt piaci előnyt.`;
       break;
   }
 
@@ -269,7 +292,7 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
     {
       icon: 'target',
       title: 'Fogadási Fókusz',
-      description: `${pickLabel} (${pickOdds.toFixed(2)} odds) – ${pickProb}% modellvalószínűség mellett az optimális piaci választás.`,
+      description: `${pickLabel} (${pickOdds.toFixed(2)} odds) – ${pickProb}% ${marketBased && ['1', 'X', '2', 'OVER_25', 'UNDER_25'].includes(activeMarket as string) ? 'piaci valószínűség' : 'modellvalószínűség'} mellett a rendszer legerősebb jelöltje.`,
     },
     {
       icon: 'shield',

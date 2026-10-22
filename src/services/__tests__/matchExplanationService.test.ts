@@ -295,4 +295,23 @@ describe('matchExplanationService', () => {
     expect(exp.pickRationale.length).toBeGreaterThan(0);
     expect(exp.keyFactors).toHaveLength(4);
   });
+  describe('piaci valószínűség (valós szorzó)', () => {
+    const marketMatch = (): Match =>
+      createBaseMatch({
+        probabilities: { homeWin: 20, draw: 25, awayWin: 55, bttsYes: 55, over15: 82, over25: 61, over35: 35, fhOver05: 72 },
+        modelProbabilities: { homeWin: 58, draw: 24, awayWin: 18, bttsYes: 55, over15: 82, over25: 61, over35: 35, fhOver05: 72 },
+        probabilitySource: 'market',
+      });
+
+    it('az összefoglaló jelzi a piaci forrást és a modell eltérő becslését', () => {
+      const ex = generateMatchExplanation(marketMatch());
+      expect(ex.summary).toContain('piaci ár');
+      expect(ex.summary).toContain('58% / 24% / 18%');
+    });
+
+    it('a tipp indoklása nem állít megalapozatlan pozitív várható értéket', () => {
+      const ex = generateMatchExplanation(createBaseMatch());
+      expect(ex.pickRationale).not.toMatch(/pozitív várható érték|kiemelkedő értéket|legstabilabb matematikai él/);
+    });
+  });
 });

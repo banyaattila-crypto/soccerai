@@ -323,7 +323,14 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           {activeTab === 'overview' && (
             <>
               {/* Szakértői Elemzés & Meccs Magyarázat Kártya */}
-              <MatchExplanationCard match={match} realOddsActive={isRealOddsActive} />
+              <MatchExplanationCard
+                match={
+                  marketP
+                    ? { ...match, probabilities: marketP, modelProbabilities: modelP, probabilitySource: 'market' }
+                    : match
+                }
+                realOddsActive={isRealOddsActive}
+              />
 
           {/* Kvantitatív Modellezés & Szűrők (Dixon-Coles & Shin) */}
           {match.quantAnalysis && (
