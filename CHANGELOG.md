@@ -3,6 +3,20 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.30.0] - 2026-10-22
+
+### Hozzáadva & Javítva - Csapatonkénti becslés az API-Sports ligákon
+A v1.29.0 élő ellenőrzése: az új ligák mind az öt mexikói meccse ugyanazt a becslést kapta (45% / 27% / 28%, xG 1,61 / 1,23), mert az API-Sports ingyenes csomagja nem ad szezon-előzményt, és a modell ligaátlagra esett vissza.
+- **Előre számolt modellek (`snapshotModels.ts`, `src/data/leagueModels.json`, `scripts/build-league-models.ts`):** 12 API-Sports ligára (norvég, svéd, dán, finn, ír, japán, mexikói, román, svájci, lengyel, osztrák, MLS) a football-data.co.uk extra-liga CSV-ekből Dixon–Coles erősségeket illesztünk (ξ = 0,0015, K = 5, utolsó ~3 szezon), és a származtatott értékeket (nem a nyers adatot) egy 8 kB-os JSON-ba mentjük. Az `apiSportsClient` ezt használja, ha nincs helyben illesztett modell. Nincs futásidejű hívás és extra kvóta.
+- **Elavulás:** a pillanatkép 120 nap után elavultnak számít, ekkor a ligaátlagra esik vissza (nem használunk régi erősségeket). Újragenerálás: `node scripts/backtest-download.mjs --extra`, majd `npx tsx scripts/build-league-models.ts`.
+- **Pontosabb csapatnév-egyeztetés (`teamUtils.ts`, `dixonColesFitting.ts`):** a ł, ø, đ, ß, æ, œ betűk átírása (Widzew Łódź, Bodø/Glimt, Brøndby), és a közelítő egyeztetés a leghosszabb találatot választja, kétértelmű találatnál nem választ (korábban az első szubsztring-találat nyert: a Tokyo Verdy a FC Tokyo erősségét kaphatta). Kézi alias-lista a román és japán eltérésekre.
+- **Fejléc (`HeroKpi.tsx`):** a hőtérkép-skála jelvényei (65%+ Kiemelt, 55–64% Erős, 45–54% Közepes, <45% Alacsony) eltávolítva.
+- **Tesztek:** 7 új teszt (`snapshotModels.test.ts`); összesen 29 fájlban 284 / 284 zöld.
+
+### Korlátok
+- A pillanatkép a generálás napjáig tudja az erősségeket; a csapatok formája utána nem frissül, amíg újra nem generáljuk.
+- A football-data.co.uk használati feltételeit nem sikerült megtalálni. A repóban csak származtatott erősségek vannak, a nyers CSV-k a gitignore-olt `data/backtest/` mappában; éles, tartós használat előtt a feltételeket ellenőrizni érdemes.
+
 ## [1.29.0] - 2026-10-22
 
 ### Hozzáadva (Added) - Nyolc új liga az API-Sports-on át (`apiSportsClient.ts`)

@@ -12,6 +12,7 @@ import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils'
 import { normalizeTeamName } from '../utils/teamUtils';
 import { marketFairFromBookmakers, blendedMarketPct, applyMarketProbabilities } from './marketBlend';
 import { eventBus } from '../utils/eventBus';
+import { getSnapshotLeagueModel } from './snapshotModels';
 import {
   computeExpectedGoalsFromModel,
   loadLeagueModel,
@@ -572,7 +573,9 @@ export async function fetchApiSportsMatches(
     const awayTeamName = f.teams.away.name;
 
     // Dixon-Coles modellből származó xG vagy liga-szintű bázis
-    const leagueModel = loadLeagueModel(`apisports_${lConfig.id}`);
+    // Szezon-modell: ha nincs helyben illesztett, az előre számolt pillanatkép (football-data.co.uk előzményekből)
+    const leagueModel =
+      loadLeagueModel(`apisports_${lConfig.id}`) ?? getSnapshotLeagueModel(lConfig.id);
     const { homeXg, awayXg, isFitted, homeRating, awayRating } =
       computeExpectedGoalsFromModel(
         leagueModel,

@@ -127,26 +127,8 @@ export const HeroKpi: React.FC<HeroKpiProps> = ({
             )}
           </div>
 
-          {/* Jobb oldal: Egysoros Kompakt Hőtérkép Színskála + Összecsukás gomb */}
+          {/* Jobb oldal: Segédlet + Összecsukás gomb */}
           <div className="flex items-center justify-between lg:justify-end gap-2 text-[10px] font-semibold overflow-x-auto scrollbar-none touch-pan-x">
-            <span className="text-slate-400 whitespace-nowrap hidden xl:inline mr-1">
-              Hőtérkép skála:
-            </span>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <span className="px-2 py-0.5 rounded bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 whitespace-nowrap">
-                65%+ Kiemelt
-              </span>
-              <span className="px-2 py-0.5 rounded bg-teal-500/20 border border-teal-500/30 text-teal-300 whitespace-nowrap">
-                55-64% Erős
-              </span>
-              <span className="px-2 py-0.5 rounded bg-slate-700/40 border border-slate-600/40 text-slate-300 whitespace-nowrap">
-                45-54% Közepes
-              </span>
-              <span className="px-2 py-0.5 rounded bg-slate-800/70 border border-slate-800 text-slate-400 whitespace-nowrap hidden sm:inline-block">
-                &lt;45% Alacsony
-              </span>
-            </div>
-
             {onOpenMethodology && (
               <button
                 onClick={onOpenMethodology}

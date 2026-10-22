@@ -495,6 +495,28 @@ function getClubPriorRating(teamName: string): TeamRating | undefined {
   };
 }
 
+/**
+ * Közelítő csapatnév-egyeztetés (a pontos egyezés már lefutott). Több szubsztring-találatnál a LEGHOSSZABB
+ * modellkulcsot választja; ha a név a kulcs része, a legrövidebb tartalmazó kulcsot veszi. Egyenlő hosszú,
+ * kétértelmű találatnál nem választ (undefined), így nem kerül téves csapat erőssége egy másikhoz.
+ */
+export function findFuzzyTeamKey(keys: string[], norm: string): string | undefined {
+  if (!norm) return undefined;
+  const contained = keys.filter((k) => k.length >= 3 && norm.includes(k));
+  if (contained.length > 0) {
+    const maxLen = Math.max(...contained.map((k) => k.length));
+    const best = contained.filter((k) => k.length === maxLen);
+    return best.length === 1 ? best[0] : undefined;
+  }
+  const containing = keys.filter((k) => norm.length >= 3 && k.includes(norm));
+  if (containing.length > 0) {
+    const minLen = Math.min(...containing.map((k) => k.length));
+    const best = containing.filter((k) => k.length === minLen);
+    return best.length === 1 ? best[0] : undefined;
+  }
+  return undefined;
+}
+
 const PRIOR_BLEND_MATCHES = 12;
 
 /**
@@ -538,15 +560,11 @@ export function computeExpectedGoalsFromModel(
   let aRating: TeamRating | undefined = model?.teams[aNorm];
 
   if (model?.teams && !hRating) {
-    const matchKey = Object.keys(model.teams).find(
-      (k) => k.includes(hNorm) || hNorm.includes(k)
-    );
+    const matchKey = findFuzzyTeamKey(Object.keys(model.teams), hNorm);
     if (matchKey) hRating = model.teams[matchKey];
   }
   if (model?.teams && !aRating) {
-    const matchKey = Object.keys(model.teams).find(
-      (k) => k.includes(aNorm) || aNorm.includes(k)
-    );
+    const matchKey = findFuzzyTeamKey(Object.keys(model.teams), aNorm);
     if (matchKey) aRating = model.teams[matchKey];
   }
 

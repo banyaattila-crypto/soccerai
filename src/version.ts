@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.29.0';
-export const APP_RELEASE_NAME = 'Nyolc Új Liga a Backtest Alapján';
+export const APP_VERSION = '1.30.0';
+export const APP_RELEASE_NAME = 'Csapatonkénti Becslés az Új Ligákon';
 export const APP_RELEASE_DATE = '2026-10-22';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,11 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'Nyolc új liga: Eliteserien (NOR), Allsvenskan (SWE), Superliga (DNK), Veikkausliiga (FIN), League of Ireland (IRL), J1 League (JPN), Liga MX (MEX), Liga I (ROU)',
-    'A választás a backtesten alapul: ezeken a ligákon a modell a naiv gyakoriságnál 0,04–0,09 log-loss-szal jobb (a gyenge lengyel, osztrák, MLS és argentin ligákat nem bővítettük)',
-    'Nincs extra API-kvóta: az API-Sports napi fixture-lekérése az összes ligát visszaadja',
-    'Új ligák adatalapja: ligaátlag + prior ("Ligaátlag + prior" felirat), szezon-előzmény még nincs',
-    '277 / 277 zöld teszt (28 tesztfájl)',
+    'Az új és a korábbi API-Sports ligák (12 liga) csapatonként eltérő becslést kapnak: előre számolt Dixon–Coles erősségek a football-data.co.uk előzményeiből, a ligaátlag helyett',
+    'Korábban minden meccs ugyanazt a becslést kapta (pl. Liga MX: 45/27/28), most a csapatok erőssége számít',
+    'Pontosabb csapatnév-egyeztetés: ł, ø, æ, ß átírás és a leghosszabb találat választása (pl. Tokyo Verdy ≠ FC Tokyo)',
+    'A pillanatkép 120 nap után elavultnak számít és nem használjuk; újragenerálás: node scripts/backtest-download.mjs --extra, majd npx tsx scripts/build-league-models.ts',
+    'A fejléc hőtérkép-skála jelvényei (65%+, 55–64%, 45–54%, <45%) eltávolítva',
+    '284 / 284 zöld teszt (29 tesztfájl)',
   ],
 };
