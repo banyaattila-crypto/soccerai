@@ -56,6 +56,11 @@ export function parseApiSportsBookmakers(rawBookmakers: ApiSportsBookmaker[]): P
     bookmakers.push({ name: b.name, home, draw, away, over25, under25, bttsYes, bttsNo, margin });
   }
 
+  return summarizeBookmakers(bookmakers);
+}
+
+/** A bukmékerenkénti szorzókból Pinnacle/Bet365 kiemelés és a legjobb szorzók kiválasztása (forrásfüggetlen). */
+export function summarizeBookmakers(bookmakers: BookmakerOddsItem[]): ParsedBookmakerOdds {
   const pinnacle = bookmakers.find((b) => b.name.toLowerCase().includes('pinnacle'));
   const bet365 = bookmakers.find((b) => b.name.toLowerCase().includes('bet365'));
 

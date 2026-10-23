@@ -65,6 +65,7 @@ import {
   getAuditLog,
 } from './services/predictionAuditService';
 import { refreshOddsForTracking } from './services/oddsPrefetch';
+import { refreshOddsApi } from './services/oddsApiClient';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -234,7 +235,12 @@ export function App() {
               refreshOddsForTracking(enhanced, getAuditLog()),
               new Promise<{ fetched: number }>((resolve) => setTimeout(() => resolve({ fetched: 0 }), 12000)),
             ]);
-            if (tracking.fetched > 0) {
+            // Második szorzóforrás (The Odds API), napi kerettel; az API-Sports-tól független
+            const oddsApiFetched = await Promise.race([
+              refreshOddsApi(enhanced),
+              new Promise<number>((resolve) => setTimeout(() => resolve(0), 12000)),
+            ]);
+            if (tracking.fetched > 0 || oddsApiFetched > 0) {
               enhanced = attachCachedRealOddsToMatches(combined);
               setMatches(markStaleLive(enhanced));
             }

@@ -3,6 +3,16 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.39.0] - 2026-10-24
+
+### Hozzáadva (Added) - Második szorzóforrás: The Odds API (az API-Sports-tól függetlenül)
+- **Miért:** az API-Sports fiók felfüggesztése miatt eddig minden valós szorzó (és így a valós piaci ár alapú tipp, EV és CLV) kiesett, mert a szorzó-azonosítók is az API-Sports meccslistájából jöttek. A The Odds API ligánként, meccsazonosító nélkül ad 20-25 fogadóiroda szorzót (1X2 és Over/Under 2.5).
+- **Szerveroldali proxy** (`/api/oddsapi`): a kulcs (`ODDS_API_KEY`) csak a szerveren van; az éles ligalista kvótát nem fogyaszt; a liga-lekérés 3 órán át gyorsítótárazott a Vercel peremén, így több eszköz sem fogyasztja többször a havi 500 kreditet.
+- **Keret:** napi 8 liga lekérés (2 kredit / liga, kb. 480 kredit / hó), 12 kredit alatt leáll a hónap végi tartalékért. Csak a következő 48 órában kezdődő meccsek ligáit kéri, a Top Tippet tartalmazó ligákat előre.
+- **Párosítás:** csapatnév (ismert eltérésekkel, pl. München/Munich, "and"/"&") és kezdési idő (±36 óra) alapján; az API-Sports szorzója elsőbbséget élvez, a The Odds API csak pótolja.
+- Ismert korlát: BTTS piac az ingyenes csomagban nincs; a román, magyar NB I és Konferencia Liga meccseihez a The Odds API nem ad szorzót.
+- **TheSportsDB proxy** (`/api/sportsdb`, kulcs: `THESPORTSDB_KEY`): meccsnaptár és eredmény lekéréshez; még nincs bekötve a felületbe.
+
 ## [1.38.0] - 2026-10-23
 
 ### Hozzáadva (Added) - API-Sports felügyelet és teljes ligalista az Eredményekben

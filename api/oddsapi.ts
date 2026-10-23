@@ -152,7 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Érvénytelen sport paraméter.' });
     }
     url = `${ODDS_API_BASE}/sports/${sport}/odds/?regions=eu&markets=h2h,totals&oddsFormat=decimal&dateFormat=iso&apiKey=${encodeURIComponent(key)}`;
-    ttl = 1800;
+    ttl = 10800;
   }
 
   try {

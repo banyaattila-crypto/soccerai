@@ -9,6 +9,7 @@ import {
 } from './predictionEngine';
 import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils';
 import { normalizeTeamName } from '../utils/teamUtils';
+import { getOddsApiOdds } from './oddsApiClient';
 import { marketFairFromBookmakers, blendedMarketPct, applyMarketProbabilities } from './marketBlend';
 import { eventBus } from '../utils/eventBus';
 import { parseApiSportsBookmakers, type ApiSportsBookmaker } from './oddsParsing';
@@ -986,16 +987,13 @@ export function attachCachedRealOddsToMatches(
     match.probabilitySource = 'model';
 
     const fId = match.apiSportsFixtureId || resolveApiSportsFixtureId(match);
-    if (!fId) {
-      if (match.aiPick) {
-        match.aiPick.isSimulatedOdds = true;
-        match.aiPick.expectedValue = 0;
-        match.aiPick.quarterKellyPct = 0;
-      }
-      return match;
-    }
 
-    const cached = getCachedFixtureOdds(fId, nowMs);
+    // Elsődleges forrás az API-Sports; ha nincs hozzá (érvényes) szorzó, a The Odds API gyorsítótára pótolja
+    let cached = fId ? getCachedFixtureOdds(fId, nowMs) : null;
+    if (!cached || cached.isExpired) {
+      const alt = getOddsApiOdds(match, nowMs);
+      if (alt && (!cached || !alt.isExpired)) cached = alt;
+    }
     if (!cached) {
       if (match.aiPick) {
         match.aiPick.isSimulatedOdds = true;
