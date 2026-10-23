@@ -47,7 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     tab: 'picks',
     label: 'Napi Top Tippek',
-    shortLabel: 'Top',
+    shortLabel: 'Tippek',
     icon: <Flame className="w-3.5 h-3.5 shrink-0" />,
   },
   {
@@ -59,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     tab: 'scanner',
     label: 'Scanner (+EV)',
-    shortLabel: 'Scan',
+    shortLabel: 'Scanner',
     icon: <Radar className="w-3.5 h-3.5 shrink-0" />,
   },
   {
@@ -71,13 +71,13 @@ const NAV_ITEMS: NavItem[] = [
   {
     tab: 'bankroll',
     label: 'Tétnapló',
-    shortLabel: 'Bankroll',
+    shortLabel: 'Tétnapló',
     icon: <Wallet className="w-3.5 h-3.5 shrink-0" />,
   },
   {
     tab: 'methodology',
     label: 'Módszertan',
-    shortLabel: 'Elmélet',
+    shortLabel: 'Módszer',
     icon: <BookOpen className="w-3.5 h-3.5 shrink-0" />,
   },
 ];
@@ -334,8 +334,11 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </nav>
 
-          {/* Mobilon megjelenő kompakt 6-oszlopos Tab-sáv (< md) */}
-          <nav className="grid grid-cols-6 gap-1 md:hidden bg-slate-900/90 p-1 rounded-xl border border-slate-800/80 text-center">
+          {/* Mobilon megjelenő 6-oszlopos Tab-sáv (< md): ikon felül, rövid felirat alul, hogy a nevek ne vágódjanak le */}
+          <nav
+            aria-label="Fő navigáció"
+            className="grid grid-cols-6 gap-0.5 md:hidden bg-slate-900/90 p-1 rounded-xl border border-slate-800/80 text-center"
+          >
             {NAV_ITEMS.map((item) => {
               const isActive = activeTab === item.tab;
               return (
@@ -343,14 +346,16 @@ export const Header: React.FC<HeaderProps> = ({
                   key={item.tab}
                   type="button"
                   onClick={() => setActiveTab(item.tab)}
-                  className={`py-1.5 px-0.5 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all truncate flex items-center justify-center gap-1 cursor-pointer ${
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`min-w-0 py-1.5 px-0 rounded-lg text-[10px] max-[359px]:text-[9px] leading-none font-bold transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
                     isActive
                       ? 'bg-brand-600 text-white shadow-sm font-extrabold'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   {item.icon}
-                  <span className="truncate">{item.shortLabel}</span>
+                  <span className="block w-full text-center whitespace-nowrap">{item.shortLabel}</span>
                 </button>
               );
             })}

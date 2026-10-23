@@ -3,6 +3,12 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.37.1] - 2026-10-23
+
+### Javítva (Fixed) - Levágott fülnevek mobilon
+A telefonos fülsáv hat oszlopa az ikont és a feliratot egymás mellé rakta, ezért a hosszabb nevek (Mérkőzés, Scanner, Eredmények, Tétnapló, Módszertan) levágódtak. Az ikon most a felirat fölött áll, a felirat nem rövidül ("..." nélkül), a nevek egységesek az asztali nézettel (Tippek, Mérkőzés, Scanner, Eredmény, Tétnapló, Módszer), 360 pixel alatt 9 pixeles betűvel. Az elemek teljes neve `aria-label`-ben marad, az aktív fül `aria-current`-et kap.
+- Ellenőrzés: a valódi fordított CSS-sel és betűtípussal 320, 360, 375, 390 és 412 pixeles szélességen megmértem minden felirat szélességét a cellához képest: mindegyik elfér (a legszűkebb: Eredmény 42,2 / 47,4 px 320 px-en).
+
 ## [1.37.0] - 2026-10-23
 
 ### Módosítva (Changed) - Kevesebb zöld, egységes színszerepek

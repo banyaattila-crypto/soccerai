@@ -1,7 +1,7 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.37.0` (SemVer 2.0.0)
+**Aktuális verzió:** `v1.37.1` (SemVer 2.0.0)
 **Kiadás neve:** Kevesebb Zöld
 **Dátum:** 2026. október 22.
 **Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 375/375 teszt zöld (41 tesztfájl), production build hibátlan
