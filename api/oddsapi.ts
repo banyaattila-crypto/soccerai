@@ -106,6 +106,15 @@ function isRequestAllowed(headers: Record<string, string | string[] | undefined>
   return refererOrigin ? isOriginAllowed(refererOrigin) : false;
 }
 
+/**
+ * Ismeretlen lekérdezési paraméter esetén 400: a Vercel gyorsítótár kulcsa a teljes URL, ezért egy tetszőleges
+ * extra paraméterrel (pl. `&x=1`, `&x=2`) kikerülhető a gyorsítótár, és minden kérés a szolgáltató havi/napi
+ * keretét fogyasztaná. A megengedett paramétereken kívüli kérés a szolgáltatóig el sem jut.
+ */
+function hasUnknownParams(query: Record<string, string | string[] | undefined> | undefined, allowed: string[]): boolean {
+  return Object.keys(query ?? {}).some((k) => !allowed.includes(k));
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const originHeader = Array.isArray(req.headers['origin']) ? req.headers['origin'][0] : req.headers['origin'];
 
@@ -122,6 +131,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method && req.method !== 'GET') {
     return res.status(405).json({ error: 'Csak GET kérések engedélyezettek.' });
+  }
+
+  if (hasUnknownParams(req.query, ['sport'])) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(400).json({ error: 'Ismeretlen lekérdezési paraméter.' });
   }
 
   const forwarded = req.headers['x-forwarded-for'];

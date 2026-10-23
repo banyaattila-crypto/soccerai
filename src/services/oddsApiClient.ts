@@ -10,16 +10,20 @@ import {
 /**
  * The Odds API (ingyenes csomag: 500 kredit / hónap). Második, az API-Sports-tól független szorzóforrás.
  * Egy liga lekérése 2 kredit (h2h + totals), ezért napi keretet és hosszú (3 órás) gyorsítótárat használunk:
- * 8 liga / nap * 2 kredit * 30 nap = 480 kredit. A szerveroldali proxy (api/oddsapi.ts) rejti az élő kulcsot.
+ * 5 liga / nap * 2 kredit * 30 nap = 300 kredit, a maradék 200 a tartalék (több eszköz, kézi frissítés). A szerveroldali proxy (api/oddsapi.ts) rejti az élő kulcsot.
  */
 
 export const ODDS_API_CACHE_PREFIX = 'soccerai_oddsapi_v1_';
 export const ODDS_API_TTL_MS = 3 * 60 * 60 * 1000;
-export const ODDS_API_DAILY_LEAGUE_BUDGET = 8;
+export const ODDS_API_DAILY_LEAGUE_BUDGET = 5;
+/** Az ingyenes csomag havi kerete (kredit) */
+export const ODDS_API_MONTHLY_CREDITS = 500;
 /** Ennyi hátralévő kredit alatt már nem kérünk le újat (hónap végi tartalék) */
-export const ODDS_API_MIN_REMAINING = 12;
+export const ODDS_API_MIN_REMAINING = 30;
 const BUDGET_KEY = 'soccerai_oddsapi_budget_v1';
 const REMAINING_KEY = 'soccerai_oddsapi_remaining_v1';
+const LEDGER_KEY = 'soccerai_oddsapi_ledger_v1';
+const LEDGER_MAX = 120;
 const HORIZON_MS = 48 * 60 * 60 * 1000;
 
 /** Belső liga-azonosító -> The Odds API sportkulcs (csak a ténylegesen kínált ligák). */
@@ -95,6 +99,61 @@ function addBudgetUsed(nowMs: number): void {
   }
 }
 
+export interface OddsApiLedgerEntry {
+  /** A lekérés ideje (epoch ms) */
+  t: number;
+  sport: string;
+  /** A szolgáltató által a válaszban jelzett hátralévő és eddig felhasznált kredit */
+  remaining?: number;
+  used?: number;
+}
+
+/** A The Odds API lekérések naplója (a legutóbbi LEDGER_MAX bejegyzés), a keret követéséhez. */
+export function getOddsApiLedger(): OddsApiLedgerEntry[] {
+  try {
+    const raw = localStorage.getItem(LEDGER_KEY);
+    const parsed = raw ? (JSON.parse(raw) as OddsApiLedgerEntry[]) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function appendLedger(entry: OddsApiLedgerEntry): void {
+  try {
+    localStorage.setItem(LEDGER_KEY, JSON.stringify([...getOddsApiLedger(), entry].slice(-LEDGER_MAX)));
+  } catch {
+    // A napló nem írható: a keretvédelem a fejléces hátralévő értékre és a napi keretre így is támaszkodik
+  }
+}
+
+export interface OddsApiUsage {
+  limit: number;
+  /** A szolgáltató szerint hátralévő kredit; null, ha még nem mértük */
+  remaining: number | null;
+  /** A szolgáltató szerint felhasznált kredit (a fiók összes használatából, a trackerrel és más eszközökkel együtt) */
+  used: number | null;
+  /** Ezen az eszközön a mai lekérések (liga) száma és a napi keret */
+  fetchesToday: number;
+  dailyBudget: number;
+  lastFetchAt: number | null;
+}
+
+export function getOddsApiUsage(nowMs: number = Date.now()): OddsApiUsage {
+  const ledger = getOddsApiLedger();
+  const last = ledger[ledger.length - 1];
+  const remaining = getOddsApiRemainingCredits();
+  const used = last?.used ?? (remaining !== null ? ODDS_API_MONTHLY_CREDITS - remaining : null);
+  return {
+    limit: ODDS_API_MONTHLY_CREDITS,
+    remaining,
+    used,
+    fetchesToday: getOddsApiBudgetUsed(nowMs),
+    dailyBudget: ODDS_API_DAILY_LEAGUE_BUDGET,
+    lastFetchAt: last?.t ?? null,
+  };
+}
+
 /** A szolgáltatótól fejlécben kapott hátralévő havi kredit (ha már mértük). */
 export function getOddsApiRemainingCredits(): number | null {
   try {
@@ -134,13 +193,22 @@ export async function fetchOddsApiLeague(sportKey: string, nowMs: number = Date.
   try {
     const res = await fetch(`/api/oddsapi?sport=${encodeURIComponent(sportKey)}`);
     const remaining = res.headers?.get?.('x-requests-remaining');
-    if (remaining !== null && remaining !== undefined && remaining !== '') {
+    const usedHeader = res.headers?.get?.('x-requests-used');
+    const remainingNum = remaining ? Number(remaining) : undefined;
+    const usedNum = usedHeader ? Number(usedHeader) : undefined;
+    if (remainingNum !== undefined && isFinite(remainingNum)) {
       try {
-        localStorage.setItem(REMAINING_KEY, String(Number(remaining)));
+        localStorage.setItem(REMAINING_KEY, String(remainingNum));
       } catch {
         // nem írható: a kijelzés nélkül is működik
       }
     }
+    appendLedger({
+      t: nowMs,
+      sport: sportKey,
+      remaining: remainingNum !== undefined && isFinite(remainingNum) ? remainingNum : undefined,
+      used: usedNum !== undefined && isFinite(usedNum) ? usedNum : undefined,
+    });
     if (!res.ok) return null;
     const data = (await res.json()) as OddsApiEvent[];
     if (!Array.isArray(data)) return null;

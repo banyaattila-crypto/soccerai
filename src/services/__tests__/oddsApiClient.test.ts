@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Match } from '../../types/football';
 
 const store: Record<string, string> = {};
@@ -18,6 +18,10 @@ Object.defineProperty(globalThis, 'localStorage', {
 
 import {
   getOddsApiOdds,
+  getOddsApiUsage,
+  getOddsApiLedger,
+  fetchOddsApiLeague,
+  refreshOddsApi,
   selectOddsApiLeagues,
   ODDS_API_CACHE_PREFIX,
   ODDS_API_TTL_MS,
@@ -96,5 +100,45 @@ describe('The Odds API kliens', () => {
     expect(selectOddsApiLeagues(matches, NOW, () => false).sort()).toEqual(['soccer_epl', 'soccer_spain_la_liga']);
     expect(selectOddsApiLeagues(matches, NOW, (k) => k === 'soccer_epl')).toEqual(['soccer_spain_la_liga']);
     expect(ODDS_API_TTL_MS).toBe(3 * 3600 * 1000);
+  });
+});
+
+describe('The Odds API kreditnapló', () => {
+  const okResponse = (remaining: string, used: string) =>
+    ({
+      ok: true,
+      status: 200,
+      headers: { get: (h: string) => ({ 'x-requests-remaining': remaining, 'x-requests-used': used })[h] ?? null },
+      json: async () => [],
+    }) as unknown as Response;
+
+  it('minden lekérést naplóz, és a szolgáltató fejléce adja a hátralévő és felhasznált krediteket', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(okResponse('496', '4'));
+    await fetchOddsApiLeague('soccer_epl', NOW);
+    globalThis.fetch = vi.fn().mockResolvedValue(okResponse('494', '6'));
+    await fetchOddsApiLeague('soccer_spain_la_liga', NOW + 1000);
+    const ledger = getOddsApiLedger();
+    expect(ledger).toHaveLength(2);
+    expect(ledger[1]).toMatchObject({ sport: 'soccer_spain_la_liga', remaining: 494, used: 6 });
+    const usage = getOddsApiUsage(NOW);
+    expect(usage.remaining).toBe(494);
+    expect(usage.used).toBe(6);
+    expect(usage.limit).toBe(500);
+  });
+
+  it('30 kredit alatt már nem kér le újat (hónap végi tartalék)', async () => {
+    store['soccerai_oddsapi_remaining_v1'] = '25';
+    const f = vi.fn();
+    globalThis.fetch = f;
+    expect(await refreshOddsApi([match()], NOW)).toBe(0);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('napi 5 liga keret felett nem kér', async () => {
+    store['soccerai_oddsapi_budget_v1'] = JSON.stringify({ date: '2026-10-24', used: 5 });
+    const f = vi.fn();
+    globalThis.fetch = f;
+    expect(await refreshOddsApi([match()], NOW)).toBe(0);
+    expect(f).not.toHaveBeenCalled();
   });
 });

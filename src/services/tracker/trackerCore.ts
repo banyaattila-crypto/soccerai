@@ -65,6 +65,8 @@ export interface TrackerState {
   version: 1;
   updatedAt: string;
   budget: { date: string; used: number };
+  /** Fiókhiba miatti szünet vége (epoch ms); addig a követő nem hív API-t */
+  haltedUntil?: number;
   /** dátum (YYYY-MM-DD, UTC) -> a meccslista utolsó lekérésének ideje (epoch ms) */
   fixtureRefresh: Record<string, number>;
   fixtures: Record<string, TrackedFixture>;

@@ -27,6 +27,9 @@ export interface ApiResponse {
   json: unknown;
 }
 
+/** Fiókhiba (pl. felfüggesztés) után ennyi ideig nem hív API-t a követő (a hiba nem múlik el 20 percen belül). */
+export const ACCOUNT_HALT_MS = 6 * 60 * 60 * 1000;
+
 export interface RunnerDeps {
   api: (path: string) => Promise<ApiResponse>;
   nowMs: number;
@@ -122,6 +125,11 @@ export async function runTracker(state: TrackerState, deps: RunnerDeps): Promise
   let stopped: string | undefined;
   let newCandidates = 0;
 
+  if (state.haltedUntil && state.haltedUntil > now) {
+    log(`Szünet fiókhiba miatt ${new Date(state.haltedUntil).toISOString()}-ig.`);
+    return { calls: 0, settled: [], newCandidates: 0, stopped: 'API fiókhiba (szünet)' };
+  }
+
   const canCall = () => !stopped && budgetUsed(state, now) < cap;
 
   async function call(path: string): Promise<ApiResponse | null> {
@@ -150,6 +158,11 @@ export async function runTracker(state: TrackerState, deps: RunnerDeps): Promise
     if (err) {
       log(`API hiba (${path}): ${err}`);
       if (/rate|limit|request|quota/i.test(err)) stopped = 'API kvóta-hiba';
+      // Fiókhiba (felfüggesztés, érvénytelen kulcs): a további hívás értelmetlen és a kvótát is terhelheti
+      if (/suspend|access|token|key|account/i.test(err)) {
+        stopped = 'API fiókhiba';
+        state.haltedUntil = now + ACCOUNT_HALT_MS;
+      }
       return null;
     }
     return res;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Match } from '../../types/football';
 import { MarketGapChip } from '../MarketGapChip';
 import { ProtocolChip } from '../ProtocolChip';
+import { MatchContextChip } from '../MatchContextChip';
 import { Plus, Check, ChevronRight, ShieldCheck } from 'lucide-react';
 import { OddsSourceBadge, OddsSourceRibbon, resolveOddsSourceState } from '../OddsSourceBadge';
 import { getDataQualityInfo, getProbabilityRange } from '../../utils/modelConfidence';
@@ -226,6 +227,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
 
           <MarketGapChip match={match} />
           <ProtocolChip match={match} />
+          <MatchContextChip match={match} />
 
           {/* Kvantitatív Robusztussági & Kelly sáv */}
           {match.quantAnalysis && (

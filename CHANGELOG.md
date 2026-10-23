@@ -3,6 +3,15 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.41.0] - 2026-10-24
+
+### Hozzáadva (Added) - API-keretek követése, proxyvédelem, meccs-kontextus
+- **Állapotsor az oldal tetején:** mindig látható, az API-Sports napi keretét és a The Odds API havi 500 kreditjét mutatja (a szolgáltató fejlécéből: hátralévő és felhasznált kredit), ezen az eszközön a napi lekéréseket; 100 kredit alatt borostyán, 30 alatt piros. A The Odds API lekéréseit a böngésző naplózza (idő, liga, hátralévő kredit).
+- **The Odds API keret:** a napi liga-keret 8-ról 5-re csökkent (300 kredit / hó, 200 tartalék), és 30 kredit alatt leáll. Dokumentáció: `docs/odds-api.md` (a szerveroldali követő hiányának indoklásával).
+- **Proxyvédelem:** a `api/apisports.ts`, `api/oddsapi.ts` és `api/sportsdb.ts` ismeretlen lekérdezési paraméterre 400-at ad. A Vercel gyorsítótár kulcsa a teljes URL, ezért egy extra paraméterrel (`&x=1`) kijátszható volt a gyorsítótár, és minden kérés a szolgáltató keretét fogyasztotta volna.
+- **Követő (tracker):** fiókhiba (felfüggesztés, érvénytelen kulcs) esetén az első hiba után leáll, és 6 órán át nem hív API-t. Eddig a felfüggesztett fióknál is 20 percenként próbálkozott.
+- **Meccs-kontextus (előkészítve, élő API-Sports fiókkal aktív):** a protokoll-tippekhez a hiányzó játékosokat és a kezdőfelállást kéri (`injuries`, `fixtures/lineups`), napi 8 kéréssel, csak ha a fiók él és legalább 30 napi kérés maradt. A Napi Top Tipp kártyán tájékoztató jelzés ("Kiesők: H n · V n"); a valószínűséget nem módosítja.
+
 ## [1.40.0] - 2026-10-24
 
 ### Hozzáadva (Added) - Fogadási protokoll és papírkereskedés

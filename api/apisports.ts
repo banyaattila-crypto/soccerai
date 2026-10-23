@@ -117,6 +117,15 @@ function isRequestAllowed(headers: Record<string, string | string[] | undefined>
   return refererOrigin ? isOriginAllowed(refererOrigin) : false;
 }
 
+/**
+ * Ismeretlen lekérdezési paraméter esetén 400: a Vercel gyorsítótár kulcsa a teljes URL, ezért egy tetszőleges
+ * extra paraméterrel (pl. `&x=1`, `&x=2`) kikerülhető a gyorsítótár, és minden kérés a szolgáltató havi/napi
+ * keretét fogyasztaná. A megengedett paramétereken kívüli kérés a szolgáltatóig el sem jut.
+ */
+function hasUnknownParams(query: Record<string, string | string[] | undefined> | undefined, allowed: string[]): boolean {
+  return Object.keys(query ?? {}).some((k) => !allowed.includes(k));
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const originHeader = Array.isArray(req.headers['origin'])
     ? req.headers['origin'][0]
@@ -145,6 +154,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method && req.method !== 'GET') {
     return res.status(405).json({ error: 'Csak GET kérések engedélyezettek.' });
+  }
+
+  if (hasUnknownParams(req.query, ['date', 'fixture', 'endpoint'])) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(400).json({ error: 'Ismeretlen lekérdezési paraméter.' });
   }
 
   const forwarded = req.headers['x-forwarded-for'];
@@ -179,15 +193,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const fixture = Array.isArray(rawFixture) ? rawFixture[0] : rawFixture;
   const endpoint = Array.isArray(rawEndpoint) ? rawEndpoint[0] : rawEndpoint;
 
-  if (endpoint && endpoint !== 'odds' && endpoint !== 'fixtures') {
+  if (endpoint && !['odds', 'fixtures', 'injuries', 'lineups'].includes(endpoint)) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(400).json({
-      error: 'Érvénytelen endpoint paraméter (csak "odds" vagy "fixtures" támogatott).',
+      error: 'Érvénytelen endpoint paraméter (odds, fixtures, injuries vagy lineups támogatott).',
     });
   }
 
+  // Meccs-kontextus (hiányzók, felállások): a hiányzók lassan változnak, a felállás a kezdés előtt ~1 órával jelenik meg
+  const contextEndpoint = endpoint === 'injuries' ? 'injuries' : endpoint === 'lineups' ? 'fixtures/lineups' : null;
   let url: string;
-  if (endpoint === 'odds' || fixture) {
+  if (contextEndpoint) {
+    if (!fixture || !FIXTURE_ID_REGEX.test(fixture)) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(400).json({ error: 'Érvénytelen fixture paraméter (pozitív egész szám szükséges).' });
+    }
+    url = `https://v3.football.api-sports.io/${contextEndpoint}?fixture=${fixture}`;
+  } else if (endpoint === 'odds' || fixture) {
     if (!fixture || !FIXTURE_ID_REGEX.test(fixture)) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(400).json({
@@ -235,6 +257,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (hasBodyErrors) {
       // Fiók- vagy kvótahiba HTTP 200-zal: nem gyorsítótárazható, különben a javítás után is a hibát kapnánk
       res.setHeader('Cache-Control', 'no-store');
+    } else if (apiRes.ok && contextEndpoint) {
+      res.setHeader(
+        'Cache-Control',
+        endpoint === 'lineups' ? 's-maxage=600, stale-while-revalidate=600' : 's-maxage=3600, stale-while-revalidate=3600'
+      );
     } else if (apiRes.ok) {
       // Élő mérkőzést tartalmazó menetrendnél rövidebb (7 perces) Edge gyorsítótár, hogy a lefújás időben
       // megjelenjen; egyébként 30 perc a napi 100 kérés védelmére. Csak sikeres (2xx) válasznál.

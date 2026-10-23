@@ -66,6 +66,7 @@ import {
 } from './services/predictionAuditService';
 import { refreshOddsForTracking } from './services/oddsPrefetch';
 import { refreshOddsApi } from './services/oddsApiClient';
+import { refreshMatchContext } from './services/matchContext';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -240,7 +241,12 @@ export function App() {
               refreshOddsApi(enhanced),
               new Promise<number>((resolve) => setTimeout(() => resolve(0), 12000)),
             ]);
-            if (tracking.fetched > 0 || oddsApiFetched > 0) {
+            // Hiányzók és felállások a protokoll-tippekhez (csak élő API-Sports fiókkal és tartalék kvótával)
+            const contextUpdated = await Promise.race([
+              refreshMatchContext(enhanced),
+              new Promise<number>((resolve) => setTimeout(() => resolve(0), 8000)),
+            ]);
+            if (tracking.fetched > 0 || oddsApiFetched > 0 || contextUpdated > 0) {
               enhanced = attachCachedRealOddsToMatches(combined);
               setMatches(markStaleLive(enhanced));
             }

@@ -203,6 +203,27 @@ describe('runTracker: keret és hibák', () => {
     expect(budgetUsed(state2, T0)).toBe(50);
   });
 
+  it('felfüggesztett fiók: az első hiba után leáll, és 6 óráig nem hív újra', async () => {
+    const state = emptyState(T0);
+    discover(state, 5);
+    const suspended = { status: 200, json: { errors: { access: 'Your account is suspended, check on https://dashboard.api-football.com.' }, response: [] } };
+    const api = fakeApi(() => suspended);
+    const r = await runTracker(state, { api: api.api, nowMs: T0, leagueIds: leagues });
+    expect(r.calls).toBe(1);
+    expect(r.stopped).toBe('API fiókhiba');
+    expect(state.haltedUntil).toBe(T0 + 6 * HOUR);
+
+    const api2 = fakeApi(() => suspended);
+    const r2 = await runTracker(state, { api: api2.api, nowMs: T0 + 20 * 60 * 1000, leagueIds: leagues });
+    expect(r2.calls).toBe(0);
+    expect(api2.calls).toHaveLength(0);
+
+    // a szünet után újra próbálkozik
+    const api3 = fakeApi(() => ({ status: 200, json: oddsJson(2.0) }));
+    const r3 = await runTracker(state, { api: api3.api, nowMs: T0 + 6.1 * HOUR, leagueIds: leagues });
+    expect(r3.calls).toBeGreaterThan(0);
+  });
+
   it('a tartalék alá csökkenő napi kvótánál leáll', async () => {
     const state = emptyState(T0);
     discover(state, 5);
