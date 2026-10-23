@@ -15,7 +15,6 @@ import { MatchCardsList } from './grid/MatchCardsList';
 import { MatchCompactList } from './grid/MatchCompactList';
 import { StatsFilterPanel } from './grid/StatsFilterPanel';
 import { StatsGridHeader } from './grid/StatsGridHeader';
-import { LeagueMatchNames } from './grid/LeagueMatchNames';
 import { StatsToolbar } from './grid/StatsToolbar';
 import { ActiveFilterChips } from './grid/ActiveFilterChips';
 import {
@@ -675,7 +674,6 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                               </span>
                             )}
                           </div>
-                          <LeagueMatchNames matches={lMatches} collapsed={isCollapsed} />
                         </div>
 
                         <div className="flex items-center gap-1.5 text-xs text-slate-400 shrink-0">

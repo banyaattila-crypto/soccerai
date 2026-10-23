@@ -77,12 +77,12 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
 
         <div className="p-4 sm:p-5 pb-3">
           {/* Fejléc címke & Ligainfó */}
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-md border border-slate-800 truncate">
-              <span>{match.leagueFlag}</span>
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 mb-3">
+            <span className="inline-flex items-center gap-1.5 min-w-0 max-w-full text-[11px] font-semibold text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-md border border-slate-800">
+              <span className="shrink-0">{match.leagueFlag}</span>
               <span className="truncate">{match.leagueName}</span>
               <span className="text-slate-600">&bull;</span>
-              <span className="text-brand-400 font-bold">{formatKickoffShort(match)}</span>
+              <span className="text-brand-400 font-bold whitespace-nowrap">{formatKickoffShort(match)}</span>
             </span>
 
             <div className="flex items-center gap-1.5 shrink-0">

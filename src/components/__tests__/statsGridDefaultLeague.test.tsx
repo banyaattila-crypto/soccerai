@@ -44,9 +44,6 @@ describe('Mérkőzés fül alapértelmezett szűrése', () => {
     for (const league of ['Premier League', 'La Liga', 'Serie A']) {
       expect(html).toContain(league);
     }
-    // a meccsek nevei a bajnokság-sávon is ott vannak (nem csak a kinyitott listában)
-    expect(html).toContain('21:00 Ipswich Town – Nottingham');
-    expect(html).toContain('21:00 Torino – Monza');
     // nincs aktív liga-szűrő chip
     expect(html).not.toContain('Aktív szűrők');
   });

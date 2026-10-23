@@ -69,6 +69,10 @@ describe('MatchCompactList Layout & No-Overlap Invariant Regression Tests', () =
     expect(html).toContain('Arsenal FC');
     expect(html).toContain('Chelsea FC');
 
+    // Telefonon az idő/állapot sora fölül, a csapatnevek alatta, teljes szélességben (nem préselődnek 1-2 betűre)
+    expect(html).toContain('flex flex-col items-start sm:flex-row sm:items-center');
+    expect(html).toContain('min-w-0 w-full sm:w-auto sm:flex-1');
+
     // 3D percentage pills are rendered
     expect(html).toContain('btn-pill-3d');
     expect(html).toContain('from-brand-600');

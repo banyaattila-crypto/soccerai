@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.37.4] - 2026-10-23
+
+### Javítva (Fixed) - A csapatnevek olvashatók telefonon, a liga neve nem vágódik le
+- **Kompakt meccslista (Mérkőzés fül):** telefonon a sor jobb oldalát (két csík és az 1X2 oszlop, kb. 155 px) fix szélességű elemek foglalták, a csapatnevek a maradék 1-2 betűnyi helyre szorultak ("I. - N."). Most telefonon az idő/dátum sora van felül, **alatta a csapatnevek teljes szélességben** (két sorban, logóval); asztali nézetben marad az egysoros elrendezés. 320, 360 és 390 pixeles szélességen élő CSS-sel ellenőrizve: 360 px-en a hosszú nevek is kiférnek (Borussia Mönchengladbach), 320 px-en csak a leghosszabbak rövidülnek.
+- **A v1.37.3 sáv-felirata megszűnt:** a bajnokság-sáv alatti meccsnév-felsorolás nem fért ki, ha sok meccs volt (és nem látszott); a nevek a meccssorok idő/dátum alatt vannak. `LeagueMatchNames` komponens és tesztje törölve.
+- **Napi Top Tippek kártya:** a liga neve ("La Liga", "Serie A") "L."-re és "S."-re vágódott a szűk fejlécben; a jelvények most új sorba törnek, ha kell, így a liga neve teljes.
+- Új regressziós tesztek a kompakt lista telefonos elrendezésére.
+
 ## [1.37.3] - 2026-10-23
 
 ### Módosítva (Changed) - A meccsek nevei a bajnokság-sávon is látszanak

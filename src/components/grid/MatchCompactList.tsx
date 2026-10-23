@@ -72,8 +72,10 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
             onClick={() => onSelectMatch(match)}
             className="p-3 sm:p-3.5 hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-3 sm:gap-5 cursor-pointer group"
           >
-            {/* Bal oldal: Csillag + Idő/Állapot + 2-soros Csapatok (Hazai felül, Vendég alul - sosem takarja el a diagram) */}
-            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+            {/* Bal oldal: telefonon az idő/állapot SORA fölül, alatta a teljes szélességű 2-soros csapatnevek
+                (a név így nem préselődik egy-két betűre); asztali nézetben egy sorban */}
+            <div className="flex flex-col items-start sm:flex-row sm:items-center gap-1.5 sm:gap-3.5 min-w-0 flex-1">
+              <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
               {/* Kedvenc kitűző csillag */}
               {onToggleFavorite && (
                 <button
@@ -119,8 +121,10 @@ export const MatchCompactList: React.FC<MatchCompactListProps> = ({
                 )}
               </div>
 
+              </div>
+
               {/* Csapatok és Eredmények: 2 sorban egymás alatt, tágas, jól olvasható, sosem fedi el a diagram */}
-              <div className="flex flex-col justify-center gap-1.5 min-w-0 flex-1">
+              <div className="flex flex-col justify-center gap-1.5 min-w-0 w-full sm:w-auto sm:flex-1">
                 {/* 1. Sor: Hazai Csapat */}
                 <div className="flex items-center justify-between gap-2 min-w-0">
                   <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
