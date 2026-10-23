@@ -35,6 +35,12 @@ describe('purgeLegacyMockData', () => {
     expect(localStorage.getItem('focitipp_datasource')).toBe('api');
   });
 
+  it('törli a bankroll bemutató szelvényeit (bet-sample-*), a saját tétet megtartja', () => {
+    localStorage.setItem('soccerai_tracked_bets', JSON.stringify([{ id: 'bet-sample-1' }, { id: 'bet-sample-4' }, { id: 'bet-17000' }]));
+    purgeLegacyMockData();
+    expect(JSON.parse(localStorage.getItem('soccerai_tracked_bets')!)).toEqual([{ id: 'bet-17000' }]);
+  });
+
   it('egyszer fut: a jelző után nem nyúl a tárhoz', () => {
     purgeLegacyMockData();
     localStorage.setItem('soccerai_match_history_archive_v1', JSON.stringify([{ id: 'm-yest-1' }]));

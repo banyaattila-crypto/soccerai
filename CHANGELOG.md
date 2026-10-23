@@ -3,6 +3,21 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.34.0] - 2026-10-23
+
+### Eltávolítva (Removed) - Bemutató szelvények a Tétnaplóban
+A Tétnapló "Minta visszaállítás" gombja és az üres állapot "Minta adatok visszatöltése" gombja megszűnt, a `SAMPLE_TRACKED_BETS` és a `resetToSampleBets` törölve. Az üres állapot a kézi tét rögzítésére visz. A `legacyMockPurge` a korábban betöltött `bet-sample-*` szelvényeket egyszer törli (a saját tétek érintetlenek).
+
+### Módosítva (Changed) - Nagy komponensek további szétvágása (F-15 része)
+- **`matchDetail/LiveOddsSection.tsx` + `matchDetail/oddsRows.ts`:** az élő bukmékeri odds szekció külön komponens; a fair szorzók, szorzók és EV számítása tiszta, tesztelt függvény (`buildOddsRows`, `calcEv`; 4 új teszt).
+- **`bankroll/TrackedBetCard.tsx`, `bankroll/ManualBetModal.tsx`:** a szelvénykártya és a kézi tét ablak külön komponens. A kézi tét űrlap állapota az ablakba költözött, ezért az alapértékek (piac, odds, tét, esély) minden megnyitáskor visszaállnak.
+- `MatchDetailModal.tsx` 868 -> 593 sor, `BankrollView.tsx` 868 -> 508 sor.
+
+### Korlátok
+- Vizuális böngészős ellenőrzés ebben a körben sem készült (a böngésző a hozzáférést megtagadta); a tsc, az oxlint és a 312 teszt fedi, az éles oldalon ellenőrzendő.
+- A `ScannerView` (687 sor), `TopPicks` és `SettingsModal` érintetlen.
+- **Tesztek:** 5 új teszt; összesen 35 fájlban 312 / 312 zöld.
+
 ## [1.33.2] - 2026-10-23
 
 ### Módosítva (Changed) - Nagy komponensek további szétvágása (F-15 része)

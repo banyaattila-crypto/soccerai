@@ -5,114 +5,6 @@ export const STORAGE_KEY_BANKROLL = 'soccerai_bankroll_config';
 export const STORAGE_KEY_BETS = 'soccerai_tracked_bets';
 export const DEFAULT_INITIAL_BANKROLL = 50000; // 50 000 Ft kezdőtőke
 
-// Alapértelmezett minta szelvények bemutató célra (új felhasználóknak)
-export const SAMPLE_TRACKED_BETS: TrackedBet[] = [
-  {
-    id: 'bet-sample-1',
-    createdAt: new Date(Date.now() - 24 * 3600 * 1000 * 2).toISOString(),
-    stake: 3000,
-    totalOdds: 2.76,
-    potentialWin: 8280,
-    status: 'WON',
-    settledAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-    netProfit: 5280,
-    notes: 'Premier League gólzápor duplázó',
-    items: [
-      {
-        matchId: 'sample-m1',
-        matchTitle: 'Liverpool vs Chelsea',
-        marketLabel: 'Mindkét csapat szerez gólt (BTTS)',
-        odds: 1.62,
-        probability: 68,
-        homeScore: 2,
-        awayScore: 1,
-        isWon: true,
-      },
-      {
-        matchId: 'sample-m2',
-        matchTitle: 'Arsenal vs Aston Villa',
-        marketLabel: '2.5 gól felett',
-        odds: 1.70,
-        probability: 64,
-        homeScore: 2,
-        awayScore: 2,
-        isWon: true,
-      },
-    ],
-  },
-  {
-    id: 'bet-sample-2',
-    createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-    stake: 4000,
-    totalOdds: 1.85,
-    potentialWin: 7400,
-    status: 'WON',
-    settledAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
-    netProfit: 3400,
-    notes: 'Kiemelt La Liga szingli',
-    items: [
-      {
-        matchId: 'sample-m3',
-        matchTitle: 'Real Madrid vs Sevilla',
-        marketLabel: 'Hazai győzelem (1)',
-        odds: 1.85,
-        probability: 67,
-        homeScore: 3,
-        awayScore: 1,
-        isWon: true,
-      },
-    ],
-  },
-  {
-    id: 'bet-sample-3',
-    createdAt: new Date(Date.now() - 18 * 3600 * 1000).toISOString(),
-    stake: 2500,
-    totalOdds: 2.10,
-    potentialWin: 5250,
-    status: 'LOST',
-    settledAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    netProfit: -2500,
-    notes: 'Serie B kockázatosabb szelvény',
-    items: [
-      {
-        matchId: 'sample-m4',
-        matchTitle: 'Palermo vs Parma',
-        marketLabel: '2.5 gól felett',
-        odds: 2.10,
-        probability: 52,
-        homeScore: 1,
-        awayScore: 0,
-        isWon: false,
-      },
-    ],
-  },
-  {
-    id: 'bet-sample-4',
-    createdAt: new Date().toISOString(),
-    stake: 3500,
-    totalOdds: 2.45,
-    potentialWin: 8575,
-    status: 'PENDING',
-    notes: 'A mai nap legmagasabb +EV kombinációja',
-    items: [
-      {
-        matchId: 'sample-m5',
-        matchTitle: 'Bayern München vs Dortmund',
-        marketLabel: '2.5 gól felett & BTTS',
-        odds: 1.75,
-        probability: 72,
-      },
-      {
-        matchId: 'sample-m6',
-        matchTitle: 'PSG vs Marseille',
-        marketLabel: 'Hazai győzelem (1)',
-        odds: 1.40,
-        probability: 74,
-      },
-    ],
-  },
-];
-
 /**
  * Kezdőtőke lekérése localStorage-ből
  */
@@ -255,14 +147,6 @@ export function deleteTrackedBet(betId: string): TrackedBet[] {
  */
 export function clearAllTrackedBets(): void {
   saveTrackedBets([]);
-}
-
-/**
- * Visszaállítás a kezdeti bemutató szelvényekre
- */
-export function resetToSampleBets(): TrackedBet[] {
-  saveTrackedBets(SAMPLE_TRACKED_BETS);
-  return SAMPLE_TRACKED_BETS;
 }
 
 /**

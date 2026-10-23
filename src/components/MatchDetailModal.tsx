@@ -8,9 +8,6 @@ import {
   CloudSun,
   Plus,
   Check,
-  RefreshCw,
-  Building2,
-  Zap,
   Calendar,
   Clock,
   Swords,
@@ -25,8 +22,9 @@ import {
 import { ScoreLabH2HCard } from './ScoreLabH2HCard';
 import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
 import { MatchExplanationCard } from './MatchExplanationCard';
+import { LiveOddsSection } from './matchDetail/LiveOddsSection';
 import { getDataQualityInfo } from '../utils/modelConfidence';
-import { marketFairFromBookmakers, blendedMarketPct, applyMarketProbabilities } from '../services/marketBlend';
+import { marketFairFromBookmakers, applyMarketProbabilities } from '../services/marketBlend';
 
 interface MatchDetailModalProps {
   match: Match | null;
@@ -45,7 +43,6 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'h2h' | 'matrix'>('overview');
   const [realOdds, setRealOdds] = useState<FixtureRealOdds | null>(match ? match.realOdds || null : null);
   const [loadingOdds, setLoadingOdds] = useState<boolean>(false);
-  const [activeBookieTab, setActiveBookieTab] = useState<'pinnacle' | 'bet365' | 'best'>('pinnacle');
 
   useEffect(() => {
     if (!match) {
@@ -113,13 +110,6 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
     } finally {
       setLoadingOdds(false);
     }
-  };
-
-  // Várható érték (+EV %) kalkulátor a modell valószínűsége és a bukmékeri szorzó alapján
-  const calcEv = (probPct: number, odd?: number) => {
-    if (!odd || probPct <= 0) return null;
-    const ev = Math.round(((probPct / 100) * odd - 1) * 1000) / 10;
-    return ev;
   };
 
   // Szelvény állapota a fő tippre
@@ -458,282 +448,17 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
           )}
 
           {/* Élő Bukmékeri Oddsok (Pinnacle & Bet365) szekció */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-[#0F1C36] via-[#0A1224] to-[#080D1A] border border-blue-500/30 space-y-3.5 shadow-lg">
-            {/* Fejléc */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                  <Building2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    Élő Bukmékeri Oddsok &amp; Valós Piaci Élek
-                    <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      ÉLŐ PIAC
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Pinnacle (éles záró árak) &bull; Bet365 (fővonal)
-                  </div>
-                </div>
-              </div>
-
-              {/* Jobb oldali gomb / frissítés státusz */}
-              <div className="flex items-center gap-2 self-end sm:self-auto">
-                {realOdds?.updatedAt && (
-                  <span className="text-[10px] text-slate-400 hidden sm:inline">
-                    Frissítve: {realOdds.updatedAt}
-                  </span>
-                )}
-                {ttlStatus.isReal && (
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                      ttlStatus.isExpired
-                        ? 'bg-red-500/15 text-red-300 border-red-500/30'
-                        : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
-                    }`}
-                  >
-                    {ttlStatus.isExpired ? '🔴 Lejárt odds (60p TTL)' : `⏳ ${ttlStatus.remainingMinutes}p hátra`}
-                  </span>
-                )}
-                {fixtureId ? (
-                  <button
-                    onClick={handleRefreshOdds}
-                    disabled={loadingOdds}
-                    title="Valós oddsok frissítése"
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-semibold transition-colors disabled:opacity-50"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${loadingOdds ? 'animate-spin text-amber-400' : 'text-blue-400'}`} />
-                    <span className="text-[11px]">{loadingOdds ? 'Betöltés...' : 'Frissítés'}</span>
-                  </button>
-                ) : (
-                  <span className="text-[10px] text-slate-500 italic">
-                    Modell fair oddsok
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Tartalom */}
-            {loadingOdds && !realOdds ? (
-              <div className="p-4 text-center space-y-2">
-                <RefreshCw className="w-6 h-6 animate-spin text-blue-400 mx-auto" />
-                <div className="text-xs text-slate-400 font-medium">
-                  Élő Pinnacle és Bet365 oddsok lekérése...
-                </div>
-              </div>
-            ) : realOdds ? (
-              <div className="space-y-3">
-                {/* Fülválasztó (Pinnacle / Bet365 / Legjobb) */}
-                <div className="flex items-center gap-1.5 p-1 bg-slate-950/70 rounded-lg border border-slate-800 text-xs">
-                  {realOdds.pinnacle && (
-                    <button
-                      onClick={() => setActiveBookieTab('pinnacle')}
-                      className={`flex-1 py-1.5 px-2 rounded-md font-bold text-center transition-all flex items-center justify-center gap-1.5 ${
-                        activeBookieTab === 'pinnacle'
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <span>Pinnacle</span>
-                      {realOdds.pinnacle.margin !== undefined && (
-                        <span className="text-[9px] px-1 py-0.2 rounded bg-black/40 text-emerald-300 font-mono">
-                          {realOdds.pinnacle.margin}% vig
-                        </span>
-                      )}
-                    </button>
-                  )}
-
-                  {realOdds.bet365 && (
-                    <button
-                      onClick={() => setActiveBookieTab('bet365')}
-                      className={`flex-1 py-1.5 px-2 rounded-md font-bold text-center transition-all flex items-center justify-center gap-1.5 ${
-                        activeBookieTab === 'bet365'
-                          ? 'bg-emerald-600 text-white shadow-md'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <span>Bet365</span>
-                      {realOdds.bet365.margin !== undefined && (
-                        <span className="text-[9px] px-1 py-0.2 rounded bg-black/40 text-amber-300 font-mono">
-                          {realOdds.bet365.margin}% vig
-                        </span>
-                      )}
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => setActiveBookieTab('best')}
-                    className={`flex-1 py-1.5 px-2 rounded-md font-bold text-center transition-all flex items-center justify-center gap-1.5 ${
-                      activeBookieTab === 'best'
-                        ? 'bg-amber-600 text-white shadow-md'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    <Zap className="w-3 h-3 text-amber-300" />
-                    <span>Legjobb Piac</span>
-                  </button>
-                </div>
-
-                {/* Táblázatos piac összehasonlító */}
-                {(() => {
-                  const currentBookie =
-                    activeBookieTab === 'pinnacle'
-                      ? realOdds.pinnacle
-                      : activeBookieTab === 'bet365'
-                      ? realOdds.bet365
-                      : undefined;
-
-                  const isBest = activeBookieTab === 'best';
-
-                  // Szorzók kinyerése
-                  const hOdd = isBest ? realOdds.bestOdds.home?.odd : currentBookie?.home;
-                  const hSource = isBest ? realOdds.bestOdds.home?.bookmaker : currentBookie?.name;
-                  const dOdd = isBest ? realOdds.bestOdds.draw?.odd : currentBookie?.draw;
-                  const dSource = isBest ? realOdds.bestOdds.draw?.bookmaker : currentBookie?.name;
-                  const aOdd = isBest ? realOdds.bestOdds.away?.odd : currentBookie?.away;
-                  const aSource = isBest ? realOdds.bestOdds.away?.bookmaker : currentBookie?.name;
-
-                  const o25Odd = isBest ? realOdds.bestOdds.over25?.odd : currentBookie?.over25;
-                  const o25Source = isBest ? realOdds.bestOdds.over25?.bookmaker : currentBookie?.name;
-                  const u25Odd = isBest ? realOdds.bestOdds.under25?.odd : currentBookie?.under25;
-                  const u25Source = isBest ? realOdds.bestOdds.under25?.bookmaker : currentBookie?.name;
-
-                  const bttsOdd = isBest ? realOdds.bestOdds.bttsYes?.odd : currentBookie?.bttsYes;
-                  const bttsSource = isBest ? realOdds.bestOdds.bttsYes?.bookmaker : currentBookie?.name;
-
-                  // EV kalkulációk
-                  // Az EV a piaci referenciához (Pinnacle fair, ennek híján az átlag) mér: a backtest szerint a nyers
-                  // modell-EV hozama negatív. Piaci referencia nélküli piacra (BTTS) nincs EV.
-                  const mk = (market: string) =>
-                    blendedMarketPct(market, { home: modelP.homeWin, draw: modelP.draw, away: modelP.awayWin, over25: modelP.over25 }, marketFair);
-                  const hP = mk('1');
-                  const dP = mk('X');
-                  const aP = mk('2');
-                  const oP = mk('OVER_25');
-                  const uP = mk('UNDER_25');
-                  const evOf = (pct: number | null, odd?: number) => (pct === null ? null : calcEv(pct, odd));
-                  const hEv = evOf(hP, hOdd);
-                  const dEv = evOf(dP, dOdd);
-                  const aEv = evOf(aP, aOdd);
-                  const o25Ev = evOf(oP, o25Odd);
-                  const u25Ev = evOf(uP, u25Odd);
-                  const bttsEv = null;
-
-                  const fairOf = (pct: number | null, fallbackPct: number) =>
-                    (100 / Math.max(1, pct ?? fallbackPct)).toFixed(2);
-                  const fairHome = fairOf(hP, modelP.homeWin);
-                  const fairDraw = fairOf(dP, modelP.draw);
-                  const fairAway = fairOf(aP, modelP.awayWin);
-                  const fairOver25 = fairOf(oP, modelP.over25);
-                  const fairUnder25 = fairOf(uP, Math.max(1, 100 - modelP.over25));
-                  const fairBtts = (100 / Math.max(1, modelP.bttsYes)).toFixed(2);
-
-                  const renderRow = (
-                    label: string,
-                    fairStr: string,
-                    odd?: number,
-                    ev?: number | null,
-                    source?: string
-                  ) => {
-                    const hasOdd = odd !== undefined && odd > 1;
-                    const isPositive = isRealOddsActive && ev !== undefined && ev !== null && ev > 0;
-
-                    return (
-                      <div className="grid grid-cols-12 items-center py-1.5 px-2.5 rounded-lg bg-slate-950/50 hover:bg-slate-950/80 transition-colors border border-slate-800/60 text-xs">
-                        <div className="col-span-4 font-semibold text-white flex flex-col">
-                          <span>{label}</span>
-                          {source && isBest && (
-                            <span className="text-[9px] text-slate-500 truncate">{source}</span>
-                          )}
-                        </div>
-
-                        <div className="col-span-3 text-center text-slate-400 font-mono text-[11px]">
-                          Fair: <strong className="text-slate-200">{fairStr}</strong>
-                        </div>
-
-                        <div className="col-span-3 text-center">
-                          {hasOdd ? (
-                            <span
-                              className={`font-extrabold font-mono px-2 py-0.5 rounded border ${
-                                !isRealOddsActive && ttlStatus.isExpired
-                                  ? 'text-red-300 bg-red-950/30 border-red-500/20 line-through'
-                                  : 'text-amber-300 bg-amber-500/10 border-amber-500/20'
-                              }`}
-                            >
-                              {odd.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span className="text-slate-600 italic text-[11px]">-</span>
-                          )}
-                        </div>
-
-                        <div className="col-span-2 text-right">
-                          {hasOdd && isRealOddsActive && ev !== null && ev !== undefined ? (
-                            <span
-                              className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded border ${
-                                isPositive
-                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                  : 'bg-slate-800 text-slate-400 border-slate-700/60'
-                              }`}
-                            >
-                              {ev > 0 ? `+${ev}%` : `${ev}%`}
-                            </span>
-                          ) : hasOdd && !isRealOddsActive ? (
-                            <span className="text-slate-500 text-[10px] italic">
-                              {ttlStatus.isExpired ? 'Lejárt' : 'Letiltva'}
-                            </span>
-                          ) : (
-                            <span className="text-slate-600 text-[10px]">-</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  };
-
-                  return (
-                    <div className="space-y-1.5">
-                      <div className="grid grid-cols-12 text-[10px] uppercase font-bold text-slate-400 px-2.5 pb-0.5">
-                        <div className="col-span-4">Piac / Kimenetel</div>
-                        <div className="col-span-3 text-center">Piaci Fair</div>
-                        <div className="col-span-3 text-center">Bukméker</div>
-                        <div className="col-span-2 text-right">Érték (+EV)</div>
-                      </div>
-
-                      {renderRow(`${match.homeTeam.shortName || match.homeTeam.name} (1)`, fairHome, hOdd, hEv, hSource)}
-                      {renderRow('Döntetlen (X)', fairDraw, dOdd, dEv, dSource)}
-                      {renderRow(`${match.awayTeam.shortName || match.awayTeam.name} (2)`, fairAway, aOdd, aEv, aSource)}
-                      {renderRow('2.5 Gól Felett', fairOver25, o25Odd, o25Ev, o25Source)}
-                      {renderRow('2.5 Gól Alatt', fairUnder25, u25Odd, u25Ev, u25Source)}
-                      {bttsOdd && renderRow('Mindkét Csapat Lő (BTTS, modell fair)', fairBtts, bttsOdd, bttsEv, bttsSource)}
-                    </div>
-                  );
-                })()}
-
-                {/* Bukméker információ & árrés összegzés */}
-                <div className="p-2 rounded-lg bg-slate-950/40 border border-slate-800 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between text-slate-400 gap-1">
-                  <span>
-                    Elérhető bukmékerek:{' '}
-                    <strong className="text-slate-200">
-                      {realOdds.bookmakers.map((b) => b.name).slice(0, 4).join(', ')}
-                      {realOdds.bookmakers.length > 4 ? ` (+${realOdds.bookmakers.length - 4})` : ''}
-                    </strong>
-                  </span>
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-amber-400" />
-                    Zöld kiemelés: ár-előny a piaci konszenzushoz (+EV)
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 text-center text-xs text-slate-400 bg-slate-950/40 rounded-lg border border-slate-800/80 space-y-1">
-                <div>A bukmékerek még nem nyitották meg a hivatalos élő piacot ehhez a mérkőzéshez.</div>
-                <div className="text-[11px] text-slate-500">
-                  A fenti kvantitatív Dixon–Coles és Shin de-vig modell fair szorzói érvényesek.
-                </div>
-              </div>
-            )}
-          </div>
+          <LiveOddsSection
+            match={match}
+            realOdds={realOdds}
+            loadingOdds={loadingOdds}
+            fixtureId={fixtureId}
+            ttlStatus={ttlStatus}
+            isRealOddsActive={isRealOddsActive}
+            marketFair={marketFair}
+            modelP={modelP}
+            onRefresh={handleRefreshOdds}
+          />
 
           {/* 1X2 Valószínűségi megoszlás grafikon */}
           <div className="space-y-2">

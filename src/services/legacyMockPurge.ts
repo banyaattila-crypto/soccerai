@@ -2,11 +2,14 @@ import { STORAGE_KEY_AUDIT_LOG } from './predictionAuditService';
 
 const ARCHIVE_KEY = 'soccerai_match_history_archive_v1';
 const BETSLIP_KEY = 'soccerai_betslip_draft';
+const BETS_KEY = 'soccerai_tracked_bets';
 const DATASOURCE_KEY = 'focitipp_datasource';
 const PURGE_FLAG = 'soccerai_mock_purged_v1';
 
 /** A korábbi mintaadat (szimulációs mód) mérkőzés-azonosítói: m-today-1, m-yest-3, m-tom-2, m-today-ucl-1 stb. */
 const MOCK_ID = /^m-(today|yest|tom)-/;
+/** A bankroll bemutató szelvényei: bet-sample-1 ... */
+const SAMPLE_BET_ID = /^bet-sample-/;
 
 function filterJsonArray(key: string, isMock: (item: unknown) => boolean): void {
   const raw = localStorage.getItem(key);
@@ -17,9 +20,9 @@ function filterJsonArray(key: string, isMock: (item: unknown) => boolean): void 
   if (kept.length !== parsed.length) localStorage.setItem(key, JSON.stringify(kept));
 }
 
-const idOf = (field: string) => (item: unknown): boolean => {
+const idOf = (field: string, pattern: RegExp = MOCK_ID) => (item: unknown): boolean => {
   const v = (item as Record<string, unknown> | null)?.[field];
-  return typeof v === 'string' && MOCK_ID.test(v);
+  return typeof v === 'string' && pattern.test(v);
 };
 
 /**
@@ -33,6 +36,7 @@ export function purgeLegacyMockData(): void {
     filterJsonArray(ARCHIVE_KEY, idOf('id'));
     filterJsonArray(STORAGE_KEY_AUDIT_LOG, idOf('matchId'));
     filterJsonArray(BETSLIP_KEY, idOf('matchId'));
+    filterJsonArray(BETS_KEY, idOf('id', SAMPLE_BET_ID));
     if (localStorage.getItem(DATASOURCE_KEY) === 'builtin') localStorage.setItem(DATASOURCE_KEY, 'api');
     localStorage.setItem(PURGE_FLAG, '1');
   } catch {
