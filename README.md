@@ -1,6 +1,6 @@
 # Szorzó-követő összegzése
 
-Frissítve: 2026-10-23T12:14:07.991Z (UTC). Modell nélküli mérés: a legjobb bukméker ára a konszenzus (Pinnacle, ennek híján az átlag) de-vigelt fair árához képest, a záró árhoz mérve.
+Frissítve: 2026-10-23T17:08:32.874Z (UTC). Modell nélküli mérés: a legjobb bukméker ára a konszenzus (Pinnacle, ennek híján az átlag) de-vigelt fair árához képest, a záró árhoz mérve.
 
 - Aktív követett meccs: **57**, ebből jelölt: **2**
 - Lezárt jelölt: **0**
