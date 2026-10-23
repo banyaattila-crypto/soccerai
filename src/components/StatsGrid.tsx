@@ -14,19 +14,15 @@ import { MatchTable } from './grid/MatchTable';
 import { MatchCardsList } from './grid/MatchCardsList';
 import { MatchCompactList } from './grid/MatchCompactList';
 import { StatsFilterPanel } from './grid/StatsFilterPanel';
+import { StatsGridHeader } from './grid/StatsGridHeader';
+import { StatsToolbar } from './grid/StatsToolbar';
+import { ActiveFilterChips } from './grid/ActiveFilterChips';
 import {
-  Search,
   Filter,
   Sparkles,
   ChevronDown,
   ChevronUp,
-  Layers,
-  Table,
-  LayoutGrid,
-  List,
   Star,
-  X,
-  RotateCcw,
 } from 'lucide-react';
 
 export * from './grid/types';
@@ -484,204 +480,45 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Rács Fejléc és Vezérlők */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
-              <span>Statisztikai Esély Rács</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
-                {filteredMatches.length} mérkőzés
-              </span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Válassz bajnokságot a fenti fülekkel, vagy kattints bármelyik mérkőzésre a részletes elemzéshez.
-            </p>
-          </div>
-
-          {/* Dátumválasztó Tabok (Tegnap / Ma / Holnap) */}
-          <div className="flex items-center gap-1 bg-mesh-dark p-1 rounded-xl border border-slate-800 self-start md:self-auto">
-            <button
-              onClick={() => setDayFilter('yesterday')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                dayFilter === 'yesterday'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Tegnap <span className="opacity-70 text-[10px]">({countsByDay.yesterday})</span>
-            </button>
-            <button
-              onClick={() => setDayFilter('today')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                dayFilter === 'today'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Ma <span className="opacity-70 text-[10px]">({countsByDay.today > 0 ? countsByDay.today : matches.length})</span>
-            </button>
-            <button
-              onClick={() => setDayFilter('tomorrow')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                dayFilter === 'tomorrow'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Holnap <span className="opacity-70 text-[10px]">({countsByDay.tomorrow})</span>
-            </button>
-          </div>
-        </div>
+        <StatsGridHeader
+          filteredCount={filteredMatches.length}
+          dayFilter={dayFilter}
+          onDayFilterChange={setDayFilter}
+          countsByDay={countsByDay}
+          totalMatches={matches.length}
+        />
 
         {/* FŐ KOMPAKT ESZKÖZTÁR (Kereső + Szűrők gomb + Nézetváltók) */}
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-mesh-card border border-slate-800/90 mb-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shadow-md">
-          {/* Bal oldal: Gyorskereső */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Csapat vagy bajnokság keresése..."
-              className="w-full pl-9 pr-8 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                title="Keresés törlése"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Jobb oldal: Szűrők lenyitó gomb + Csoportosítás + Nézetváltó */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* SZŰRŐK LENYITÓ GOMB (Badge-el és állapottal) */}
-            <button
-              onClick={handleToggleFilters}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer border ${
-                isFiltersExpanded || activeFilterCount > 0
-                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-sm'
-                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
-              }`}
-              title={isFiltersExpanded ? 'Szűrők összecsukása' : 'Részletes szűrők és mutatók megnyitása'}
-            >
-              <Filter className="w-3.5 h-3.5 text-amber-400" />
-              <span>Szűrők</span>
-              {activeFilterCount > 0 && (
-                <span className="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full font-black text-[10px]">
-                  {activeFilterCount}
-                </span>
-              )}
-              {isFiltersExpanded ? (
-                <ChevronUp className="w-3.5 h-3.5 ml-0.5 text-slate-400" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5 ml-0.5 text-slate-400" />
-              )}
-            </button>
-
-            {/* Szűrők törlése gomb, ha van aktív szűrő */}
-            {activeFilterCount > 0 && (
-              <button
-                onClick={handleResetGridFilters}
-                className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
-                title="Minden szűrő alaphelyzetbe"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Csoportosítás váltó (Bajnokság szerint / Időrendben) */}
-            <button
-              onClick={() => setViewMode(viewMode === 'league' ? 'time' : 'league')}
-              className="px-2.5 py-1.5 rounded-xl font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
-              title={viewMode === 'league' ? 'Váltás időrendi listára' : 'Váltás bajnokságonkénti csoportosításra'}
-            >
-              <Layers className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">{viewMode === 'league' ? 'Bajnokság szerint' : 'Időrendben'}</span>
-            </button>
-
-            {/* Kompakt / Kártyák / Táblázat nézetváltó */}
-            <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-xl border border-slate-700/80">
-              <button
-                type="button"
-                onClick={() => handleSetDisplayMode('compact')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                  displayMode === 'compact' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-                title="ScoreLab kompakt meccssoros nézet"
-              >
-                <List className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Kompakt</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSetDisplayMode('cards')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                  displayMode === 'cards' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-                title="Kártyás nézet"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Kártyák</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSetDisplayMode('table')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
-                  displayMode === 'table' ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-                }`}
-                title="Részletes táblázat nézet"
-              >
-                <Table className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Táblázat</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <StatsToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          isFiltersExpanded={isFiltersExpanded}
+          activeFilterCount={activeFilterCount}
+          onToggleFilters={handleToggleFilters}
+          onResetFilters={handleResetGridFilters}
+          viewMode={viewMode}
+          onToggleViewMode={() => setViewMode(viewMode === 'league' ? 'time' : 'league')}
+          displayMode={displayMode}
+          onDisplayModeChange={handleSetDisplayMode}
+        />
 
         {/* AKTÍV SZŰRŐ CHIP-EK (Csak akkor látható, ha a szűrőpanel be van csukva, de van aktív szűrő) */}
         {!isFiltersExpanded && activeFilterCount > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 mb-4 text-xs animate-fade-in">
-            <span className="text-[11px] font-bold text-slate-400 mr-1">Aktív szűrők:</span>
-            {effectiveLeague !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium">
-                <span>Liga: {availableLeagues.find((l) => l.id === effectiveLeague)?.name || effectiveLeague}</span>
-                <button onClick={() => setSelectedLeague('all')} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-            {onlyStrongSignals && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-medium">
-                <span>Kiemelt ({signalThreshold}%+)</span>
-                <button onClick={() => setOnlyStrongSignals(false)} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-            {onlyLiveMatches && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300 font-medium">
-                <span>Csak Élő</span>
-                <button onClick={() => setOnlyLiveMatches(false)} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-            {focusMarket !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 font-medium">
-                <span>Piac: {focusMarket}</span>
-                <button onClick={() => setFocusMarket('ALL')} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium">
-                <span>Keresés: &bdquo;{searchQuery}&ldquo;</span>
-                <button onClick={() => setSearchQuery('')} className="hover:text-white ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-            <button
-              onClick={handleResetGridFilters}
-              className="text-[11px] text-amber-400 hover:underline font-semibold ml-1 cursor-pointer"
-            >
-              Összes törlése
-            </button>
-          </div>
+          <ActiveFilterChips
+            effectiveLeague={effectiveLeague}
+            leagueName={availableLeagues.find((l) => l.id === effectiveLeague)?.name || effectiveLeague}
+            onClearLeague={() => setSelectedLeague('all')}
+            onlyStrongSignals={onlyStrongSignals}
+            signalThreshold={signalThreshold}
+            onClearStrongSignals={() => setOnlyStrongSignals(false)}
+            onlyLiveMatches={onlyLiveMatches}
+            onClearLiveMatches={() => setOnlyLiveMatches(false)}
+            focusMarket={focusMarket}
+            onClearMarket={() => setFocusMarket('ALL')}
+            searchQuery={searchQuery}
+            onClearSearch={() => setSearchQuery('')}
+            onResetAll={handleResetGridFilters}
+          />
         )}
 
         {/* KINYÍLÓ RÉSZLETES SZŰRŐPANEL (Csak akkor látható, ha a felhasználó rákattint a Szűrők gombra) */}

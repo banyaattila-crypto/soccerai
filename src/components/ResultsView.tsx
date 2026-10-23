@@ -1,4 +1,7 @@
 import { ResultEntryCard } from './results/ResultEntryCard';
+import { AuditKpiGrid } from './results/AuditKpiGrid';
+import { ProvenanceTabs } from './results/ProvenanceTabs';
+import { MarketBreakdown } from './results/MarketBreakdown';
 import React, { useState, useMemo, useCallback } from 'react';
 import { Match, PredictionAuditRecord } from '../types/football';
 import { useEventBus } from '../utils/eventBus';
@@ -14,10 +17,8 @@ import {
   Lock,
   Download,
   Upload,
-  AlertTriangle,
   Check,
   RotateCcw,
-  Layers,
 } from 'lucide-react';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import {
@@ -582,187 +583,19 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
           )}
 
           {/* FŐ KPI MUTATÓK (HITELESÍTETT ADATOKBÓL) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-2">
-            {/* Találati Arány */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                Hitelesített Találati Arány
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-2xl sm:text-3xl font-black text-emerald-400">
-                  {verifiedStats.settledCount > 0 ? `${verifiedStats.winRate}%` : '—'}
-                </span>
-                {verifiedStats.settledCount > 0 && (
-                  <span className="text-xs text-slate-400 font-mono">
-                    ({verifiedStats.wonCount}/{verifiedStats.settledCount})
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                {verifiedStats.pendingCount > 0
-                  ? `${verifiedStats.pendingCount} mérkőzés kezdésre/lefújásra vár`
-                  : 'Kizárólag lezárt pre-match tippekből'}
-              </span>
-            </div>
-
-            {/* Hitelesített ROI */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400 flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                Hitelesített ROI %
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span
-                  className={`text-2xl sm:text-3xl font-black ${
-                    verifiedStats.settledCount === 0
-                      ? 'text-slate-500'
-                      : verifiedStats.roi >= 0
-                      ? 'text-emerald-400'
-                      : 'text-red-400'
-                  }`}
-                >
-                  {verifiedStats.settledCount > 0
-                    ? `${verifiedStats.roi >= 0 ? '+' : ''}${verifiedStats.roi}%`
-                    : '—'}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                {verifiedStats.settledCount > 0
-                  ? `${(verifiedStats.totalStaked / 1000).toFixed(0)}e Ft össztétre; többnyire szimulált szorzón számolva (kalibrációs mutató, nem piaci hozam)`
-                  : 'Csak lezárt pre-match auditból'}
-              </span>
-            </div>
-
-            {/* Hitelesített Profit */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Hitelesített Nettó Profit
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span
-                  className={`text-2xl sm:text-3xl font-black font-mono ${
-                    verifiedStats.settledCount === 0
-                      ? 'text-slate-500'
-                      : verifiedStats.netProfit >= 0
-                      ? 'text-amber-400'
-                      : 'text-red-400'
-                  }`}
-                >
-                  {verifiedStats.settledCount > 0
-                    ? `${verifiedStats.netProfit >= 0 ? '+' : ''}${verifiedStats.netProfit.toLocaleString('hu-HU')} Ft`
-                    : '—'}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                {verifiedStats.settledCount > 0
-                  ? '10 000 Ft alaptét / tipp'
-                  : '10 000 Ft egységtét alapon'}
-              </span>
-            </div>
-
-            {/* Átlagos nyertes odds */}
-            <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
-              <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-                Átlagos Nyertes Odds
-              </span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
-                  {verifiedStats.avgWinningOdds > 0 ? `@${verifiedStats.avgWinningOdds.toFixed(2)}` : '—'}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                Kizárólag igazolt nyertes tippekből
-              </span>
-            </div>
-          </div>
+          <AuditKpiGrid verifiedStats={verifiedStats} />
 
           {/* Fülválasztó: Összes Eredmény vs Hitelesített Audit vs Külső Archívum */}
-          <div className="flex flex-wrap border-b border-slate-800 gap-2 pt-2">
-            <button
-              onClick={() => setProvenanceTab('all')}
-              className={`pb-3 px-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                provenanceTab === 'all'
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>Összes Befejezett Eredmény ({unifiedEntries.length})</span>
-            </button>
-            <button
-              onClick={() => setProvenanceTab('verified')}
-              className={`pb-3 px-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                provenanceTab === 'verified'
-                  ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Hitelesített Pre-Match Napló ({verifiedRecords.length})</span>
-            </button>
-            <button
-              onClick={() => setProvenanceTab('unverified')}
-              className={`pb-3 px-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                provenanceTab === 'unverified'
-                  ? 'border-amber-500 text-amber-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <AlertTriangle className="w-4 h-4" />
-              <span>Nem auditált külső archívum ({unverifiedFinishedMatches.length})</span>
-            </button>
-          </div>
+          <ProvenanceTabs
+            active={provenanceTab}
+            onChange={setProvenanceTab}
+            counts={{ all: unifiedEntries.length, verified: verifiedRecords.length, unverified: unverifiedFinishedMatches.length }}
+          />
         </div>
 
         {/* Piaci sikerteljesítmény bontás (ha vannak lezárt audit tippek) */}
         {verifiedStats.settledCount > 0 && (
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
-              <span className="uppercase tracking-wider text-[11px] font-bold text-slate-300">
-                Hitelesített Piaconkénti Teljesítmény (Kattints a szűréshez)
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-              {verifiedMarketBreakdown.map((mb) => {
-                const Icon = mb.icon;
-                const isSelected = activeMarket === mb.id;
-                return (
-                  <button
-                    key={mb.id}
-                    onClick={() => setActiveMarket(isSelected ? 'ALL' : mb.id)}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? 'bg-gradient-to-br from-blue-900/40 via-slate-900 to-slate-950 border-amber-400 shadow-md shadow-amber-500/10 scale-[1.02]'
-                        : 'bg-mesh-dark hover:border-slate-700 border-slate-800 text-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1.5">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-                        <Icon className={`w-3.5 h-3.5 ${mb.color}`} />
-                        <span className="truncate">{mb.label}</span>
-                      </span>
-                      {isSelected && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-lg font-black text-white">{mb.total > 0 ? `${mb.winRate}%` : '—'}</span>
-                        <span className="text-[11px] font-mono text-slate-400">
-                          {mb.won}/{mb.total} nyert
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800/80">
-                        <span className="text-slate-500">Audit ROI:</span>
-                        <span className={`font-mono font-bold ${mb.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {mb.total > 0 ? `${mb.roi >= 0 ? '+' : ''}${mb.roi}%` : '—'}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <MarketBreakdown rows={verifiedMarketBreakdown} activeMarket={activeMarket} onSelect={setActiveMarket} />
         )}
 
         {/* Szűrősáv */}

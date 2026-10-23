@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.33.2] - 2026-10-23
+
+### Módosítva (Changed) - Nagy komponensek további szétvágása (F-15 része)
+Viselkedés-változás nélküli szerkezeti tisztítás.
+- **Mérkőzés fül:** `grid/StatsGridHeader.tsx` (cím, találatszám, Tegnap / Ma / Holnap), `grid/StatsToolbar.tsx` (kereső, szűrők, csoportosítás, nézetváltó), `grid/ActiveFilterChips.tsx` (aktív szűrők chipjei). A háromszor ismétlődő gombok tömbből épülnek.
+- **Eredmények & Audit:** `results/AuditKpiGrid.tsx`, `results/ProvenanceTabs.tsx`, `results/MarketBreakdown.tsx`.
+- `StatsGrid.tsx` 1223 -> 767 sor, `ResultsView.tsx` 1081 -> 750 sor (v1.33.1 óta 930 -> 767, illetve 917 -> 750).
+
+### Korlátok
+- Ezt a kört a tsc, az oxlint és a 307 teszt fedi; helyi böngészős vizuális ellenőrzés nem készült (a böngésző a localhost-hozzáférést megtagadta), ezért az éles oldalon ellenőriztem.
+- A `MatchDetailModal` és a `BankrollView` (868 sor), valamint a ScannerView érintetlen.
+
 ## [1.33.1] - 2026-10-22
 
 ### Módosítva (Changed) - Nagy komponensek szétvágása (F-15 része)
