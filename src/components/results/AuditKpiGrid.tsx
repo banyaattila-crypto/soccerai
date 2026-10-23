@@ -26,9 +26,7 @@ export const AuditKpiGrid: React.FC<AuditKpiGridProps> = ({ verifiedStats }) => 
         )}
       </div>
       <span className="text-[10px] text-slate-500 mt-1 block">
-        {verifiedStats.pendingCount > 0
-          ? `${verifiedStats.pendingCount} mérkőzés kezdésre/lefújásra vár`
-          : 'Kizárólag lezárt pre-match tippekből'}
+        Kizárólag lezárt pre-match tippekből
       </span>
     </div>
 

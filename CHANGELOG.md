@@ -3,6 +3,15 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.37.5] - 2026-10-23
+
+### Javítva (Fixed) - Az Eredmények közé csak lejátszott, eredménnyel rendelkező mérkőzés kerül
+Az Eredmények & Audit nézet listájában kezdésre váró (még le nem játszott) auditált tippek is szerepeltek "FÜGGŐBEN" állapottal, jövőbeli dátum-csoportokban. Most csak az a mérkőzés jelenik meg, amelyik lezárt és mindkét csapatnak numerikus végeredménye van:
+- a hitelesített (naplózott) tippek közül csak a lezárt, eredménnyel rendelkezők; a kezdésre váró tippek a naplóban maradnak az elszámolásig (az Audit JSON letöltés a teljes naplót adja), de a listában nem látszanak;
+- a nem auditált archívumból és az élő adatból csak a végeredménnyel rendelkező lefújt meccsek;
+- a "Kezdésre vár" státusz-szűrő és a "FÜGGŐBEN" kártyaállapot megszűnt, a fülek darabszámai és a fejléc a megjelenített (lejátszott) elemekre vonatkoznak, az első KPI-kártya alatti "kezdésre vár" megjegyzés helyett fix szöveg áll.
+- Új regressziós teszt: kezdésre váró, eredmény nélküli és pontszám nélküli lezárt tipp nem jelenik meg; lejátszott auditált és archív meccs igen.
+
 ## [1.37.4] - 2026-10-23
 
 ### Javítva (Fixed) - A csapatnevek olvashatók telefonon, a liga neve nem vágódik le

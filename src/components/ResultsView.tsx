@@ -39,7 +39,7 @@ import {
 
 export { evaluatePickWon, getMarketCategory, type MarketCategory };
 
-export type StatusFilter = 'ALL' | 'WON' | 'LOST' | 'PENDING';
+export type StatusFilter = 'ALL' | 'WON' | 'LOST';
 export type ProvenanceViewTab = 'all' | 'verified' | 'unverified';
 
 interface ResultsViewProps {
@@ -76,6 +76,11 @@ export interface UnifiedResultEntry {
 /**
  * Dátum fejléc humán formázása magyar nyelven (pl. "Ma – 2026. október 21., szerda")
  */
+/** Van-e mindkét csapatnak numerikus végeredménye (csak ilyen mérkőzés kerülhet az Eredmények közé). */
+function hasResult(home: unknown, away: unknown): boolean {
+  return typeof home === 'number' && typeof away === 'number' && isFinite(home) && isFinite(away);
+}
+
 function formatHungarianDateHeader(dateStr: string, todayStr: string, yesterdayStr: string): string {
   if (!dateStr || dateStr === 'Egyéb') return 'Egyéb időpont';
   let prefix = '';
@@ -235,8 +240,10 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const unifiedEntries: UnifiedResultEntry[] = useMemo(() => {
     const list: UnifiedResultEntry[] = [];
 
-    // Hitelesített rekordok felvétele
+    // Hitelesített rekordok felvétele: csak a már lejátszott, eredménnyel rendelkező mérkőzések
+    // (a kezdésre váró tippek a naplóban maradnak az elszámolásig, de itt nem jelennek meg)
     verifiedRecords.forEach((r) => {
+      if (!(r.settled && hasResult(r.homeScore, r.awayScore))) return;
       list.push({
         type: 'verified',
         id: `audit_${r.id}`,
@@ -265,6 +272,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
 
     // Archív nem auditált lezárt meccsek felvétele
     unverifiedFinishedMatches.forEach((m) => {
+      if (!hasResult(m.homeScore, m.awayScore)) return;
       let pickWonStatus: 'WON' | 'LOST' | 'VOID' | 'PENDING' = 'VOID';
       let profit: number | undefined;
       let roi: number | undefined;
@@ -395,7 +403,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
       // Státusz szűrő
       if (activeStatus === 'WON' && entry.status !== 'WON') return false;
       if (activeStatus === 'LOST' && entry.status !== 'LOST') return false;
-      if (activeStatus === 'PENDING' && entry.settled) return false;
 
       // Bajnokság szűrő
       if (selectedLeague !== 'ALL' && entry.leagueId !== selectedLeague) return false;
@@ -528,7 +535,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 font-medium">
                   <Lock className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                   <span>
-                    Audit napló: <strong>{verifiedRecords.length} hitelesített</strong> pre-match bejegyzés
+                    Lejátszott, hitelesített tipp: <strong>{unifiedEntries.filter((e) => e.type === 'verified').length}</strong>
                   </span>
                 </span>
               </div>
@@ -596,7 +603,11 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
           <ProvenanceTabs
             active={provenanceTab}
             onChange={setProvenanceTab}
-            counts={{ all: unifiedEntries.length, verified: verifiedRecords.length, unverified: unverifiedFinishedMatches.length }}
+            counts={{
+              all: unifiedEntries.length,
+              verified: unifiedEntries.filter((e) => e.type === 'verified').length,
+              unverified: unifiedEntries.filter((e) => e.type === 'unverified').length,
+            }}
           />
         </div>
 
@@ -614,7 +625,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 <Filter className="w-3 h-3 text-amber-400" />
                 Státusz:
               </span>
-              {(['ALL', 'PENDING', 'WON', 'LOST'] as StatusFilter[]).map((status) => (
+              {(['ALL', 'WON', 'LOST'] as StatusFilter[]).map((status) => (
                 <button
                   key={status}
                   onClick={() => setActiveStatus(status)}
@@ -625,7 +636,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                   }`}
                 >
                   {status === 'ALL' && 'Összes'}
-                  {status === 'PENDING' && '⏳ Kezdésre vár'}
                   {status === 'WON' && '✓ Nyertes'}
                   {status === 'LOST' && '✗ Vesztes'}
                 </button>
