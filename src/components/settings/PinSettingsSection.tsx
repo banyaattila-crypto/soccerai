@@ -188,8 +188,8 @@ export const PinSettingsSection: React.FC<{ isOpen: boolean }> = ({ isOpen }) =>
           <span>6-jegyű PIN Kód &amp; Alkalmazás Zárolás</span>
         </div>
         {pinActive ? (
-          <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+          <span className="text-[10px] bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 text-brand-400" />
             Képernyőzár Aktív
           </span>
         ) : (
@@ -204,8 +204,8 @@ export const PinSettingsSection: React.FC<{ isOpen: boolean }> = ({ isOpen }) =>
       </p>
 
       {pinSuccessNotice && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold animate-fade-in">
-          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-brand-500/15 border border-brand-500/30 text-brand-300 text-xs font-semibold animate-fade-in">
+          <Check className="w-4 h-4 text-brand-400 shrink-0" />
           <span>{pinSuccessNotice}</span>
         </div>
       )}
@@ -263,7 +263,7 @@ export const PinSettingsSection: React.FC<{ isOpen: boolean }> = ({ isOpen }) =>
             <PinInput value={confirmPinInput} onChange={setConfirmPinInput} placeholder="PIN megerősítése..." show={showPinText} />
           </div>
 
-          <FormButtons onCancel={resetPinForm} submitLabel="PIN Bekapcsolása" submitClass="bg-emerald-600 hover:bg-emerald-500 text-white" />
+          <FormButtons onCancel={resetPinForm} submitLabel="PIN Bekapcsolása" submitClass="bg-brand-600 hover:bg-brand-500 text-white" />
         </form>
       )}
 

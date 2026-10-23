@@ -71,7 +71,7 @@ describe('MatchCompactList Layout & No-Overlap Invariant Regression Tests', () =
 
     // 3D percentage pills are rendered
     expect(html).toContain('btn-pill-3d');
-    expect(html).toContain('from-emerald-600');
+    expect(html).toContain('from-brand-600');
     expect(html).toContain('from-amber-600');
 
     // The away team is rendered after the home team in independent row containers

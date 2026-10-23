@@ -20,7 +20,7 @@ const TABS: {
     id: 'verified',
     label: 'Hitelesített Pre-Match Napló',
     Icon: ShieldCheck,
-    activeClass: 'border-emerald-500 text-emerald-400',
+    activeClass: 'border-brand-500 text-brand-400',
     count: (c) => c.verified,
   },
   {

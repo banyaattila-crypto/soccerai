@@ -3,6 +3,20 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.37.0] - 2026-10-23
+
+### Módosítva (Changed) - Kevesebb zöld, egységes színszerepek
+A felületen túl erős és túl sok volt a zöld (az emerald osztály kb. 380 helyen). A kinézet többi része változatlan, a színszerepek viszont kimondottak:
+- **brand (kobaltkék, új):** márka, navigáció, aktív fülek és szűrők, elsődleges gombok, kiemelések (190 használat átállítva `emerald-` -> `brand-`).
+- **emerald (visszafogott zsálya):** kizárólag pozitív jelentés: nyert, nyereség, pozitív érték (+EV, pozitív CLV), siker (44 használat marad). A skála telítettsége csökkent, így a megmaradó zöld sem harsány.
+- **teal:** hűvös, szürkéskék (nem zöldes). **red/rose:** negatív. **amber:** figyelmeztetés és másodlagos kiemelés.
+- **Tokenek (`src/index.css`, `@theme`):** `--color-brand-*`, a felülírt `--color-emerald-*` és `--color-teal-*`. A 3D gombok (kobalt árnyék és derengés), a háttér-derengés, a labda-glóriák, a megbízhatósági grafikon és a PIN-képernyő is követi; a tőkegörbe pozitív vonala a visszafogott zöld.
+- Tömör kobalt felületen fehér betű (a sötét betű kevés kontrasztot adna).
+
+### Korlátok
+- Az átállítás szerepek szerint, a kód környezetéből döntött (a pozitív jelentésű sorok maradnak zöldek); egy-egy szokatlan helyen előfordulhat, hogy egy elem a szerepével ellentétes színt kapott. Jelezd, ha ilyet látsz.
+- Az elrendezés és a betűtípus nem változott.
+
 ## [1.36.0] - 2026-10-23
 
 ### Hozzáadva (Added) - Szerveroldali szorzó-követő

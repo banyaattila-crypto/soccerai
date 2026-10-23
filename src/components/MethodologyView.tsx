@@ -60,7 +60,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
         {/* 1. Valószínűségi Hőtérkép Színskála */}
         <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-4">
           <div className="flex items-center gap-2 text-white font-extrabold text-sm sm:text-base">
-            <Layers className="w-4 h-4 text-emerald-400" />
+            <Layers className="w-4 h-4 text-brand-400" />
             <h3>1. Valószínűségi Hőtérkép Színkódok</h3>
           </div>
           <p className="text-xs text-slate-400">
@@ -68,10 +68,10 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs">
-            <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">
+            <div className="p-3 rounded-xl bg-brand-500/20 border border-brand-500/40 text-brand-300">
               <div className="font-black text-base">65%+</div>
               <div className="font-bold mt-0.5">Kiemelt Szignál</div>
-              <p className="text-[11px] text-emerald-200/80 mt-1">
+              <p className="text-[11px] text-brand-200/80 mt-1">
                 Kimagasló statisztikai valószínűség, erős modellbizalom.
               </p>
             </div>
@@ -143,7 +143,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
 
           {/* Robusztussági szűrő */}
           <div className="p-5 rounded-2xl bg-mesh-card border border-slate-800 space-y-2.5">
-            <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
+            <div className="flex items-center gap-2 text-brand-400 font-extrabold text-sm">
               <Activity className="w-4 h-4" />
               <h4>4. λ-rács Robusztussági Teszt &amp; λ-inverzió</h4>
             </div>
@@ -174,7 +174,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
             </p>
             <div className="grid grid-cols-3 gap-2 text-[10px] pt-1">
               <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                <strong className="text-emerald-400 block">A-szint</strong>
+                <strong className="text-brand-400 block">A-szint</strong>
                 <span className="text-slate-400">Top 5 európai liga &amp; BL</span>
               </div>
               <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
@@ -198,7 +198,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
                 <FlaskConical className="w-5 h-5 text-sky-400" />
                 <h4>7. 🧪 Szimulált Odds vs. 🎯 Bukméker Odds: Kockázatkezelés &amp; Anti-Fake Value Etika</h4>
               </div>
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-bold">
+              <span className="text-[11px] font-mono text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-500/20 font-bold">
                 Anti-Fake Value Védelem Aktív
               </span>
             </div>
@@ -220,19 +220,19 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
                     <tr>
                       <th className="p-2.5">Tulajdonság</th>
                       <th className="p-2.5 text-amber-300">🧪 Szimulált Odds</th>
-                      <th className="p-2.5 text-emerald-400">🎯 Bukméker Odds (Valós)</th>
+                      <th className="p-2.5 text-brand-400">🎯 Bukméker Odds (Valós)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/80 bg-slate-950/40 text-[11px]">
                     <tr className="hover:bg-slate-900/50">
                       <td className="p-2.5 font-bold text-white">Mérkőzés &amp; Időpont</td>
-                      <td className="p-2.5 text-emerald-300">✓ Valós hivatalos meccs (API adatfolyam)</td>
-                      <td className="p-2.5 text-emerald-300">✓ Valós hivatalos meccs (API adatfolyam)</td>
+                      <td className="p-2.5 text-brand-300">✓ Valós hivatalos meccs (API adatfolyam)</td>
+                      <td className="p-2.5 text-brand-300">✓ Valós hivatalos meccs (API adatfolyam)</td>
                     </tr>
                     <tr className="hover:bg-slate-900/50">
                       <td className="p-2.5 font-bold text-white">Modell Valószínűség (%)</td>
-                      <td className="p-2.5 text-emerald-300">✓ Valós Dixon–Coles bivariáns MI predikció</td>
-                      <td className="p-2.5 text-emerald-300">✓ Valós Dixon–Coles bivariáns MI predikció</td>
+                      <td className="p-2.5 text-brand-300">✓ Valós Dixon–Coles bivariáns MI predikció</td>
+                      <td className="p-2.5 text-brand-300">✓ Valós Dixon–Coles bivariáns MI predikció</td>
                     </tr>
                     <tr className="hover:bg-slate-900/50">
                       <td className="p-2.5 font-bold text-white">Szorzó (Odds) forrása</td>
@@ -280,8 +280,8 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
 
               {/* Jobb kártya: Hogyan válnak valósággá */}
               <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                <div className="flex items-center gap-2 text-emerald-300 font-bold">
-                  <Zap className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="flex items-center gap-2 text-brand-300 font-bold">
+                  <Zap className="w-4 h-4 text-brand-400 shrink-0" />
                   <span>Hogyan válnak a tippek „🎯 Bukméker Odds”-szá?</span>
                 </div>
                 <ol className="text-slate-300 space-y-1.5 list-decimal list-inside text-[11px] leading-relaxed">
@@ -307,7 +307,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
             <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 text-[11px] text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <div className="font-bold text-white flex items-center gap-1.5">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle className="w-3.5 h-3.5 text-brand-400" />
                   <span>Összegzés fogadóknak</span>
                 </div>
                 <p className="text-slate-400">

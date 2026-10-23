@@ -666,7 +666,7 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                             ({league.country} &bull; {lMatches.length} meccs)
                           </span>
                           {strongCount > 0 && (
-                            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-300 border border-brand-500/30 text-[10px] font-bold">
                               <Sparkles className="w-2.5 h-2.5" />
                               {strongCount} erős jel
                             </span>

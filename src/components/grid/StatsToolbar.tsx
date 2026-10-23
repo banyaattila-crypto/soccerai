@@ -111,7 +111,7 @@ export const StatsToolbar: React.FC<StatsToolbarProps> = ({
         className="px-2.5 py-1.5 rounded-xl font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 flex items-center gap-1.5 text-xs transition-colors cursor-pointer"
         title={viewMode === 'league' ? 'Váltás időrendi listára' : 'Váltás bajnokságonkénti csoportosításra'}
       >
-        <Layers className="w-3.5 h-3.5 text-emerald-400" />
+        <Layers className="w-3.5 h-3.5 text-brand-400" />
         <span className="hidden sm:inline">{viewMode === 'league' ? 'Bajnokság szerint' : 'Időrendben'}</span>
       </button>
 

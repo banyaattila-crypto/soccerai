@@ -45,7 +45,7 @@ export const LeagueRadar: React.FC<{ stats: LeagueRadarStat[] }> = ({ stats }) =
             </div>
             <div className="p-2 rounded-lg bg-slate-950/70 border border-slate-800/80">
               <span className="text-[9px] text-slate-400 block font-bold">&gt; 2.5 Gól</span>
-              <span className="text-sm font-black text-emerald-400 font-mono">
+              <span className="text-sm font-black text-brand-400 font-mono">
                 {stat.avgOver25Prob}%
               </span>
             </div>

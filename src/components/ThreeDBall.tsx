@@ -42,9 +42,9 @@ export const ThreeDBall: React.FC<ThreeDBallProps> = ({
       {showRings && (
         <>
           <div
-            className={`absolute inset-0 rounded-full border border-emerald-400/40 pointer-events-none transition-all duration-700 ${
+            className={`absolute inset-0 rounded-full border border-brand-400/40 pointer-events-none transition-all duration-700 ${
               isSuperSpinning
-                ? 'animate-spin scale-110 border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.6)]'
+                ? 'animate-spin scale-110 border-brand-300 shadow-[0_0_20px_rgba(79,112,245,0.6)]'
                 : 'animate-[spin_12s_linear_infinite]'
             }`}
             style={{
@@ -70,8 +70,8 @@ export const ThreeDBall: React.FC<ThreeDBallProps> = ({
       <div
         className={`relative rounded-full transition-transform duration-700 ${
           isSuperSpinning
-            ? 'scale-105 shadow-[0_0_25px_rgba(16,185,129,0.5)]'
-            : 'hover:shadow-[0_0_18px_rgba(52,211,153,0.35)]'
+            ? 'scale-105 shadow-[0_0_25px_rgba(79,112,245,0.5)]'
+            : 'hover:shadow-[0_0_18px_rgba(111,140,255,0.35)]'
         }`}
         style={{
           width: ballInnerSize,
@@ -90,7 +90,7 @@ export const ThreeDBall: React.FC<ThreeDBallProps> = ({
 
         {/* Fényudvar a gömb alatt */}
         <div
-          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4/5 h-2 rounded-full bg-emerald-500/20 blur-sm pointer-events-none"
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4/5 h-2 rounded-full bg-brand-500/20 blur-sm pointer-events-none"
         />
       </div>
 
@@ -98,7 +98,7 @@ export const ThreeDBall: React.FC<ThreeDBallProps> = ({
       {interactive && clickCount > 0 && (
         <span
           key={clickCount}
-          className="absolute -top-1 -right-1 text-[9px] font-black text-emerald-400 bg-slate-900/90 px-1 rounded-full border border-emerald-500/40 animate-ping pointer-events-none"
+          className="absolute -top-1 -right-1 text-[9px] font-black text-brand-400 bg-slate-900/90 px-1 rounded-full border border-brand-500/40 animate-ping pointer-events-none"
         >
           +{clickCount}
         </span>

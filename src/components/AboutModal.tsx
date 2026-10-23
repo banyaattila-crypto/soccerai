@@ -56,7 +56,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <span className="text-[10px] uppercase font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
                   PRO
                 </span>
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/40">
                   v{CURRENT_RELEASE_INFO.version}
                 </span>
               </div>
@@ -110,7 +110,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           {/* Főbb funkciók és újdonságok ebben a verzióban */}
           <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2.5">
             <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <Sparkles className="w-3.5 h-3.5 text-brand-400" />
               <span>A v{CURRENT_RELEASE_INFO.version} kiadás újdonságai:</span>
             </div>
             <ul className="space-y-1.5 text-xs text-slate-300">
@@ -170,7 +170,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
           {/* Kvantitatív motor minősítés */}
           <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80 text-[11px] text-slate-400 flex items-start gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <ShieldCheck className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
             <div>
               <strong className="text-slate-200">Matematikai Biztonsági Szűrők:</strong> Dixon–Coles bivariáns korrekció, Shin (1992) bukmékeri árrés de-vigging, és negyed-Kelly tétméretezés a fals értékek kizárásáért.
             </div>
@@ -180,7 +180,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
           <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
             <div className="flex flex-wrap items-center gap-3 text-slate-300 font-medium">
               <span className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                <Globe className="w-3.5 h-3.5 text-brand-400" />
                 Élő Football-Data.org API Integráció
               </span>
               <span>&bull;</span>

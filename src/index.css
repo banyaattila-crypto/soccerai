@@ -1,5 +1,48 @@
 @import "tailwindcss";
 
+/*
+  SZÍNSZEREPEK
+  brand  = kobaltkék: márka, navigáció, kiemelés, elsődleges gombok
+  emerald = visszafogott zsálya: KIZÁRÓLAG pozitív jelentés (nyert, nyereség, pozitív érték)
+  amber   = figyelmeztetés és másodlagos kiemelés; red/rose = negatív
+*/
+@theme {
+  --color-brand-50: #eff3ff;
+  --color-brand-100: #dfe6ff;
+  --color-brand-200: #bccaff;
+  --color-brand-300: #94abff;
+  --color-brand-400: #6f8cff;
+  --color-brand-500: #4f70f5;
+  --color-brand-600: #3a58d6;
+  --color-brand-700: #2e45a8;
+  --color-brand-800: #26387f;
+  --color-brand-900: #1f2d5e;
+  --color-brand-950: #141c3d;
+
+  --color-emerald-50: #f0f7f2;
+  --color-emerald-100: #deece2;
+  --color-emerald-200: #c2dac9;
+  --color-emerald-300: #a1c4ab;
+  --color-emerald-400: #86b894;
+  --color-emerald-500: #5f9a73;
+  --color-emerald-600: #4a7f5e;
+  --color-emerald-700: #3a654a;
+  --color-emerald-800: #2b4a37;
+  --color-emerald-900: #1f3629;
+  --color-emerald-950: #14231b;
+
+  /* a teal sem lehet zöldes: hűvös, visszafogott szürkéskék */
+  --color-teal-200: #c3dde3;
+  --color-teal-300: #a0c9d3;
+  --color-teal-400: #7cb4c2;
+  --color-teal-500: #5a9db0;
+  --color-teal-600: #468093;
+  --color-teal-700: #386676;
+  --color-teal-800: #2b4d5a;
+  --color-teal-900: #1f3a45;
+  --color-teal-950: #14262d;
+}
+
 @layer base {
   :root {
     --bg-primary: #070B14;
@@ -7,7 +50,8 @@
     --bg-elevated: #131D33;
     --border-subtle: #1E293B;
     --accent-gold: #F59E0B;
-    --accent-emerald: #10B981;
+    --accent-brand: #4f70f5;
+    --accent-positive: #86b894;
   }
 
   html, body {
@@ -15,7 +59,7 @@
     background-image: 
       linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
-      radial-gradient(ellipse 90% 60% at 50% -10%, rgba(16, 185, 129, 0.09), transparent 60%),
+      radial-gradient(ellipse 90% 60% at 50% -10%, rgba(79, 112, 245, 0.10), transparent 60%),
       radial-gradient(ellipse 70% 50% at 90% 30%, rgba(245, 158, 11, 0.05), transparent 50%),
       linear-gradient(180deg, #070C18 0%, #0B1327 50%, #050813 100%);
     background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%, 100% 100%;
@@ -76,7 +120,7 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(16, 185, 129, 0.07), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(79, 112, 245, 0.08), transparent 60%),
     linear-gradient(160deg, rgba(19, 31, 56, 0.98) 0%, rgba(8, 13, 26, 0.99) 100%);
   background-size: 26px 26px, 26px 26px, 100% 100%, 100% 100%;
 }
@@ -165,24 +209,24 @@ button:disabled {
   border-color: rgba(148, 163, 184, 0.2) !important;
 }
 
-/* 2. Kiemelt 3D Smaragd Gombok (pl. Szelvényhez adás, Mentés, Telepítés, aktív tabok) */
-button.bg-emerald-600:not(.btn-link):not(.no-3d),
-button[class*="from-emerald"]:not(.btn-link):not(.no-3d),
-.btn-3d-emerald {
+/* 2. Kiemelt 3D márka-gombok (kobalt) (pl. Szelvényhez adás, Mentés, Telepítés, aktív tabok) */
+button.bg-brand-600:not(.btn-link):not(.no-3d),
+button[class*="from-brand"]:not(.btn-link):not(.no-3d),
+.btn-3d-brand {
   border-color: rgba(245, 158, 11, 0.55) !important;
   box-shadow: 
-    0 2.5px 0 #064E3B,
-    0 4px 12px rgba(16, 185, 129, 0.3),
+    0 2.5px 0 #1b2a6b,
+    0 4px 12px rgba(79, 112, 245, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
-button.bg-emerald-600:not(.btn-link):not(.no-3d):not(:disabled):hover,
-button[class*="from-emerald"]:not(.btn-link):not(.no-3d):not(:disabled):hover,
-.btn-3d-emerald:hover {
+button.bg-brand-600:not(.btn-link):not(.no-3d):not(:disabled):hover,
+button[class*="from-brand"]:not(.btn-link):not(.no-3d):not(:disabled):hover,
+.btn-3d-brand:hover {
   border-color: rgba(251, 191, 36, 0.95) !important;
   box-shadow: 
-    0 3.5px 0 #064E3B,
-    0 6px 16px rgba(16, 185, 129, 0.4),
+    0 3.5px 0 #1b2a6b,
+    0 6px 16px rgba(79, 112, 245, 0.4),
     0 0 14px rgba(245, 158, 11, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.38);
 }

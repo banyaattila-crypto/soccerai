@@ -12,7 +12,7 @@ export const AuditKpiGrid: React.FC<AuditKpiGridProps> = ({ verifiedStats }) => 
     {/* Találati Arány */}
     <div className="p-4 rounded-xl bg-mesh-dark border border-slate-800 flex flex-col justify-between">
       <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400 flex items-center gap-1">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+        <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
         Hitelesített Találati Arány
       </span>
       <div className="flex items-baseline gap-2 mt-2">

@@ -51,7 +51,7 @@ export const BacktestSection: React.FC = () => {
         className={`p-4 rounded-xl border text-xs leading-relaxed ${
           negativeEdge || marketBeatsModel
             ? 'bg-amber-500/10 border-amber-500/40 border-dashed text-amber-100'
-            : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100'
+            : 'bg-brand-500/10 border-brand-500/40 text-brand-100'
         }`}
       >
         <strong className="block text-sm mb-1">

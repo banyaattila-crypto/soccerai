@@ -55,7 +55,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
         </div>
         <div className="text-right shrink-0">
           <span className="text-[10px] text-slate-400 block font-mono">Modell becslés</span>
-          <span className="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+          <span className="text-xs font-extrabold px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 font-mono">
             {match.probabilities.homeWin}% - {match.probabilities.draw}% - {match.probabilities.awayWin}%
           </span>
         </div>
@@ -78,7 +78,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
           <div className="space-y-2 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/70">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white truncate">{home.shortName}</span>
-              <span className="text-xs font-mono font-bold text-emerald-400">
+              <span className="text-xs font-mono font-bold text-brand-400">
                 {home.formPoints}/15p <span className="text-[10px] text-slate-400">({home.formPct}%)</span>
               </span>
             </div>
@@ -88,7 +88,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
                   key={i}
                   className={`flex-1 py-1 text-center rounded text-[10px] font-extrabold ${
                     res === 'W'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      ? 'bg-brand-500/20 text-brand-300 border border-brand-500/40'
                       : res === 'D'
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                       : 'bg-red-500/20 text-red-300 border border-red-500/40'
@@ -114,7 +114,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
                   key={i}
                   className={`flex-1 py-1 text-center rounded text-[10px] font-extrabold ${
                     res === 'W'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      ? 'bg-brand-500/20 text-brand-300 border border-brand-500/40'
                       : res === 'D'
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                       : 'bg-red-500/20 text-red-300 border border-red-500/40'
@@ -136,7 +136,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
             Dinamikus Mutatók Összevetése
           </span>
           <div className="flex items-center gap-3 text-[11px] font-bold">
-            <span className="text-emerald-400">{home.shortName}</span>
+            <span className="text-brand-400">{home.shortName}</span>
             <span className="text-slate-600">vs</span>
             <span className="text-teal-400">{away.shortName}</span>
           </div>
@@ -146,14 +146,14 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
           {/* xG Összehasonlítás */}
           <div className="space-y-1">
             <div className="flex justify-between text-[11px] font-mono">
-              <span className="text-emerald-400 font-bold">{home.xg.toFixed(2)}</span>
+              <span className="text-brand-400 font-bold">{home.xg.toFixed(2)}</span>
               <span className="text-slate-400 font-semibold uppercase">Várható gólok (modell)</span>
               <span className="text-teal-400 font-bold">{away.xg.toFixed(2)}</span>
             </div>
             <div className="h-2 rounded-full bg-slate-950 overflow-hidden flex border border-slate-800">
               <div
                 style={{ width: `${homeXgPct}%` }}
-                className="bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500"
+                className="bg-gradient-to-r from-brand-600 to-brand-400 transition-all duration-500"
               />
               <div
                 style={{ width: `${awayXgPct}%` }}
@@ -165,14 +165,14 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
           {/* Támadóerő (Alpha) */}
           <div className="space-y-1">
             <div className="flex justify-between text-[11px] font-mono">
-              <span className="text-emerald-400 font-bold">{home.attackRating.toFixed(2)} α</span>
+              <span className="text-brand-400 font-bold">{home.attackRating.toFixed(2)} α</span>
               <span className="text-slate-400 font-semibold uppercase">Támadási Erősség</span>
               <span className="text-teal-400 font-bold">{away.attackRating.toFixed(2)} α</span>
             </div>
             <div className="h-2 rounded-full bg-slate-950 overflow-hidden flex border border-slate-800">
               <div
                 style={{ width: `${homeAttackPct}%` }}
-                className="bg-emerald-500/80 transition-all duration-500"
+                className="bg-brand-500/80 transition-all duration-500"
               />
               <div
                 style={{ width: `${awayAttackPct}%` }}
@@ -184,7 +184,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
           {/* Védelmi Stabilitás (Beta - alacsonyabb a jobb) */}
           <div className="space-y-1">
             <div className="flex justify-between text-[11px] font-mono">
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
+              <span className="text-brand-400 font-bold flex items-center gap-1">
                 <Shield className="w-3 h-3" />
                 {home.defenseRating.toFixed(2)} β
               </span>
@@ -197,7 +197,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
             <div className="h-2 rounded-full bg-slate-950 overflow-hidden flex border border-slate-800">
               <div
                 style={{ width: `${homeDefPct}%` }}
-                className="bg-emerald-400/70 transition-all duration-500"
+                className="bg-brand-400/70 transition-all duration-500"
               />
               <div
                 style={{ width: `${awayDefPct}%` }}
@@ -211,7 +211,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
             <div className="p-2 rounded-lg bg-slate-950/50 border border-slate-800/80">
               <span className="text-[10px] text-slate-400 block">Lőtt gól átlag / meccs</span>
               <span className="text-sm font-mono font-bold text-white">
-                <span className="text-emerald-400">{home.goalsScoredAvg.toFixed(1)}</span>
+                <span className="text-brand-400">{home.goalsScoredAvg.toFixed(1)}</span>
                 <span className="text-slate-600 mx-1.5">:</span>
                 <span className="text-teal-400">{away.goalsScoredAvg.toFixed(1)}</span>
               </span>
@@ -219,7 +219,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
             <div className="p-2 rounded-lg bg-slate-950/50 border border-slate-800/80">
               <span className="text-[10px] text-slate-400 block">Kapott gól átlag / meccs</span>
               <span className="text-sm font-mono font-bold text-white">
-                <span className="text-emerald-400">{home.goalsConcededAvg.toFixed(1)}</span>
+                <span className="text-brand-400">{home.goalsConcededAvg.toFixed(1)}</span>
                 <span className="text-slate-600 mx-1.5">:</span>
                 <span className="text-teal-400">{away.goalsConcededAvg.toFixed(1)}</span>
               </span>
@@ -279,7 +279,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className={`font-semibold ${m.winner === 'home' ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
+                    <span className={`font-semibold ${m.winner === 'home' ? 'text-brand-400 font-bold' : 'text-slate-300'}`}>
                       {home.name}
                     </span>
                     <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 font-mono font-extrabold text-amber-300">
@@ -292,7 +292,7 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
 
                   <div className="text-[10px] font-mono">
                     {m.winner === 'home' ? (
-                      <span className="text-emerald-400 font-bold">1 (Hazai)</span>
+                      <span className="text-brand-400 font-bold">1 (Hazai)</span>
                     ) : m.winner === 'away' ? (
                       <span className="text-teal-400 font-bold">2 (Vendég)</span>
                     ) : (

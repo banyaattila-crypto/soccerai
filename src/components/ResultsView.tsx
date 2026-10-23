@@ -506,8 +506,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
         <div className="p-6 rounded-2xl bg-mesh-card border border-slate-800 shadow-xl space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-md border border-brand-500/20">
+                <ShieldCheck className="w-4 h-4 text-brand-400" />
                 <span>Pre-Match Predikciónapló &amp; Befejezett Mérkőzések</span>
               </div>
               <h2 className="text-2xl font-black text-white tracking-tight">
@@ -526,7 +526,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                   </span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 font-medium">
-                  <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <Lock className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                   <span>
                     Audit napló: <strong>{verifiedRecords.length} hitelesített</strong> pre-match bejegyzés
                   </span>
@@ -555,12 +555,12 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Audit napló másolása JSON formátumban"
               >
-                {copiedJson ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Lock className="w-3.5 h-3.5 text-amber-400" />}
+                {copiedJson ? <Check className="w-3.5 h-3.5 text-brand-400" /> : <Lock className="w-3.5 h-3.5 text-amber-400" />}
                 <span>{copiedJson ? 'Másolva!' : 'Audit JSON'}</span>
               </button>
               <button
                 onClick={handleExportJson}
-                className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-bold border border-emerald-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-brand-500/15 hover:bg-brand-500/25 text-brand-400 text-xs font-bold border border-brand-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
                 title="Audit napló letöltése"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -575,7 +575,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
               className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 animate-fade-in ${
                 importNotice.error
                   ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                  : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                  : 'bg-brand-500/15 border-brand-500/30 text-brand-300'
               }`}
             >
               <span>{importNotice.text}</span>

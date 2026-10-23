@@ -166,7 +166,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock }) => {
             <Logo size={56} />
             <div className="absolute -bottom-1 -right-1 p-1 rounded-full bg-slate-900 border border-slate-700 shadow-md">
               {isSuccess ? (
-                <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                <Unlock className="w-3.5 h-3.5 text-brand-400" />
               ) : (
                 <Lock className="w-3.5 h-3.5 text-amber-400" />
               )}
@@ -179,7 +179,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock }) => {
               <span className="text-amber-400">PRO</span>
             </h2>
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] font-semibold text-slate-300">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <ShieldCheck className="w-3 h-3 text-brand-400" />
               <span>Biztonsági Zárolás</span>
             </div>
           </div>
@@ -201,11 +201,11 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({ onUnlock }) => {
                 key={idx}
                 className={`w-4 h-4 rounded-full transition-all duration-200 border-2 ${
                   isSuccess
-                    ? 'border-emerald-400 bg-emerald-400 scale-125 shadow-[0_0_15px_rgba(52,211,153,0.9)]'
+                    ? 'border-brand-400 bg-brand-400 scale-125 shadow-[0_0_15px_rgba(111,140,255,0.9)]'
                     : isShaking
                     ? 'border-rose-500 bg-rose-500/80 scale-110 shadow-[0_0_12px_rgba(244,63,94,0.8)]'
                     : isFilled
-                    ? 'border-emerald-400 bg-emerald-400 scale-110 shadow-[0_0_12px_rgba(52,211,153,0.7)]'
+                    ? 'border-brand-400 bg-brand-400 scale-110 shadow-[0_0_12px_rgba(111,140,255,0.7)]'
                     : 'border-slate-600 bg-slate-800/80'
                 }`}
               />

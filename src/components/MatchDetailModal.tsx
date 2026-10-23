@@ -148,7 +148,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   <span>{isFinished ? 'Lejátszva:' : 'Kezdés:'} <strong className="text-white">{match.kickoffTime}</strong></span>
                 </span>
                 {isFinished && (
-                  <span className="font-bold text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  <span className="font-bold text-[10px] text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded border border-brand-500/20">
                     LEZÁRULT
                   </span>
                 )}
@@ -190,7 +190,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     key={i}
                     className={`w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center ${
                       f === 'W'
-                        ? 'bg-emerald-500 text-slate-950'
+                        ? 'bg-brand-500 text-white'
                         : f === 'D'
                         ? 'bg-amber-500 text-slate-950'
                         : 'bg-red-500 text-white'
@@ -209,7 +209,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                   <div className="text-2xl font-black text-amber-400 font-mono">
                     {match.homeScore} : {match.awayScore}
                   </div>
-                  <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                  <div className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">
                     FT
                   </div>
                   {(match.kickoffDate || match.kickoffTime) && (
@@ -249,7 +249,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     key={i}
                     className={`w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center ${
                       f === 'W'
-                        ? 'bg-emerald-500 text-slate-950'
+                        ? 'bg-brand-500 text-white'
                         : f === 'D'
                         ? 'bg-amber-500 text-slate-950'
                         : 'bg-red-500 text-white'
@@ -282,7 +282,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
               onClick={() => setActiveTab('h2h')}
               className={`flex-1 py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'h2h'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
+                  ? 'bg-brand-500 text-white shadow-md font-black'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
@@ -328,7 +328,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                 <span className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <ShieldCheck className="w-4 h-4 text-brand-400" />
                   Kvantitatív Modellezés (Dixon-Coles &amp; Shin de-vig)
                 </span>
                 <span
@@ -401,7 +401,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                     </strong>{' '}
                     gól/meccs
                   </span>
-                  <span className="text-emerald-400 font-semibold">
+                  <span className="text-brand-400 font-semibold">
                     {match.quantAnalysis.lambdaInversion.verdict}
                   </span>
                 </div>
@@ -409,10 +409,10 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
 
               {/* Valós Dixon-Coles illesztett paraméterek panel */}
               {match.quantAnalysis.dixonColesRatings?.isEmpiricallyFitted && (
-                <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-xs space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-emerald-300">
+                <div className="p-3 rounded-lg bg-brand-950/20 border border-brand-500/30 text-xs space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-brand-300">
                     <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                      <Sparkles className="w-3.5 h-3.5 text-brand-400" />
                       Dixon–Coles MLE Paraméterek ({match.quantAnalysis.dixonColesRatings.sampleSize} meccs alapján)
                     </span>
                     <span className="font-mono text-[10px] text-slate-400">
@@ -424,7 +424,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                       <span className="text-slate-400 font-medium block truncate">{match.homeTeam.name}</span>
                       <div className="flex items-center justify-between mt-0.5">
                         <span className="text-slate-500 text-[10px]">Támadás (α):</span>
-                        <span className="font-bold font-mono text-emerald-400">{match.quantAnalysis.dixonColesRatings.homeAttack}</span>
+                        <span className="font-bold font-mono text-brand-400">{match.quantAnalysis.dixonColesRatings.homeAttack}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 text-[10px]">Védelem (β):</span>
@@ -435,7 +435,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                       <span className="text-slate-400 font-medium block truncate">{match.awayTeam.name}</span>
                       <div className="flex items-center justify-between mt-0.5">
                         <span className="text-slate-500 text-[10px]">Támadás (α):</span>
-                        <span className="font-bold font-mono text-emerald-400">{match.quantAnalysis.dixonColesRatings.awayAttack}</span>
+                        <span className="font-bold font-mono text-brand-400">{match.quantAnalysis.dixonColesRatings.awayAttack}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 text-[10px]">Védelem (β):</span>
@@ -473,7 +473,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <div className="text-slate-400 text-[11px]">Hazai (1)</div>
-                <div className="text-base font-extrabold text-emerald-400">{p.homeWin}%</div>
+                <div className="text-base font-extrabold text-brand-400">{p.homeWin}%</div>
                 {marketP && <div className="text-[10px] text-slate-400">Modell: {modelP.homeWin}%</div>}
                 <div className="text-[10px] text-slate-500 font-mono">Odds: {match.odds.home.toFixed(2)}</div>
               </div>
@@ -571,7 +571,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
             }}
             className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
               isAdded
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                ? 'bg-brand-500/20 text-brand-300 border border-brand-500/40'
                 : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
             }`}
           >

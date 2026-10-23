@@ -84,7 +84,7 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opp, isAdded, 
           {opp.marketLabel}
         </span>
         <div className="flex items-center gap-2 justify-end mt-0.5">
-          <span className="font-mono text-xs font-black text-emerald-400">
+          <span className="font-mono text-xs font-black text-brand-400">
             {opp.probability}%
           </span>
           <span className="text-[10px] text-slate-400 font-mono">esély</span>
@@ -165,7 +165,7 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opp, isAdded, 
         }}
         className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
           isAdded
-            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+            ? 'bg-brand-500/20 text-brand-300 border border-brand-500/40'
             : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md font-black'
         }`}
       >

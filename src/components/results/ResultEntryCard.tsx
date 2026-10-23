@@ -30,7 +30,7 @@ export const ResultEntryCard: React.FC<ResultEntryCardProps> = ({ entry, onClick
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Audit jelvény */}
             {isVerified ? (
-              <span className="font-mono text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded flex items-center gap-1">
+              <span className="font-mono text-[9px] font-bold text-brand-400 bg-brand-500/10 border border-brand-500/25 px-1.5 py-0.5 rounded flex items-center gap-1">
                 <ShieldCheck className="w-2.5 h-2.5" /> AUDITÁLT
               </span>
             ) : (
@@ -67,8 +67,8 @@ export const ResultEntryCard: React.FC<ResultEntryCardProps> = ({ entry, onClick
             <span>{entry.kickoffDate} {entry.kickoffTime}</span>
           </span>
           {entry.auditHash && (
-            <span className="text-emerald-400/80 truncate max-w-[120px]" title={`Ellenőrző összeg (sérülést jelez, nem hamisítás-biztos): ${entry.auditHash}`}>
-              <Lock className="w-2.5 h-2.5 inline mr-0.5 text-emerald-400" />
+            <span className="text-brand-400/80 truncate max-w-[120px]" title={`Ellenőrző összeg (sérülést jelez, nem hamisítás-biztos): ${entry.auditHash}`}>
+              <Lock className="w-2.5 h-2.5 inline mr-0.5 text-brand-400" />
               {entry.auditHash}
             </span>
           )}

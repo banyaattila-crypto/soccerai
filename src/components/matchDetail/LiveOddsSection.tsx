@@ -82,7 +82,7 @@ const OddsRow: React.FC<{
 
 const TAB_STYLE: Record<BookieTab, string> = {
   pinnacle: 'bg-blue-600 text-white shadow-md',
-  bet365: 'bg-emerald-600 text-white shadow-md',
+  bet365: 'bg-brand-600 text-white shadow-md',
   best: 'bg-amber-600 text-white shadow-md',
 };
 
@@ -177,7 +177,7 @@ export const LiveOddsSection: React.FC<LiveOddsSectionProps> = ({
                 <>
                   <span>Pinnacle</span>
                   {realOdds.pinnacle.margin !== undefined && (
-                    <span className="text-[9px] px-1 py-0.2 rounded bg-black/40 text-emerald-300 font-mono">
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-black/40 text-brand-300 font-mono">
                       {realOdds.pinnacle.margin}% vig
                     </span>
                   )}
@@ -232,7 +232,7 @@ export const LiveOddsSection: React.FC<LiveOddsSectionProps> = ({
                 {realOdds.bookmakers.length > 4 ? ` (+${realOdds.bookmakers.length - 4})` : ''}
               </strong>
             </span>
-            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+            <span className="text-brand-400 font-semibold flex items-center gap-1">
               <Zap className="w-3 h-3 text-amber-400" />
               Zöld kiemelés: ár-előny a piaci konszenzushoz (+EV)
             </span>

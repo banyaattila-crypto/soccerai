@@ -40,7 +40,7 @@ export const MatchExplanationCard: React.FC<MatchExplanationCardProps> = ({
   const getRiskColor = (level: 'Alacsony' | 'Közepes' | 'Magas') => {
     switch (level) {
       case 'Alacsony':
-        return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30';
+        return 'text-brand-400 bg-brand-500/15 border-brand-500/30';
       case 'Magas':
         return 'text-rose-400 bg-rose-500/15 border-rose-500/30';
       case 'Közepes':
@@ -77,7 +77,7 @@ export const MatchExplanationCard: React.FC<MatchExplanationCardProps> = ({
           >
             {explanation.riskAssessment.level} kockázat
           </span>
-          <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+          <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 flex items-center gap-1">
             <Award className="w-3.5 h-3.5" />
             Bizalom: {defaultPick.confidence || 7}/10
           </span>
@@ -120,7 +120,7 @@ export const MatchExplanationCard: React.FC<MatchExplanationCardProps> = ({
         
         {/* Csapatdinamika & Forma */}
         <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-          <div className="font-bold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 text-emerald-400">
+          <div className="font-bold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 text-brand-400">
             <Activity className="w-3.5 h-3.5" />
             <span>Csapatdinamika, Helyezés &amp; Múltbéli Mérleg</span>
           </div>
@@ -141,7 +141,7 @@ export const MatchExplanationCard: React.FC<MatchExplanationCardProps> = ({
         </div>
 
         {/* Kiemelt Tipp Részletes Indoklása */}
-        <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-emerald-500/10 border border-amber-500/30 space-y-1.5">
+        <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-brand-500/10 border border-amber-500/30 space-y-1.5">
           <div className="font-extrabold text-amber-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5" />
             <span>Miért ezt a tippet választotta az algoritmus?</span>

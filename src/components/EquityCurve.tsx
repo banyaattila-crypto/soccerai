@@ -36,7 +36,7 @@ export const EquityCurve: React.FC<EquityCurveProps> = ({ bets, initialBankroll 
   const area = `${line} L${x(curve.points.length - 1).toFixed(1)},${H - PAD.b} L${x(0).toFixed(1)},${H - PAD.b} Z`;
   const last = curve.points[curve.points.length - 1];
   const up = last.bankroll >= initialBankroll;
-  const stroke = up ? '#34d399' : '#f87171';
+  const stroke = up ? '#86b894' : '#f87171';
   const baseY = y(initialBankroll);
 
   return (

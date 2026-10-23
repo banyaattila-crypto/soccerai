@@ -70,7 +70,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Vissza</span>
             </button>
-            <Server className="w-4 h-4 text-emerald-400" />
+            <Server className="w-4 h-4 text-brand-400" />
             <h3 className="font-extrabold text-white text-sm sm:text-base">Rendszer &amp; API Beállítások</h3>
           </div>
           <button
@@ -110,7 +110,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <div className="space-y-0.5">
                   <div className="text-xs font-extrabold text-white flex items-center gap-2">
                     <span>Élő Külső Futball API (Football-Data.org)</span>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
+                    <span className="text-[10px] bg-brand-500/20 text-brand-300 px-1.5 py-0.2 rounded font-bold">
                       Aktív / Éles kulccsal
                     </span>
                   </div>
@@ -130,7 +130,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <Key className="w-3.5 h-3.5 text-amber-400" />
                 <span>Football-Data.org API Kulcs</span>
               </label>
-              <span className="text-[10px] text-emerald-400 font-mono font-bold">
+              <span className="text-[10px] text-brand-400 font-mono font-bold">
                 {apiKey ? '✓ Egyéni kulcs megadva' : '✓ Szerveroldali proxy aktív'}
               </span>
             </div>
@@ -150,10 +150,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="space-y-3 p-3.5 bg-gradient-to-b from-slate-900/90 to-[#0B1220] rounded-xl border border-slate-800">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-emerald-400" />
+                <Key className="w-3.5 h-3.5 text-brand-400" />
                 <span>API-Sports, Nemzetközi Kupák &amp; Bajnokságok</span>
               </label>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold font-mono">
+              <span className="text-[10px] bg-brand-500/20 text-brand-300 border border-brand-500/30 px-1.5 py-0.5 rounded font-bold font-mono">
                 {apiSportsKey ? '✓ Egyéni kulcs' : '✓ Proxy védett (100 req/nap)'}
               </span>
             </div>
@@ -172,7 +172,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onChange={(e) => setEnableSecondaryLeagues(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500"></div>
               </label>
             </div>
 
@@ -185,7 +185,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 value={apiSportsKey}
                 onChange={(e) => setApiSportsKey(e.target.value)}
                 placeholder="Üresen hagyva a szerveroldali API_SPORTS_KEY változót használja..."
-                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono"
               />
               <p className="text-[10px] text-slate-500">
                 Szerveroldali proxy (<code className="text-slate-300">API_SPORTS_KEY</code>) és 45 perces gyorsítótár védi a kvótát.
@@ -195,7 +195,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <div className="flex flex-wrap gap-1.5 pt-1">
               <span className="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">⭐ Bajnokok Ligája</span>
               <span className="text-[10px] bg-slate-800 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">🏆 Európa Liga</span>
-              <span className="text-[10px] bg-slate-800 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">🟢 Konferencia Liga</span>
+              <span className="text-[10px] bg-slate-800 text-brand-300 px-2 py-0.5 rounded border border-brand-500/30">🟢 Konferencia Liga</span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇭🇺 NB I</span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇵🇹 Primeira Liga</span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">🇪🇸 LaLiga 2</span>
@@ -265,7 +265,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
           <button
             onClick={handleSave}
-            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-brand-600/20 transition-all cursor-pointer"
           >
             {saved ? (
               <>

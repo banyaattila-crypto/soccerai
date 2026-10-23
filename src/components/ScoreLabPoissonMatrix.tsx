@@ -25,10 +25,10 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
       return 'bg-amber-400 text-slate-950 ring-2 ring-amber-300 font-black shadow-lg scale-105 z-10';
     }
     if (pct >= 11) {
-      return 'bg-emerald-500/40 text-emerald-200 border-emerald-400/60 font-bold';
+      return 'bg-brand-500/40 text-brand-200 border-brand-400/60 font-bold';
     }
     if (pct >= 7) {
-      return 'bg-emerald-600/25 text-emerald-300 border-emerald-500/40 font-semibold';
+      return 'bg-brand-600/25 text-brand-300 border-brand-500/40 font-semibold';
     }
     if (pct >= 4) {
       return 'bg-slate-800/80 text-slate-300 border-slate-700/60';
@@ -117,7 +117,7 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
                       score.zone === 'home'
-                        ? 'text-emerald-400 bg-emerald-500/10'
+                        ? 'text-brand-400 bg-brand-500/10'
                         : score.zone === 'away'
                         ? 'text-teal-400 bg-teal-500/10'
                         : 'text-amber-300 bg-amber-500/10'
@@ -128,7 +128,7 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
                 </div>
 
                 <div className="flex items-center justify-between mt-1 text-[11px]">
-                  <span className="font-bold text-emerald-400 font-mono">
+                  <span className="font-bold text-brand-400 font-mono">
                     {score.probabilityPct}%
                   </span>
                   <span className="text-slate-400 font-mono text-[10px]">
@@ -145,7 +145,7 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
       <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
           <span className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <Sparkles className="w-4 h-4 text-brand-400" />
             Eredmény Mátrix Hőtérkép
           </span>
           <span className="text-[10px] text-slate-400 italic">
@@ -175,7 +175,7 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
               return (
                 <div key={rIdx} className="grid grid-cols-6 gap-1 items-center">
                   {/* Hazai gól címke */}
-                  <div className="text-xs font-bold text-emerald-400 font-mono text-center truncate pr-1">
+                  <div className="text-xs font-bold text-brand-400 font-mono text-center truncate pr-1">
                     {rowLabel}
                   </div>
 
@@ -231,7 +231,7 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
         ) : (
           <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-1">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded bg-emerald-500/40 inline-block border border-emerald-400/50" />
+              <span className="w-2.5 h-2.5 rounded bg-brand-500/40 inline-block border border-brand-400/50" />
               <span>Magas valószínűség (&gt;10%)</span>
               <span className="w-2.5 h-2.5 rounded bg-slate-800/80 inline-block border border-slate-700 ml-2" />
               <span>Közepes / Alacsony</span>
@@ -264,12 +264,12 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
 
             <div className="flex justify-between items-center text-[11px]">
               <span className="text-slate-400">2 - 3 Gól (Fő sáv)</span>
-              <span className="font-mono font-bold text-emerald-400">{goalsDistribution.mid23Pct}%</span>
+              <span className="font-mono font-bold text-brand-400">{goalsDistribution.mid23Pct}%</span>
             </div>
             <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
               <div
                 style={{ width: `${goalsDistribution.mid23Pct}%` }}
-                className="bg-emerald-500 h-full rounded-full"
+                className="bg-brand-500 h-full rounded-full"
               />
             </div>
 
@@ -289,12 +289,12 @@ export const ScoreLabPoissonMatrix: React.FC<ScoreLabPoissonMatrixProps> = ({ ma
         {/* 1X2 Mátrix Zónák */}
         <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
           <div className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider border-b border-slate-800/80 pb-1.5">
-            <Info className="w-3.5 h-3.5 text-emerald-400" />
+            <Info className="w-3.5 h-3.5 text-brand-400" />
             Mátrix Kimeneteli Zónák
           </div>
           <div className="space-y-2 pt-0.5">
             <div className="flex items-center justify-between p-1.5 rounded bg-slate-950/60 border border-slate-800/60 text-[11px]">
-              <span className="text-emerald-400 font-semibold truncate">Hazai Zóna (Alsó háromszög)</span>
+              <span className="text-brand-400 font-semibold truncate">Hazai Zóna (Alsó háromszög)</span>
               <span className="font-mono font-bold text-white">{outcomeZones.homeWinPct}%</span>
             </div>
             <div className="flex items-center justify-between p-1.5 rounded bg-slate-950/60 border border-slate-800/60 text-[11px]">

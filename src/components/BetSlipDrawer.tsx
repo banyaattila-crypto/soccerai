@@ -280,7 +280,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                   <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
                     <span>
                       Modell esély:{' '}
-                      <strong className="text-emerald-400 font-bold">{item.probability}%</strong>
+                      <strong className="text-brand-400 font-bold">{item.probability}%</strong>
                     </span>
                     {item.isRealOdds && !item.isExpired && item.quarterKellyPct && item.quarterKellyPct > 0 ? (
                       <span className="text-[10px] text-amber-400/90 font-mono">
@@ -317,7 +317,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
             {savedSuccess && (
               <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 text-xs text-emerald-300 animate-fade-in">
                 <div className="flex items-center gap-1.5 font-bold">
-                  <BookmarkCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <BookmarkCheck className="w-4 h-4 text-brand-400 shrink-0" />
                   <span>Szelvény rögzítve a Tétnaplóban!</span>
                 </div>
                 {onOpenBankroll && (
@@ -349,7 +349,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                     <span className="text-[9px] text-amber-400 font-semibold">Korrelált*</span>
                   )}
                 </span>
-                <span className="text-lg font-black text-emerald-400">
+                <span className="text-lg font-black text-brand-400">
                   {combinedProbPct}%
                   {hasSameMatchCorrelation && <span className="text-xs text-amber-400 ml-0.5">*</span>}
                 </span>
@@ -388,7 +388,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                     onClick={() => setStake(amt)}
                     className={`py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                       stake === amt
-                        ? 'bg-emerald-600 text-white font-bold shadow-sm'
+                        ? 'bg-brand-600 text-white font-bold shadow-sm'
                         : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
@@ -409,9 +409,9 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
             </div>
 
             {/* Várható nyeremény */}
-            <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-gradient-to-r from-brand-950/40 via-slate-900 to-slate-900 border border-brand-500/30 flex items-center justify-between">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 block">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-brand-400 block">
                   Várható Bruttó Kifizetés
                 </span>
                 <span className="text-xl font-black text-white">
@@ -431,7 +431,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                 placeholder="Opcionális jegyzet a tétnaplóhoz (pl. Hétvégi top kombi)..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full px-2.5 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500"
               />
             </div>
 
@@ -451,7 +451,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
                 className={`py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   hasInvalidItems
                     ? 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed opacity-60'
-                    : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                    : 'bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white shadow-md shadow-brand-500/20'
                 }`}
                 title={hasInvalidItems ? 'Érvénytelen meccsek találhatók a szelvényen' : 'Szelvény mentése'}
               >
@@ -465,7 +465,7 @@ export const BetSlipDrawer: React.FC<BetSlipDrawerProps> = ({
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-400" />
+                    <Check className="w-4 h-4 text-brand-400" />
                     <span>Kimásolva!</span>
                   </>
                 ) : (

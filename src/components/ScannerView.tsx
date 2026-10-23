@@ -131,7 +131,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
                 Kvantitatív Értékkereső &bull; Scanner
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 font-mono">
                   ÉLŐ RADAR
                 </span>
               </h1>
@@ -258,7 +258,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
               </button>
             </div>
             <div className="text-[11px] text-slate-400 font-mono shrink-0">
-              Találatok: <span className="font-bold text-emerald-400">{filteredOpportunities.length}</span> db lehetőség
+              Találatok: <span className="font-bold text-brand-400">{filteredOpportunities.length}</span> db lehetőség
             </div>
           </div>
 
@@ -270,7 +270,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                 onClick={() => setActivePreset(p.id)}
                 className={`py-2 px-3 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
                   activePreset === p.id
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md shadow-emerald-950/40'
+                    ? 'bg-brand-500/20 text-brand-300 border-brand-500/50 shadow-md shadow-brand-950/40'
                     : 'bg-slate-900/80 hover:bg-slate-800 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >

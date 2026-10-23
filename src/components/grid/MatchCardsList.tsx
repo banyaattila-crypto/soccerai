@@ -295,7 +295,7 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     }}
                     className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer ${
                       isPickAdded
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        ? 'bg-brand-500/20 text-brand-300 border-brand-500/40'
                         : 'bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-white border-slate-700'
                     }`}
                   >

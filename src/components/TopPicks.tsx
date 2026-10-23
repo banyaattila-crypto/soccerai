@@ -123,7 +123,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
         {/* Szekció fejléc */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-400">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Kvantitatív Érték- és λ-rács szűrőn átment prémium válogatás</span>
             </div>
@@ -134,7 +134,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
 
           <div className="flex items-center gap-2">
             <div className="text-[11px] text-slate-400 flex items-center gap-1.5 bg-mesh-card px-3 py-1.5 rounded-xl border border-slate-800">
-              <Zap className="w-3.5 h-3.5 text-emerald-400" />
+              <Zap className="w-3.5 h-3.5 text-brand-400" />
               <span>Dixon–Coles &amp; Shin De-vig Modell</span>
             </div>
             {onSwitchToGrid && (
@@ -154,7 +154,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
           role="status"
           className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs leading-relaxed ${
             decision.withEdge > 0
-              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100'
+              ? 'bg-brand-500/10 border-brand-500/40 text-brand-100'
               : decision.realActive > 0
               ? 'bg-slate-800/60 border-slate-700 text-slate-200'
               : 'bg-amber-500/10 border-amber-500/40 border-dashed text-amber-100'
@@ -188,12 +188,12 @@ export const TopPicks: React.FC<TopPicksProps> = ({
               onClick={() => setOddsMode('value')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 oddsMode === 'value'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                  ? 'bg-brand-500/20 text-brand-300 border border-brand-500/40 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
               <span>🎯 Érték Szorzók (1.50+)</span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold">
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-brand-500/20 text-brand-300 font-mono font-bold">
                 Ajánlott
               </span>
             </button>
@@ -271,7 +271,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
           <div className="p-4 sm:p-5 rounded-2xl bg-mesh-card border border-slate-800/90 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Flame className="w-4 h-4 text-emerald-400" />
+                <Flame className="w-4 h-4 text-brand-400" />
                 <h3 className="text-sm font-extrabold text-white">
                   További Magas Valószínűségű Szignálok Ma (60%+)
                 </h3>
@@ -279,7 +279,7 @@ export const TopPicks: React.FC<TopPicksProps> = ({
               {onSwitchToGrid && (
                 <button
                   onClick={onSwitchToGrid}
-                  className="btn-link text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer"
+                  className="btn-link text-xs text-brand-400 hover:text-brand-300 font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <span>Összes mérkőzés</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -305,12 +305,12 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                         <span>{m.leagueFlag}</span>
                         <span className="truncate">{m.leagueName}</span>
                         <span>&bull;</span>
-                        <span className="text-emerald-400 font-mono">{formatKickoffShort(m)}</span>
+                        <span className="text-brand-400 font-mono">{formatKickoffShort(m)}</span>
                       </div>
-                      <div className="text-xs font-bold text-white truncate mt-0.5 group-hover:text-emerald-200">
+                      <div className="text-xs font-bold text-white truncate mt-0.5 group-hover:text-brand-200">
                         {m.homeTeam.name} – {m.awayTeam.name}
                       </div>
-                      <div className="text-[11px] font-semibold text-emerald-400 truncate">
+                      <div className="text-[11px] font-semibold text-brand-400 truncate">
                         {p.marketLabel} ({p.probability}%)
                       </div>
                     </div>
@@ -340,8 +340,8 @@ export const TopPicks: React.FC<TopPicksProps> = ({
                       }}
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold shrink-0 border transition-all cursor-pointer ${
                         isAdded
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                          : 'bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-200 border-slate-700'
+                          ? 'bg-brand-500/20 text-brand-300 border-brand-500/40'
+                          : 'bg-slate-800 hover:bg-brand-600 hover:text-white text-slate-200 border-slate-700'
                       }`}
                       title="Szelvényhez adás"
                     >

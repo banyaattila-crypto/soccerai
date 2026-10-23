@@ -46,7 +46,7 @@ export const ReliabilityChart: React.FC<ReliabilityChartProps> = ({ bins }) => {
           <polyline
             points={used.map((b) => `${scale(b.avgPredictedProb)},${sy(b.observedHitRate)}`).join(' ')}
             fill="none"
-            stroke="#34d399"
+            stroke="#6f8cff"
             strokeWidth="1.5"
           />
         )}
@@ -56,7 +56,7 @@ export const ReliabilityChart: React.FC<ReliabilityChartProps> = ({ bins }) => {
             cx={scale(b.avgPredictedProb)}
             cy={sy(b.observedHitRate)}
             r={4 + (b.count / maxCount) * 6}
-            fill={b.isWellCalibrated ? '#34d399' : '#fbbf24'}
+            fill={b.isWellCalibrated ? '#6f8cff' : '#fbbf24'}
             fillOpacity="0.85"
             stroke="#0f172a"
             strokeWidth="1"

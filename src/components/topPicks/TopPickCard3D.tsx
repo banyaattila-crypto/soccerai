@@ -58,7 +58,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
       style={{ perspective: '1000px' }}
     >
       <div
-        className="group relative flex flex-col justify-between rounded-2xl bg-mesh-card border border-slate-800 hover:border-emerald-500/50 shadow-xl overflow-hidden h-full"
+        className="group relative flex flex-col justify-between rounded-2xl bg-mesh-card border border-slate-800 hover:border-brand-500/50 shadow-xl overflow-hidden h-full"
         style={{
           transformStyle: 'preserve-3d',
           transform: tilt.active
@@ -69,7 +69,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
       >
         {/* 3D Fénytükröződési sáv egérmozgásra */}
         <div
-          className="absolute inset-0 bg-gradient-to-tr from-white/0 via-emerald-400/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-tr from-white/0 via-brand-400/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
           style={{ transform: 'translateZ(10px)' }}
         />
 
@@ -82,7 +82,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span>{match.leagueFlag}</span>
               <span className="truncate">{match.leagueName}</span>
               <span className="text-slate-600">&bull;</span>
-              <span className="text-emerald-400 font-bold">{formatKickoffShort(match)}</span>
+              <span className="text-brand-400 font-bold">{formatKickoffShort(match)}</span>
             </span>
 
             <div className="flex items-center gap-1.5 shrink-0">
@@ -95,7 +95,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                 className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border shrink-0 ${
                   idx === 0
                     ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
-                    : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                    : 'bg-brand-500/15 text-brand-300 border-brand-500/30'
                 }`}
               >
                 #{idx + 1} TOP TIPP
@@ -118,7 +118,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
-                <span className="text-sm font-bold text-white group-hover:text-emerald-200 transition-colors truncate">
+                <span className="text-sm font-bold text-white group-hover:text-brand-200 transition-colors truncate">
                   {match.homeTeam.name}
                 </span>
               </div>
@@ -137,7 +137,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
-                <span className="text-sm font-bold text-slate-200 group-hover:text-emerald-200 transition-colors truncate">
+                <span className="text-sm font-bold text-slate-200 group-hover:text-brand-200 transition-colors truncate">
                   {match.awayTeam.name}
                 </span>
               </div>
@@ -156,7 +156,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">
                 MI Ajánlott Tipp
               </span>
-              <span className="text-xs sm:text-sm font-extrabold text-emerald-300 truncate block">
+              <span className="text-xs sm:text-sm font-extrabold text-brand-300 truncate block">
                 {pick.marketLabel}
               </span>
             </div>
@@ -167,7 +167,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span
                 className={`text-base font-black px-2.5 py-0.5 rounded-lg border ${
                   isRealActive
-                    ? 'text-emerald-300 bg-emerald-950/60 border-emerald-500/40 shadow-sm shadow-emerald-900/30'
+                    ? 'text-brand-300 bg-brand-950/60 border-brand-500/40 shadow-sm shadow-brand-900/30'
                     : isExpired
                     ? 'text-red-300 bg-red-950/40 border-red-500/40 border-dotted line-through opacity-80'
                     : 'text-amber-300 bg-amber-950/40 border-amber-500/50 border-dashed'
@@ -184,18 +184,18 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               <span className="text-slate-400 font-medium">
                 {isMarketBased ? 'Piaci esély (de-vigelt):' : 'Becsült modell esély:'}
               </span>
-              <span className="font-extrabold text-emerald-400">{pick.probability}%</span>
+              <span className="font-extrabold text-brand-400">{pick.probability}%</span>
             </div>
             <div className="relative w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
               {range && (
                 <div
-                  className="absolute top-0 h-full bg-emerald-300/30"
+                  className="absolute top-0 h-full bg-brand-300/30"
                   style={{ left: `${range.low}%`, width: `${Math.max(1, range.high - range.low)}%` }}
                   aria-hidden="true"
                 />
               )}
               <div
-                className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-teal-500 to-brand-400 h-full rounded-full transition-all duration-500"
                 style={{ width: `${pick.probability}%` }}
               />
             </div>
@@ -265,8 +265,8 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
             onClick={onAddToBetSlip}
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               isAdded
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20'
+                ? 'bg-brand-500/20 text-brand-300 border border-brand-500/40'
+                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-600/20'
             }`}
           >
             {isAdded ? (

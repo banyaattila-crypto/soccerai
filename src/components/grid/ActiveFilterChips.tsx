@@ -47,7 +47,7 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
     <span className="text-[11px] font-bold text-slate-400 mr-1">Aktív szűrők:</span>
     {effectiveLeague !== 'all' && (
       <Chip
-        tone="bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
+        tone="bg-brand-500/15 border-brand-500/30 text-brand-300"
         label={`Liga: ${leagueName}`}
         onClear={onClearLeague}
       />
