@@ -280,6 +280,19 @@ export type PredictionProvenance =
   | 'VERIFIED_PRE_MATCH'    // Kezdőrúgás előtt naplózva, megváltoztathatatlan audit bejegyzés
   | 'UNVERIFIED_HISTORICAL'; // Kezdés után/utólag beérkezett vagy korábbi nem auditált mérkőzés
 
+/**
+ * Piaci pillanatkép egy naplózott tipphez (CLV-méréshez). A kivonatban (auditHash) nem szerepel: a napló
+ * a tipp rögzítése után is kiegészülhet a záró pillanatképpel, a tipp (piac, valószínűség, szorzó) viszont nem változik.
+ */
+export interface AuditMarketSnapshot {
+  /** A tipp kimenetelének de-vigelt piaci (fair) valószínűsége, % */
+  fairProb: number;
+  /** A legjobb elérhető szorzó erre a kimenetelre a pillanatkép idején */
+  odds?: number;
+  bookmaker?: string;
+  seenAt: string; // ISO időpont
+}
+
 export interface PredictionAuditRecord {
   id: string;               // pl. audit-m1234-1718000000
   matchId: string;
@@ -326,6 +339,10 @@ export interface PredictionAuditRecord {
   awayScore?: number;
   homeHalfTimeScore?: number;
   awayHalfTimeScore?: number;
+  /** Piaci pillanatkép a naplózáskor (csak valós szorzónál, 1X2 és Over/Under 2.5 piacon) */
+  marketAtLog?: AuditMarketSnapshot;
+  /** A kezdés előtti legutolsó ismert piaci pillanatkép (a záró fair ár közelítése) */
+  marketClose?: AuditMarketSnapshot;
   status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
   profit: number;           // Forintban alaptéttel számolva (pl. 10 000 Ft alapon)
   roi: number;              // % megtérülés az adott fogadásra

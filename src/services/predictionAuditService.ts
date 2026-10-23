@@ -2,6 +2,7 @@ import { Match, PredictionAuditRecord, VerifiedAuditStats } from '../types/footb
 import { evaluatePickWon } from './betEvaluation';
 import { eventBus } from '../utils/eventBus';
 import { sha256Hex } from '../utils/sha256';
+import { marketSnapshotForPick, sanitizeSnapshot } from './clvService';
 
 export const STORAGE_KEY_AUDIT_LOG = 'soccerai_prediction_audit_log_v2';
 export const AUDIT_BASE_STAKE = 10000; // 10 000 Ft alaptét a hitelesített ROI és nyereség számításához
@@ -220,6 +221,11 @@ export function recordPreMatchPredictions(
         robustnessVerdict: match.quantAnalysis?.robustnessVerdict,
         dataQuality: match.quantAnalysis?.dataQuality,
       },
+      // Piaci pillanatkép a CLV-hez: csak valós szorzónál (a szimulált ár nem piaci ár)
+      marketAtLog:
+        match.aiPick.isSimulatedOdds === false
+          ? marketSnapshotForPick(match, match.aiPick.market, nowMs)
+          : undefined,
       provenance: 'VERIFIED_PRE_MATCH',
       auditHash,
       settled: false,
@@ -237,6 +243,34 @@ export function recordPreMatchPredictions(
   }
 
   return { added, skipped };
+}
+
+/**
+ * A még le nem zárt, valós szorzón naplózott tippek záró piaci pillanatképének frissítése.
+ * Minden kezdés előtti hívás a legfrissebb érvényes pillanatképpel felülírja a `marketClose`-t, így a kezdés előtti
+ * utolsó ismert fair ár marad meg. A tipp (piac, valószínűség, szorzó) és az auditHash nem változik.
+ */
+export function updateClosingSnapshots(
+  matches: Match[],
+  nowMs: number = Date.now()
+): { updated: number } {
+  if (!matches || matches.length === 0) return { updated: 0 };
+  const log = getAuditLog();
+  if (log.length === 0) return { updated: 0 };
+  const byId = new Map<string, Match>(matches.map((m) => [m.id, m]));
+  let updated = 0;
+  for (const rec of log) {
+    if (rec.settled || rec.pick.isSimulatedOdds !== false) continue;
+    if (nowMs >= rec.kickoffTimestamp) continue;
+    const match = byId.get(rec.matchId);
+    if (!match || !isMatchBeforeKickoff(match, nowMs)) continue;
+    const snap = marketSnapshotForPick(match, rec.pick.market, nowMs);
+    if (!snap) continue;
+    rec.marketClose = snap;
+    updated++;
+  }
+  if (updated > 0) saveAuditLog(log);
+  return { updated };
 }
 
 /**
@@ -601,6 +635,8 @@ export function importAuditLogFromJson(jsonStr: string): AuditImportResult {
       if (!existing) {
         map.set(r.id, {
           ...r,
+          marketAtLog: sanitizeSnapshot(r.marketAtLog),
+          marketClose: sanitizeSnapshot(r.marketClose),
           settled: sanitizedSettled,
           settledAt: sanitizedSettledAt,
           homeScore: sanitizedSettled ? r.homeScore : undefined,

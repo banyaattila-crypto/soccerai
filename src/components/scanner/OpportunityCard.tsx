@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Check, Eye, Calendar, Clock } from 'lucide-react';
 import type { Match, BetSlipItem } from '../../types/football';
 import type { ScannedOpportunity } from '../../services/scannerService';
+import { MarketGapChip } from '../MarketGapChip';
 
 interface OpportunityCardProps {
   opp: ScannedOpportunity;
@@ -64,6 +65,8 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({ opp, isAdded, 
           {opp.match.awayTeam.name}
         </span>
       </div>
+
+      <MarketGapChip match={opp.match} compact />
 
       {/* Magyarázat */}
       {opp.reasoning && (

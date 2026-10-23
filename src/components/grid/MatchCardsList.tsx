@@ -1,4 +1,5 @@
 import { formatKickoffShort } from '../../utils/kickoffFormat';
+import { MarketGapChip } from '../MarketGapChip';
 import { isMatchLive } from '../../utils/matchStatus';
 import React from 'react';
 import { Match, BetSlipItem, FocusMarket } from '../../types/football';
@@ -115,6 +116,7 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                     Piaci ár
                   </span>
                 )}
+                <MarketGapChip match={match} compact />
                 {match.quantAnalysis && (
                   <span className="text-[11px] text-slate-400 font-mono font-bold bg-slate-900 px-1.5 py-0.5 rounded-md border border-slate-800">
                     {match.quantAnalysis.dataQuality}-szint
@@ -141,7 +143,7 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs font-mono text-slate-400">
-                    xG {match.homeTeam.xgAvg}
+                    Vár. gól {match.homeTeam.xgAvg}
                   </span>
                   {match.homeScore !== undefined && (
                     <span className="font-mono font-black text-sm text-amber-400 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800">
@@ -167,7 +169,7 @@ export const MatchCardsList: React.FC<MatchCardsListProps> = ({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs font-mono text-slate-400">
-                    xG {match.awayTeam.xgAvg}
+                    Vár. gól {match.awayTeam.xgAvg}
                   </span>
                   {match.awayScore !== undefined && (
                     <span className="font-mono font-black text-sm text-amber-400 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800">

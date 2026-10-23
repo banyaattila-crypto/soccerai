@@ -1,10 +1,10 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.34.1` (SemVer 2.0.0)
-**Kiadás neve:** Rendezett Komponensek
+**Aktuális verzió:** `v1.35.0` (SemVer 2.0.0)
+**Kiadás neve:** Mérhető Él
 **Dátum:** 2026. október 22.
-**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 312/312 teszt zöld (35 tesztfájl), production build hibátlan
+**Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 341/341 teszt zöld (39 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
 **Élő URL:** https://soccerai-pro.vercel.app
 **Helyi szerver:** `http://localhost:3000` (`npm run dev`)
@@ -102,7 +102,7 @@ Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális kész�
 | :--- | :--- |
 | Frontend | React 19, TypeScript ~6.0 (strict), Vite 8 |
 | Stílus | Tailwind CSS v4, sötét téma |
-| Tesztek | Vitest 5.0.5: 312 teszt, 35 fájl |
+| Tesztek | Vitest 5.0.5: 341 teszt, 39 fájl |
 | Lint | Oxlint (`--deny-warnings`) |
 | Szkriptek | `tsx` (backtest és hangolás: `scripts/backtest.ts`, `scripts/backtest-tune.ts`) |
 | PWA | Web App Manifest + Service Worker (network-first navigáció) |
@@ -157,7 +157,9 @@ soccerai/
     │   ├── marketBlend.ts            piaccal súlyozás, piaci referencia (Pinnacle fair)
     │   ├── backtestEngine.ts         walk-forward backtest, RPS/log-loss, fogadási szimuláció
     │   ├── calibrationService.ts     Brier, ECE, edge-kapu
-    │   ├── predictionAuditService.ts pre-match napló
+    │   ├── predictionAuditService.ts pre-match napló (piaci pillanatképek)
+    │   ├── clvService.ts             CLV, konfidencia-intervallum, ítélet
+    │   ├── oddsPrefetch.ts           valós szorzók előzetes és záró lekérése (napi keret)
     │   ├── bankrollService.ts, equityCurve.ts
     │   ├── footballDataApi.ts, apiSportsClient.ts, quotaService.ts
     │   ├── scannerService.ts, scoreLabService.ts, betEvaluation.ts
@@ -174,10 +176,11 @@ soccerai/
 
 ## 6. Javasolt következő csomagok
 
+0. **Az éles fogadás kapuja (v1.35.0 óta mérhető):** a rendszer addig nem alkalmas komoly, saját pénzzel való fogadásra, amíg nincs bizonyított, a piacnál jobb ár. Mérce a CLV (Eredmények & Audit nézet): legalább 100 valós szorzón naplózott tipp, a 95%-os konfidencia-intervallum alsó széle > 0, és a szorzók ténylegesen elérhetők (számlakorlátok). A backtest szerint a modell nem éri el a piacot (log-loss rés ~0,02, a nyers modell-EV hozama -10...-17%), ezért a kapu nem teljesül; a Modell ≠ piac jelző azt mutatja, hol a legkevésbé szabad a modellre támaszkodni. Teendő: a CLV-minta gyűjtése (app nyitva a kezdés előtt, vagy szerveroldali ütemező), majd új információforrás (xG, felállás, sérülés) vizsgálata.
 1. **Élő finomhangolás:** a modell-építés idejének mérése új deploy után (automatikus újrapróbálás 65 másodpercenként, legfeljebb 8 alkalommal); megfontolandó szerveroldali előmelegítés (cron).
 2. **Modell-javítás a piac ellen (a backtest a mérce):** a ξ/K hangolás megvolt (v1.27.1), a hazai/idegenbeli szétválasztás és a feljutó-prior kipróbálva és elutasítva (`docs/backtest-experiments.md`). A rés a piachoz kb. 0,02 log-loss maradt, szerkezeti változtatással nem záródik. További javulás csak új információs forrástól várható (xG, felállás/sérülés); ez adatforrás-vizsgálatot igényel (elérhetőség, jogi feltételek, költség).
 2/c. **Több liga:** megvan (v1.29.0 + v1.30.0): 8 új liga, mind a 12 API-Sports ligához előre számolt csapaterősségek (`src/data/leagueModels.json`). Nyitva: a pillanatkép időnkénti újragenerálása (120 nap után elavul), és a football-data.co.uk használati feltételeinek ellenőrzése éles, tartós használat előtt; a repóban csak származtatott erősségek vannak.
-2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** megvan (v1.28.0). Nyitott: a piaci alapú esély csak a már lekért szorzójú meccsekre jelenik meg (napi API-Sports kvóta); megfontolandó a szorzók előzetes, ütemezett lekérése a legfontosabb meccsekre.
+2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** megvan (v1.28.0); v1.35.0 óta a legerősebb tippekhez a szorzót az app előre lekéri (napi 40 kérés). Nyitott: szerveroldali ütemező (cron), hogy a záró szorzó akkor is mentődjön, ha az app nincs nyitva.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
 4. **Higiénia (F-15):** kész. Opcionálisan a StatsGrid (767) és a ResultsView (750) szűrő- és állapotkezelő logikájának egyedi hookba szervezése. Tartós rate limit: Vercel Firewall szabály a soccerai-pro projekt fiókjában.
 
@@ -188,7 +191,7 @@ soccerai/
 ```bash
 npm ci          # reprodukálható telepítés
 npm run dev     # fejlesztői szerver (3000)
-npm test        # 312 teszt
+npm test        # 341 teszt
 npx tsc -b      # típusellenőrzés
 npx oxlint --deny-warnings
 npm run build   # production build

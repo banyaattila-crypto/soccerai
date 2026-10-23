@@ -3,6 +3,28 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.35.0] - 2026-10-23
+
+### Hozzáadva (Added) - A tippek valódi mérése: CLV
+Az audit-napló eddig főként szimulált szorzón készült tippeket tartalmazott, ezekből a modell piacnál jobb voltára nem lehet következtetni. A valós szorzón naplózott tippeket most a záró piaci árhoz mérjük.
+- **Piaci pillanatképek (`clvService.ts`, `PredictionAuditRecord.marketAtLog / marketClose`):** valós szorzónál a naplózáskor a tipp kimenetelének de-vigelt piaci valószínűsége és a legjobb szorzó mentődik; a kezdés előtti utolsó ismert pillanatkép a `marketClose`. A tipp és az `auditHash` nem változik; importáláskor az érvénytelen pillanatkép eldobódik.
+- **CLV = szorzó · záró fair valószínűség − 1** (a backtest definíciója). A záró pillanatkép csak érvényes, ha legfeljebb 3 órával a kezdés előtt és legalább 15 perccel a naplózás után készült. A statisztika az átlagot, a 95%-os konfidencia-intervallumot, az ár-előnyt a naplózáskor (bukméker-választás) és a piac-mozgást a tipp irányába külön adja. Ítélet: n < 50 insufficient; n >= 100 és az intervallum alsó széle > 0 edge_likely; n >= 50 és a felső széle < 0 negative; egyébként unproven.
+- **Valós szorzók lekérése (`oddsPrefetch.ts`):** a legerősebb, szorzó nélküli tippekhez előzetesen (legfeljebb 30 órával a kezdés előtt), a naplózott tippekhez a kezdés előtti 110 percben frissítve. Napi 40 kérés, futásonként 6 + 4, tartalék a menetrendnek (15), kvótapihenő alatt nem kér; 12 másodpercnél tovább nem késlelteti a betöltést.
+- **Eredmények & Audit (`ClvKpiRow`):** "Valós szorzón naplózott tippek" (darabszám, ROI) és "CLV a záró fair árhoz" kártya, kimondott ítélettel.
+
+### Hozzáadva (Added) - Modell ≠ piac jelző
+`scripts/backtest-disagreement.ts` (`docs/backtest-disagreement.md`): walk-forward, 3504 meccs, 5 liga. Az átlagos log-loss rés (modell − piac) az eltéréssel nő: 0–3 pp: 0,000; 3–5 pp: 0,004; 5–8 pp: 0,016 ± 0,005; 8–12 pp: 0,025 ± 0,008; 12+ pp: 0,103 ± 0,015 (a meccsek 66%-ában a piac a pontosabb). A `MarketGapChip` 5 pp-től figyelmeztet, 12 pp-től erős jelzést ad (Top Tipp kártya, kártyalista, Scanner, meccs részletei).
+
+### Módosítva (Changed)
+- A szimulált szorzón számolt ROI és nettó profit kártyája "Kalibrációs ROI % (szimulált szorzón)" és "Szimulált Nettó Profit (nem valós pénz)" feliratú, semleges színű (a veszteség nem tűnik valódi pénznek).
+- A kártyákon, magyarázatokban és a módszertanban az "xG" helyett "várható gól" áll: ez a modell becslése, nem lövésalapú xG adat.
+
+### Korlátok
+- A CLV csak akkor gyűlik, ha az app nyitva van a kezdés előtt (nincs szerveroldali ütemező); a mérés ezért részleges, és a minta lassan nő.
+- Az ár-előny a naplózáskor részben árverseny (a legjobb bukméker szorzója a Pinnacle/átlag fair árához mérve). Ez csak akkor értékes, ha tényleg ezen az áron lehet fogadni (számlakorlátok).
+- A CLV az 1X2 és az Over/Under 2.5 piacra számolható; BTTS-re nincs piaci referencia.
+- **Tesztek:** 29 új teszt (CLV, szorzó-lekérés, naplózás, eltérés-jelző); összesen 39 fájlban 341 / 341 zöld.
+
 ## [1.34.1] - 2026-10-23
 
 ### Módosítva (Changed) - Nagy komponensek szétvágásának lezárása (F-15)

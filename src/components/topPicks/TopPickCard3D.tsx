@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Match } from '../../types/football';
+import { MarketGapChip } from '../MarketGapChip';
 import { Plus, Check, ChevronRight, ShieldCheck } from 'lucide-react';
 import { OddsSourceBadge, OddsSourceRibbon, resolveOddsSourceState } from '../OddsSourceBadge';
 import { getDataQualityInfo, getProbabilityRange } from '../../utils/modelConfidence';
@@ -122,7 +123,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                 </span>
               </div>
               <span className="text-[11px] font-mono font-medium text-slate-500 shrink-0">
-                xG {match.homeTeam.xgAvg}
+                Vár. gól {match.homeTeam.xgAvg}
               </span>
             </div>
 
@@ -141,7 +142,7 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
                 </span>
               </div>
               <span className="text-[11px] font-mono font-medium text-slate-500 shrink-0">
-                xG {match.awayTeam.xgAvg}
+                Vár. gól {match.awayTeam.xgAvg}
               </span>
             </div>
           </div>
@@ -221,6 +222,8 @@ export const TopPickCard3D: React.FC<TopPickCard3DProps> = ({
               </span>
             </div>
           </div>
+
+          <MarketGapChip match={match} />
 
           {/* Kvantitatív Robusztussági & Kelly sáv */}
           {match.quantAnalysis && (

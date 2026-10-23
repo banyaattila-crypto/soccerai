@@ -120,7 +120,7 @@ export const MethodologyView: React.FC<MethodologyViewProps> = ({
               <h4>2. Dixon–Coles (1997) Bivariáns Poisson &amp; MLE Illesztés</h4>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              A csapatok várható góljait (xG) a szezonban már lejátszott mérkőzésekből, <strong>Maximum Likelihood Estimation (MLE)</strong> és időbeli súlyozás segítségével számoljuk ki. Minden csapat egyedi támadóerővel (α) és védelmi gyengeséggel (β) rendelkezik, korrigálva az alacsony gólszámú (0–0, 1–0, 0–1, 1–1) τ(x,y) összefüggésekkel (ρ = -0.13).
+              A csapatok várható góljait (a modell becslése, nem lövésalapú xG adat) a szezonban már lejátszott mérkőzésekből, <strong>Maximum Likelihood Estimation (MLE)</strong> és időbeli súlyozás segítségével számoljuk ki. Minden csapat egyedi támadóerővel (α) és védelmi gyengeséggel (β) rendelkezik, korrigálva az alacsony gólszámú (0–0, 1–0, 0–1, 1–1) τ(x,y) összefüggésekkel (ρ = -0.13).
             </p>
             <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 font-mono">
               λ_hazai = α_hazai · β_vendég · γ | μ_vendég = α_vendég · β_hazai

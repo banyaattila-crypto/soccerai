@@ -1,5 +1,7 @@
 import { ResultEntryCard } from './results/ResultEntryCard';
 import { AuditKpiGrid } from './results/AuditKpiGrid';
+import { ClvKpiRow } from './results/ClvKpiRow';
+import { getClvStats, getRealOddsRoi } from '../services/clvService';
 import { ProvenanceTabs } from './results/ProvenanceTabs';
 import { MarketBreakdown } from './results/MarketBreakdown';
 import React, { useState, useMemo, useCallback } from 'react';
@@ -196,6 +198,10 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const verifiedRecords = useMemo(() => {
     return auditRecords.filter((r) => r.provenance === 'VERIFIED_PRE_MATCH');
   }, [auditRecords]);
+
+  // CLV és valós szorzós statisztika a hitelesített naplóból
+  const clvStats = useMemo(() => getClvStats(verifiedRecords), [verifiedRecords]);
+  const realOddsRoi = useMemo(() => getRealOddsRoi(verifiedRecords), [verifiedRecords]);
 
   // 2. Hitelesített hivatalos statisztikák kiszámítása (KIZÁRÓLAG lezárt pre-match meccsekből!)
   const verifiedStats = useMemo(() => {
@@ -584,6 +590,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
 
           {/* FŐ KPI MUTATÓK (HITELESÍTETT ADATOKBÓL) */}
           <AuditKpiGrid verifiedStats={verifiedStats} />
+          <ClvKpiRow clv={clvStats} real={realOddsRoi} totalAudited={verifiedStats.totalAudited} />
 
           {/* Fülválasztó: Összes Eredmény vs Hitelesített Audit vs Külső Archívum */}
           <ProvenanceTabs

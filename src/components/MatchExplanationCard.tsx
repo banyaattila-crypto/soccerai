@@ -133,7 +133,7 @@ export const MatchExplanationCard: React.FC<MatchExplanationCardProps> = ({
         <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
           <div className="font-bold text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1.5 text-amber-400">
             <Flame className="w-3.5 h-3.5" />
-            <span>Gólvárás &amp; Taktikai Játékstílus (xG Modell)</span>
+            <span>Gólvárás &amp; Taktikai Játékstílus (gólmodell)</span>
           </div>
           <p className="text-slate-300 leading-relaxed text-[11px] sm:text-xs">
             {explanation.goalExpectation}

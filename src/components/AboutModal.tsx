@@ -184,7 +184,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 Élő Football-Data.org API Integráció
               </span>
               <span>&bull;</span>
-              <span>Poisson &amp; xG Modelling</span>
+              <span>Poisson Gólmodell</span>
               <span>&bull;</span>
               <span>Magyar Nyelvű Fejlesztés</span>
             </div>

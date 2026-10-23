@@ -59,9 +59,11 @@ const DEFAULT_API_KEY = '';
 import { persistFinishedMatchesToHistory } from './services/historyService';
 import {
   recordPreMatchPredictions,
+  updateClosingSnapshots,
   settleAuditPredictions,
   getAuditLog,
 } from './services/predictionAuditService';
+import { refreshOddsForTracking } from './services/oddsPrefetch';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -218,13 +220,31 @@ export function App() {
 
         if (combined.length > 0) {
           // Valós gyorsítótárazott bukmékeri oddsok és lejárati idők hozzácsatolása
-          const enhanced = attachCachedRealOddsToMatches(combined);
+          let enhanced = attachCachedRealOddsToMatches(combined);
           setMatches(markStaleLive(enhanced));
           
           setApiErrorNotice(null);
+
+          // 0. Valós szorzók előzetes és záró lekérése a legerősebb tippekhez (napi kerettel), hogy a naplózott
+          //    tipp piaci áron készüljön és mérhető legyen a CLV. A lekérés hibája nem akadályozza a betöltést.
+          try {
+            // Legfeljebb 12 másodpercet várunk: lassú hálózaton se késleljen a naplózás és az elszámolás
+            const tracking = await Promise.race([
+              refreshOddsForTracking(enhanced, getAuditLog()),
+              new Promise<{ fetched: number }>((resolve) => setTimeout(() => resolve({ fetched: 0 }), 12000)),
+            ]);
+            if (tracking.fetched > 0) {
+              enhanced = attachCachedRealOddsToMatches(combined);
+              setMatches(markStaleLive(enhanced));
+            }
+          } catch (e) {
+            console.warn('Szorzó-lekérés a naplózáshoz sikertelen:', e);
+          }
           
           // 1. Kezdés előtti predikciók megváltoztathatatlan rögzítése az audit naplóba
           recordPreMatchPredictions(enhanced);
+          // 1/b. A valós szorzón naplózott tippek záró piaci pillanatképének frissítése (CLV)
+          updateClosingSnapshots(enhanced);
           // 2. Korábban rögzített auditált predikciók lezárása valós befejezett meccsekkel
           settleAuditPredictions(enhanced);
           // 3. Tartós előzmények

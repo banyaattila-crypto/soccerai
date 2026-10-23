@@ -80,7 +80,7 @@ describe('matchExplanationService', () => {
     expect(explanation.summary).toContain('58%');
     expect(explanation.teamDynamics).toContain('Arsenal');
     expect(explanation.teamDynamics).toContain('Chelsea');
-    expect(explanation.goalExpectation).toContain('xG');
+    expect(explanation.goalExpectation).toContain('várható gól');
     expect(explanation.pickRationale).toContain('hazai győzelmet');
     expect(explanation.pickRationale).toContain('1.65');
     expect(explanation.riskAssessment.level).toBe('Alacsony');

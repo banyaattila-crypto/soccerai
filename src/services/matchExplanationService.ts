@@ -196,18 +196,18 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
   // 4. Góldinamika & Taktikai Várakozás (Goal Expectation)
   let goalExpectation = '';
   if (totalExpectedGoals >= 2.85 || over25P >= 58) {
-    goalExpectation = `A matematikai gólmodell összetett gólvárakozása ${totalExpectedGoals.toFixed(1)} xG (${homeShort}: ${homeXg.toFixed(1)} xG, ${awayShort}: ${awayXg.toFixed(1)} xG). Mindkét együttes nyílt felfogásban futballozik, a védekező zónák mögött gyakran nyílik terület. A 2.5 gól feletti kimenetel esélye ${over25P}%, a mindkét csapat szerez gólt (BTTS) valószínűsége pedig ${bttsP}%, ami élvezetes, gólgazdag összecsapást ígér.`;
+    goalExpectation = `A matematikai gólmodell összetett gólvárakozása ${totalExpectedGoals.toFixed(1)} várható gól (${homeShort}: ${homeXg.toFixed(1)} várható gól, ${awayShort}: ${awayXg.toFixed(1)} várható gól). Mindkét együttes nyílt felfogásban futballozik, a védekező zónák mögött gyakran nyílik terület. A 2.5 gól feletti kimenetel esélye ${over25P}%, a mindkét csapat szerez gólt (BTTS) valószínűsége pedig ${bttsP}%, ami élvezetes, gólgazdag összecsapást ígér.`;
   } else if (totalExpectedGoals <= 2.2 || under25P >= 58) {
-    goalExpectation = `A várható gólok száma visszafogott, mindössze ${totalExpectedGoals.toFixed(1)} xG összetett szinten (${homeShort}: ${homeXg.toFixed(1)}, ${awayShort}: ${awayXg.toFixed(1)}). A csapatok fegyelmezett pozíciós játékot játszanak, kevés engedett ziccerrel. A modell ${under25P}%-os valószínűséget rendel a 2.5 gól alatti eredményhez, a legvalószínűbb végeredmények a Poisson-mátrix szerint a 0-0, 1-0 vagy 1-1.`;
+    goalExpectation = `A várható gólok száma visszafogott, mindössze ${totalExpectedGoals.toFixed(1)} várható gól összetett szinten (${homeShort}: ${homeXg.toFixed(1)}, ${awayShort}: ${awayXg.toFixed(1)}). A csapatok fegyelmezett pozíciós játékot játszanak, kevés engedett ziccerrel. A modell ${under25P}%-os valószínűséget rendel a 2.5 gól alatti eredményhez, a legvalószínűbb végeredmények a Poisson-mátrix szerint a 0-0, 1-0 vagy 1-1.`;
   } else {
-    goalExpectation = `Kiegyensúlyozott gólprofil figyelhető meg: az elvárt gólok száma ${totalExpectedGoals.toFixed(1)} xG környékén mozog. Mindkét fél képes veszélyes támadásokat vezetni, de a szervezett védelmek miatt a 2-3 gólos sáv tűnik a legreálisabb forgatókönyvnek. Az első félidőben legalább egy találat születésére ${fhOver05P}% az esély.`;
+    goalExpectation = `Kiegyensúlyozott gólprofil figyelhető meg: az elvárt gólok száma ${totalExpectedGoals.toFixed(1)} várható gól környékén mozog. Mindkét fél képes veszélyes támadásokat vezetni, de a szervezett védelmek miatt a 2-3 gólos sáv tűnik a legreálisabb forgatókönyvnek. Az első félidőben legalább egy találat születésére ${fhOver05P}% az esély.`;
   }
 
   // 5. Kiemelt Tipp Részletes Indoklása (Pick Rationale)
   let pickRationale = '';
   switch (activeMarket) {
     case '1':
-      pickRationale = `A rendszer a hazai győzelmet (${pickLabel}) jelöli meg a legerősebb jelöltként. ${Basis} ${pickProb}%-os hazai győzelmi esélyt ad, a kínált szorzó ${pickOdds.toFixed(2)}. A ${homeShort} hazai pályán magasabb intenzitással játszik és stabilabb xG mutatókkal rendelkezik.`;
+      pickRationale = `A rendszer a hazai győzelmet (${pickLabel}) jelöli meg a legerősebb jelöltként. ${Basis} ${pickProb}%-os hazai győzelmi esélyt ad, a kínált szorzó ${pickOdds.toFixed(2)}. A ${homeShort} hazai pályán magasabb intenzitással játszik és stabilabb gólmutatókkal rendelkezik.`;
       break;
 
     case '2':
@@ -223,15 +223,15 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
       break;
 
     case 'BTTS_NO':
-      pickRationale = `A kiemelt választás: legalább az egyik fél nem szerez gólt (${pickLabel}). A védekező taktika és az alacsony várható xG (${totalExpectedGoals.toFixed(1)}) miatt a kapott gól nélküli mérkőzés valószínűsége meghaladja a piaci várakozásokat.`;
+      pickRationale = `A kiemelt választás: legalább az egyik fél nem szerez gólt (${pickLabel}). A védekező taktika és az alacsony várható gólszám (${totalExpectedGoals.toFixed(1)}) miatt a kapott gól nélküli mérkőzés valószínűsége meghaladja a piaci várakozásokat.`;
       break;
 
     case 'OVER_25':
-      pickRationale = `A választott tipp a 2.5 gól feletti kimenetel (${pickLabel}). A modell által becsült ${totalExpectedGoals.toFixed(1)} összetett xG és a ${over25P}%-os valószínűség a mérkőzés korai szakaszában kialakuló helyzeteket és gólváltásokat vetíti előre a ${pickOdds.toFixed(2)}-es oddson.`;
+      pickRationale = `A választott tipp a 2.5 gól feletti kimenetel (${pickLabel}). A modell által becsült ${totalExpectedGoals.toFixed(1)} összetett várható gól és a ${over25P}%-os valószínűség a mérkőzés korai szakaszában kialakuló helyzeteket és gólváltásokat vetíti előre a ${pickOdds.toFixed(2)}-es oddson.`;
       break;
 
     case 'UNDER_25':
-      pickRationale = `A mérkőzés kiemelt tippje a 2.5 gól alatti kimenetel (${pickLabel}). A két együttes stabil védekezése, alacsony engedett xG-je és a lassabb tempójú játékstílus miatt a modell ${under25P}%-os valószínűséggel legfeljebb 2 gólt vár (${pickOdds.toFixed(2)} odds).`;
+      pickRationale = `A mérkőzés kiemelt tippje a 2.5 gól alatti kimenetel (${pickLabel}). A két együttes stabil védekezése, alacsony engedett gólszáma és a lassabb tempójú játékstílus miatt a modell ${under25P}%-os valószínűséggel legfeljebb 2 gólt vár (${pickOdds.toFixed(2)} odds).`;
       break;
 
     case 'BTTS_AND_OVER25':
@@ -284,10 +284,10 @@ export function generateMatchExplanation(match: Match): MatchExplanation {
       title: 'Gólprofil & Tempó',
       description:
         totalExpectedGoals >= 2.8
-          ? `Magas tempójú meccs, ${totalExpectedGoals.toFixed(1)} összetett xG, nyílt védekezésekkel.`
+          ? `Magas tempójú meccs, ${totalExpectedGoals.toFixed(1)} összetett várható gól, nyílt védekezésekkel.`
           : totalExpectedGoals <= 2.2
           ? `Taktikus, zárt mérkőzés, ${totalExpectedGoals.toFixed(1)} várható góllal, szigorú védelmekkel.`
-          : `Átlagos gólvárakozás (${totalExpectedGoals.toFixed(1)} xG), 2-3 gól közötti tartományban.`,
+          : `Átlagos gólvárakozás (${totalExpectedGoals.toFixed(1)} várható gól), 2-3 gól közötti tartományban.`,
     },
     {
       icon: 'target',

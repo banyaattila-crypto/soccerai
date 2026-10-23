@@ -11,7 +11,7 @@ export const LeagueRadar: React.FC<{ stats: LeagueRadarStat[] }> = ({ stats }) =
         Bajnokságok Kvantitatív Gól- és Értékradara
       </span>
       <span className="text-[11px] text-slate-400">
-        Rendezve a legmagasabb várható gólátlag (xG) szerint
+        Rendezve a legmagasabb várható gólátlag (modell) szerint
       </span>
     </div>
 
@@ -38,7 +38,7 @@ export const LeagueRadar: React.FC<{ stats: LeagueRadarStat[] }> = ({ stats }) =
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
             <div className="p-2 rounded-lg bg-slate-950/70 border border-slate-800/80">
-              <span className="text-[9px] text-slate-400 block font-bold">Várható xG</span>
+              <span className="text-[9px] text-slate-400 block font-bold">Várható gól</span>
               <span className="text-sm font-black text-amber-400 font-mono">
                 {stat.avgExpectedGoals}
               </span>

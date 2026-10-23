@@ -146,9 +146,9 @@ export const ScoreLabH2HCard: React.FC<ScoreLabH2HCardProps> = ({ match }) => {
           {/* xG Összehasonlítás */}
           <div className="space-y-1">
             <div className="flex justify-between text-[11px] font-mono">
-              <span className="text-emerald-400 font-bold">{home.xg.toFixed(2)} xG</span>
-              <span className="text-slate-400 font-semibold uppercase">Várható gólok (xG)</span>
-              <span className="text-teal-400 font-bold">{away.xg.toFixed(2)} xG</span>
+              <span className="text-emerald-400 font-bold">{home.xg.toFixed(2)}</span>
+              <span className="text-slate-400 font-semibold uppercase">Várható gólok (modell)</span>
+              <span className="text-teal-400 font-bold">{away.xg.toFixed(2)}</span>
             </div>
             <div className="h-2 rounded-full bg-slate-950 overflow-hidden flex border border-slate-800">
               <div

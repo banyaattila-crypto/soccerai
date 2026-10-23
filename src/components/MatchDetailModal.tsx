@@ -23,6 +23,7 @@ import { ScoreLabH2HCard } from './ScoreLabH2HCard';
 import { ScoreLabPoissonMatrix } from './ScoreLabPoissonMatrix';
 import { MatchExplanationCard } from './MatchExplanationCard';
 import { LiveOddsSection } from './matchDetail/LiveOddsSection';
+import { MarketGapChip } from './MarketGapChip';
 import { getDataQualityInfo } from '../utils/modelConfidence';
 import { marketFairFromBookmakers, applyMarketProbabilities } from '../services/marketBlend';
 
@@ -468,6 +469,7 @@ export const MatchDetailModal: React.FC<MatchDetailModalProps> = ({
                 {marketP ? 'Piaci ár alapján (de-vigelt)' : 'Modell becslés'}
               </span>
             </div>
+            <MarketGapChip match={match} compact />
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
                 <div className="text-slate-400 text-[11px]">Hazai (1)</div>
