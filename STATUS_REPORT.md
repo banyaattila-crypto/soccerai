@@ -1,8 +1,8 @@
 # SoccerAI PRO: Projekt státusz jelentés
 
 **Projekt:** `soccerai` (SoccerAI PRO)
-**Aktuális verzió:** `v1.34.0` (SemVer 2.0.0)
-**Kiadás neve:** Bemutató Szelvények Nélkül
+**Aktuális verzió:** `v1.34.1` (SemVer 2.0.0)
+**Kiadás neve:** Rendezett Komponensek
 **Dátum:** 2026. október 22.
 **Állapot:** `tsc -b` 0 hiba, `oxlint --deny-warnings` 0 hiba, 312/312 teszt zöld (35 tesztfájl), production build hibátlan
 **GitHub:** https://github.com/banyaattila-crypto/soccerai
@@ -90,7 +90,7 @@ A v1.25.0-ig a modell 3 napos ablakból illeszkedett (a szimulációban rosszabb
 | F-12 | Közepes | A `fullTime` ET/tizenegyes esetén nem 90 perces | Javítva (`regularTime`), élőben ellenőrizve: a mező létezik, a `fullTime` tartalmazza a hosszabbítást |
 | F-13 | Közepes | A PIN kliensoldali képernyőzár, nem védelem | Javítva (v1.32.0): a felirat képernyőzárként pontos |
 | F-14 | Alacsony | `MOCK_MATCHES` a fő bundle-ben; forced auto-refresh | Javítva (v1.33.0: a mintaadat megszűnt); az automatikus frissítés v1.31.0 óta adaptív |
-| F-15 | Alacsony | 26 üres `catch {}`, nagy komponensek, CSP hiánya | Részben (v1.32.0, v1.33.1): CSP és fejlécek, a `catch`-ek indokolva; StatsGrid 1223 -> 767, ResultsView 1081 -> 750, MatchDetailModal 868 -> 593, BankrollView 868 -> 508 sor; ScannerView, TopPicks, SettingsModal nyitva |
+| F-15 | Alacsony | 26 üres `catch {}`, nagy komponensek, CSP hiánya | Javítva (v1.32.0 - v1.34.1): CSP és fejlécek, a `catch`-ek indokolva; a legnagyobb komponens 1223 -> 767 sor (StatsGrid 767, ResultsView 750, MatchDetailModal 593, BankrollView 508, ScannerView 456) |
 
 Pontszámok (0–10): architektúra 6,5; kódminőség 6,5; funkcionális készültség 7; biztonság 5; tesztelhetőség 8; karbantarthatóság 5,5; dokumentáció 6; telepíthetőség 8. **Döntés: B, feltételesen érdemes folytatni.**
 
@@ -179,7 +179,7 @@ soccerai/
 2/c. **Több liga:** megvan (v1.29.0 + v1.30.0): 8 új liga, mind a 12 API-Sports ligához előre számolt csapaterősségek (`src/data/leagueModels.json`). Nyitva: a pillanatkép időnkénti újragenerálása (120 nap után elavul), és a football-data.co.uk használati feltételeinek ellenőrzése éles, tartós használat előtt; a repóban csak származtatott erősségek vannak.
 2/b. **Piaci valószínűség megjelenítése, ha van valós szorzó:** megvan (v1.28.0). Nyitott: a piaci alapú esély csak a már lekért szorzójú meccsekre jelenik meg (napi API-Sports kvóta); megfontolandó a szorzók előzetes, ütemezett lekérése a legfontosabb meccsekre.
 3. **Proxy- és audit-keményítés (F-05, F-06, F-13):** tartós rate limit, `Origin`/fixture ellenőrzés, HMAC-alapú szerveroldali napló, PIN-felirat pontosítása.
-4. **Higiénia (F-15):** ScannerView (687), TopPicks (647), SettingsModal (633) bontása. Tartós rate limit: Vercel Firewall szabály a soccerai-pro projekt fiókjában.
+4. **Higiénia (F-15):** kész. Opcionálisan a StatsGrid (767) és a ResultsView (750) szűrő- és állapotkezelő logikájának egyedi hookba szervezése. Tartós rate limit: Vercel Firewall szabály a soccerai-pro projekt fiókjában.
 
 ---
 

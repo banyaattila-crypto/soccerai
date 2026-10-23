@@ -3,6 +3,18 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.34.1] - 2026-10-23
+
+### Módosítva (Changed) - Nagy komponensek szétvágásának lezárása (F-15)
+Viselkedés-változás nélküli szerkezeti tisztítás.
+- **`topPicks/TopPickCard3D.tsx`:** a Napi Top Tipp 3D-s kártyája külön fájl (`TopPicks.tsx` 647 -> 359 sor).
+- **`scanner/OpportunityCard.tsx`, `scanner/LeagueRadar.tsx`:** a találati sor és a ligaradar külön komponens (`ScannerView.tsx` 687 -> 456 sor).
+- **`settings/PinSettingsSection.tsx`:** a PIN-képernyőzár szakasz állapottal és kezelőkkel együtt külön komponens, a három közel azonos űrlap közös `PinInput`, `ShowToggle`, `FormButtons` elemekre épül (`SettingsModal.tsx` 633 -> 284 sor).
+
+### Korlátok
+- Vizuális böngészős ellenőrzés ebben a körben sem készült (a böngésző a hozzáférést megtagadta); a tsc, az oxlint és a 312 teszt fedi, az éles oldalon ellenőrzendő.
+- A legnagyobb komponensek: `StatsGrid` 767, `ResultsView` 750, `MatchDetailModal` 593 sor.
+
 ## [1.34.0] - 2026-10-23
 
 ### Eltávolítva (Removed) - Bemutató szelvények a Tétnaplóban
