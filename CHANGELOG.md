@@ -3,6 +3,13 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.37.3] - 2026-10-23
+
+### Módosítva (Changed) - A meccsek nevei a bajnokság-sávon is látszanak
+A Mérkőzés fülön a bajnokság-sáv (Premier League, La Liga stb.) csak a ligát és a meccsek számát mutatta, a csapatnevek a sáv kinyitása után jelentek meg. A sáv második sora most kezdési idő szerint felsorolja a liga meccseit ("21:00 Ipswich Town – Nottingham · ..."): kinyitva egy sorra rövidül, becsukva legfeljebb három sorban látszik (a teljes lista az egérrel a tooltipben).
+- Új `grid/LeagueMatchNames.tsx` komponens; a sáv gombja `aria-expanded`-et kap. 3 új teszt (felsorolás, becsukott és nyitott állapot, üres lista) és kiegészített StatsGrid teszt; mind a 379 teszt zöld.
+- Helyi buildben, élő adattal szemmel ellenőrizve: a becsukott sávon is látszanak a nevek.
+
 ## [1.37.2] - 2026-10-23
 
 ### Javítva (Fixed) - A Mérkőzés fül csak egy liga meccseit mutatta

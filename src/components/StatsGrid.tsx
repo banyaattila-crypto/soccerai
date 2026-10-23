@@ -15,6 +15,7 @@ import { MatchCardsList } from './grid/MatchCardsList';
 import { MatchCompactList } from './grid/MatchCompactList';
 import { StatsFilterPanel } from './grid/StatsFilterPanel';
 import { StatsGridHeader } from './grid/StatsGridHeader';
+import { LeagueMatchNames } from './grid/LeagueMatchNames';
 import { StatsToolbar } from './grid/StatsToolbar';
 import { ActiveFilterChips } from './grid/ActiveFilterChips';
 import {
@@ -655,22 +656,26 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
                       <button
                         type="button"
                         onClick={() => toggleLeagueCollapse(league.id)}
-                        className="w-full px-4 sm:px-5 py-3 bg-mesh-header hover:bg-[#131E38] border-b border-slate-800/80 flex items-center justify-between transition-colors cursor-pointer text-left"
+                        aria-expanded={!isCollapsed}
+                        className="w-full px-4 sm:px-5 py-3 bg-mesh-header hover:bg-[#131E38] border-b border-slate-800/80 flex items-center justify-between gap-3 transition-colors cursor-pointer text-left"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-lg shrink-0">{league.flag}</span>
-                          <span className="font-extrabold text-sm text-white tracking-wide truncate">
-                            {league.name}
-                          </span>
-                          <span className="text-xs text-slate-400 shrink-0">
-                            ({league.country} &bull; {lMatches.length} meccs)
-                          </span>
-                          {strongCount > 0 && (
-                            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-300 border border-brand-500/30 text-[10px] font-bold">
-                              <Sparkles className="w-2.5 h-2.5" />
-                              {strongCount} erős jel
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-lg shrink-0">{league.flag}</span>
+                            <span className="font-extrabold text-sm text-white tracking-wide truncate">
+                              {league.name}
                             </span>
-                          )}
+                            <span className="text-xs text-slate-400 shrink-0">
+                              ({league.country} &bull; {lMatches.length} meccs)
+                            </span>
+                            {strongCount > 0 && (
+                              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-300 border border-brand-500/30 text-[10px] font-bold">
+                                <Sparkles className="w-2.5 h-2.5" />
+                                {strongCount} erős jel
+                              </span>
+                            )}
+                          </div>
+                          <LeagueMatchNames matches={lMatches} collapsed={isCollapsed} />
                         </div>
 
                         <div className="flex items-center gap-1.5 text-xs text-slate-400 shrink-0">
