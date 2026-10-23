@@ -3,6 +3,12 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.35.1] - 2026-10-23
+
+### Javítva (Fixed)
+- Az Over/Under 2.5 tipp indoklásában maradt két "xG" felirat is "várható gól"-ra cserélve (`predictionEngine.ts`); élő ellenőrzésen derült ki.
+- Élőben ellenőrizve (v1.35.0): a szorzó előzetes lekérése működik (a két legerősebb tipp valós Pinnacle árat kapott), a "Modell eltér a piactól: 6 pp / 7 pp" jelző megjelenik, a CLV-kártya "Még nincs mérhető tipp" állapotot mutat (a korábban naplózott 98 tipp szimulált szorzón készült, ezek nem alakíthatók át; a CLV a mostantól naplózott, valós szorzós tippekből gyűlik).
+
 ## [1.35.0] - 2026-10-23
 
 ### Hozzáadva (Added) - A tippek valódi mérése: CLV

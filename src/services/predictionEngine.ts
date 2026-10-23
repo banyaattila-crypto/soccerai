@@ -833,7 +833,7 @@ export function buildMatchQuantAndPick(params: {
         isTopPick: isTop,
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
-        reasoning: `Piacfüggő λ-rács teszt (Over 2.5): ${rob.verdict} (${rob.posPct}% stabilitás). Várható össz-gól: ${(homeXg + awayXg).toFixed(1)} xG.`,
+        reasoning: `Piacfüggő λ-rács teszt (Over 2.5): ${rob.verdict} (${rob.posPct}% stabilitás). Várható össz-gól: ${(homeXg + awayXg).toFixed(1)}.`,
         rankScore,
         robStats: rob,
       });
@@ -867,7 +867,7 @@ export function buildMatchQuantAndPick(params: {
         isTopPick: isTop,
         robustnessVerdict: rob.verdict,
         quarterKellyPct: qk,
-        reasoning: `Piacfüggő λ-rács teszt (Under 2.5): ${rob.verdict} (${rob.posPct}% stabilitás). Alacsony várható gólszám (${(homeXg + awayXg).toFixed(1)} xG).`,
+        reasoning: `Piacfüggő λ-rács teszt (Under 2.5): ${rob.verdict} (${rob.posPct}% stabilitás). Alacsony várható gólszám (${(homeXg + awayXg).toFixed(1)}).`,
         rankScore,
         robStats: rob,
       });
