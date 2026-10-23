@@ -3,6 +3,12 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.37.2] - 2026-10-23
+
+### Javítva (Fixed) - A Mérkőzés fül csak egy liga meccseit mutatta
+A Mérkőzés fül alapértelmezetten a Premier League-re volt szűrve, ezért a nap többi meccse (ma 33-ból egy) rejtve maradt, és csak egy mérkőzés neve látszott. Az alapértelmezés most "Minden Bajnokság": a nap összes meccse látszik csapatnevekkel, bajnokságonként csoportosítva; a liga-szűrő továbbra is kiválasztható.
+- 1 új regressziós teszt (több liga meccsei alapból névvel látszanak); a teszt a régi alapértelmezéssel elbukik.
+
 ## [1.37.1] - 2026-10-23
 
 ### Javítva (Fixed) - Levágott fülnevek mobilon

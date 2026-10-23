@@ -44,8 +44,8 @@ export const StatsGrid: React.FC<StatsGridProps> = ({
   onAddToBetSlip,
   betSlipItems,
 }) => {
-  // Alapértelmezett liga: Premier League ('pl') a kompakt kezdőnézethez
-  const [selectedLeague, setSelectedLeague] = useState<string>('pl');
+  // Alapértelmezetten minden bajnokság látszik: egyetlen liga előszűrése elrejtette a nap többi meccsét
+  const [selectedLeague, setSelectedLeague] = useState<string>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('league');
   const [isLeaguesExpanded, setIsLeaguesExpanded] = useState<boolean>(false);
   // Alapértelmezett nézet: 'compact' (ScoreLab lista), 'cards' vagy 'table'
