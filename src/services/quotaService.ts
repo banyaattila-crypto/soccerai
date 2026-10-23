@@ -35,7 +35,16 @@ interface StoredQuotaState {
   dailyDate: string; // YYYY-MM-DD
   dailyLimit: number;
   lastErrorNotice?: string;
+  /** Saját hívások időbélyegei az elmúlt 24 órából (görgetett napi számláló). */
+  callLog?: number[];
+  /** Az API-Sports fejlécéből kapott hátralévő keret és a mérés ideje (a tracker hívásait is tartalmazza). */
+  remainingHeader?: number;
+  remainingAt?: number;
+  /** Fiók- vagy hozzáférési hiba az API-Sports válasz `errors` mezőjéből (pl. felfüggesztett fiók). */
+  accountIssue?: string;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function getTodayDateString(): string {
   return new Date().toISOString().slice(0, 10);
@@ -212,6 +221,7 @@ export function recordApiSportsCall(
 ): void {
   const state = loadState(STORAGE_KEY_AS_QUOTA, 100);
   state.dailyCount += 1;
+  state.callLog = [...(state.callLog ?? []).filter((ts) => ts > nowMs - DAY_MS), nowMs].slice(-300);
 
   if (limitHeader !== undefined) {
     const l = Number(limitHeader);
@@ -222,6 +232,8 @@ export function recordApiSportsCall(
     const r = Number(remainingHeader);
     if (!isNaN(r) && r >= 0) {
       state.dailyCount = Math.max(0, state.dailyLimit - r);
+      state.remainingHeader = r;
+      state.remainingAt = nowMs;
     }
   }
 
@@ -237,6 +249,70 @@ export function recordApiSportsCall(
 }
 
 /**
+ * Az API-Sports válasz `errors` mezőjének rögzítése. A szolgáltató a fiókhibákat (felfüggesztés, érvénytelen kulcs,
+ * elfogyott keret) HTTP 200-zal adja vissza, ezért a törzset is vizsgálni kell. Üres `errors` törli az előző hibát.
+ */
+export function recordApiSportsBodyErrors(errors: unknown, nowMs = Date.now()): string | null {
+  const state = loadState(STORAGE_KEY_AS_QUOTA, 100);
+  let issue: string | undefined;
+  if (errors && typeof errors === 'object') {
+    const entries = Object.entries(errors as Record<string, unknown>).filter(([, v]) => v);
+    if (entries.length > 0) {
+      const [key, value] = entries[0];
+      const text = String(value);
+      if (key === 'access' || /suspend/i.test(text)) {
+        issue = 'Az API-Sports fiók fel van függesztve, ezért a másodlagos ligák (pl. Román Liga I) nem töltődnek be. Ellenőrizd: dashboard.api-football.com.';
+      } else if (key === 'requests' || /request limit|limit/i.test(text)) {
+        issue = 'Az API-Sports napi kérés-kerete elfogyott. A keret éjfélkor (UTC) áll vissza.';
+      } else if (key === 'token' || /token|key/i.test(text)) {
+        issue = 'Az API-Sports kulcs érvénytelen vagy hiányzik.';
+      } else {
+        issue = `API-Sports hiba: ${text}`;
+      }
+    }
+  }
+  if (issue !== state.accountIssue) {
+    state.accountIssue = issue;
+    saveState(STORAGE_KEY_AS_QUOTA, state);
+  }
+  void nowMs;
+  return issue ?? null;
+}
+
+export interface ApiSportsUsage {
+  used24h: number;
+  limit: number;
+  /** Hátralévő napi keret: a fejlécből (ha ma mértük), különben becslés a saját hívásokból. */
+  remaining: number;
+  /** A `remaining` a szolgáltató fejlécéből származik-e (pontos, a tracker hívásait is tartalmazza). */
+  exact: boolean;
+  resetsAt: number;
+  issue: string | null;
+}
+
+/** Az API-Sports felhasználás összegzése a felülethez: görgetett 24 órás saját hívásszám és a hátralévő keret. */
+export function getApiSportsUsage(nowMs = Date.now()): ApiSportsUsage {
+  const state = loadState(STORAGE_KEY_AS_QUOTA, 100);
+  const limit = state.dailyLimit || 100;
+  const used24h = (state.callLog ?? []).filter((ts) => ts > nowMs - DAY_MS).length;
+  const nextMidnight = new Date(nowMs);
+  nextMidnight.setUTCHours(24, 0, 0, 0);
+  const lastMidnight = nextMidnight.getTime() - DAY_MS;
+  const exact = state.remainingHeader !== undefined && (state.remainingAt ?? 0) >= lastMidnight;
+  const remaining = exact
+    ? (state.remainingHeader as number)
+    : Math.max(0, limit - state.dailyCount);
+  return {
+    used24h,
+    limit,
+    remaining,
+    exact,
+    resetsAt: nextMidnight.getTime(),
+    issue: state.accountIssue ?? null,
+  };
+}
+
+/**
  * Mindkét szolgáltató kvóta státuszának együttes lekérdezése
  */
 export function getOverallQuotaSummary(nowMs = Date.now()): {
@@ -247,6 +323,7 @@ export function getOverallQuotaSummary(nowMs = Date.now()): {
 } {
   const fd = checkFootballDataQuota(nowMs);
   const as = checkApiSportsQuota(nowMs);
+  as.lastErrorNotice = as.lastErrorNotice || getApiSportsUsage(nowMs).issue || undefined;
   const hasActiveRateLimit = fd.isRateLimited || as.isRateLimited;
   const activeNotice = fd.lastErrorNotice || as.lastErrorNotice || null;
 

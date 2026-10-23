@@ -22,6 +22,8 @@ import {
   Check,
   RotateCcw,
 } from 'lucide-react';
+import { LEAGUES } from '../data/leagues';
+import { SUPPORTED_SECONDARY_LEAGUES } from '../services/apiSportsClient';
 import { getRelativeDateStr } from '../utils/dateUtils';
 import {
   getAuditLog,
@@ -362,19 +364,29 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
     });
   }, [verifiedRecords]);
 
-  // 6. Elérhető ligák az összes rekordból
+  // 6. Ligák: az összes ismert bajnokság (a még eredmény nélküliek is), az eredménnyel rendelkezők előre
   const distinctLeagues = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; flag?: string }>();
+    const map = new Map<string, { id: string; name: string; flag?: string; hasResults: boolean }>();
     unifiedEntries.forEach((entry) => {
       if (!map.has(entry.leagueId)) {
         map.set(entry.leagueId, {
           id: entry.leagueId,
           name: entry.leagueName,
           flag: entry.leagueFlag,
+          hasResults: true,
         });
       }
     });
-    return Array.from(map.values());
+    const known = [
+      ...LEAGUES.map((l) => ({ id: l.id, name: l.name, flag: l.flag })),
+      ...Object.values(SUPPORTED_SECONDARY_LEAGUES).map((l) => ({ id: l.internalId, name: l.name, flag: l.flag })),
+    ];
+    known.forEach((l) => {
+      if (!map.has(l.id)) map.set(l.id, { ...l, hasResults: false });
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => Number(b.hasResults) - Number(a.hasResults) || a.name.localeCompare(b.name, 'hu')
+    );
   }, [unifiedEntries]);
 
   // 7. Szűrt elemek a fülválasztó és egyéb szűrők alapján
@@ -682,6 +694,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
                 {distinctLeagues.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.flag || '⚽'} {l.name}
+                    {l.hasResults ? '' : ' (még nincs eredmény)'}
                   </option>
                 ))}
               </select>

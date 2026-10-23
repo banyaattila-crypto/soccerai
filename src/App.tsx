@@ -1,3 +1,4 @@
+import { ApiQuotaBanner } from './components/ApiQuotaBanner';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Match, DayFilter, BetSlipItem } from './types/football';
 import { LEAGUES } from './data/leagues';
@@ -580,6 +581,8 @@ export function App() {
         isPinEnabled={pinEnabled}
         onLockApp={() => setIsLocked(true)}
       />
+
+      <ApiQuotaBanner />
 
       {/* Új PWA verzió elérhető sáv */}
       {swUpdateReg && (

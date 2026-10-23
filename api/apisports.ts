@@ -222,7 +222,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       data = { error: `API-Sports válasz feldolgozási hiba (HTTP ${apiRes.status})` };
     }
 
-    if (apiRes.ok) {
+    for (const h of ['x-ratelimit-requests-remaining', 'x-ratelimit-requests-limit']) {
+      const v = apiRes.headers?.get?.(h);
+      if (v) res.setHeader(h, v);
+    }
+    res.setHeader('Access-Control-Expose-Headers', 'x-ratelimit-requests-remaining, x-ratelimit-requests-limit');
+
+    const errs = (data as { errors?: unknown } | null)?.errors;
+    const hasBodyErrors =
+      !!errs && typeof errs === 'object' && Object.values(errs as Record<string, unknown>).some(Boolean);
+
+    if (hasBodyErrors) {
+      // Fiók- vagy kvótahiba HTTP 200-zal: nem gyorsítótárazható, különben a javítás után is a hibát kapnánk
+      res.setHeader('Cache-Control', 'no-store');
+    } else if (apiRes.ok) {
       // Élő mérkőzést tartalmazó menetrendnél rövidebb (7 perces) Edge gyorsítótár, hogy a lefújás időben
       // megjelenjen; egyébként 30 perc a napi 100 kérés védelmére. Csak sikeres (2xx) válasznál.
       if (hasLiveFixtures(data)) {

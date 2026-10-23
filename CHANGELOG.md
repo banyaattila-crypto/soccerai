@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.38.0] - 2026-10-23
+
+### Hozzáadva (Added) - API-Sports felügyelet és teljes ligalista az Eredményekben
+- **Fiókhiba jelzése:** az API-Sports a felfüggesztett fiókot, az érvénytelen kulcsot és az elfogyott keretet is HTTP 200-zal, a válasz `errors` mezőjében jelzi. Ezt eddig az app észrevétlenül 0 mérkőzésként kezelte, ezért tűntek el a másodlagos ligák (pl. Román Liga I). Most a hiba piros sávban látszik, és a lekérés hibának számít (a meglévő gyorsítótár használható marad).
+- **Kvótaszámláló:** görgetett 24 órás saját hívásszám, és a szolgáltató fejlécéből kapott pontos hátralévő napi keret (a tracker hívásait is tartalmazza). A sáv akkor is megjelenik, ha a keret 30% alá csökkent; a visszaállás ideje UTC éjfél.
+- **Proxy:** továbbítja az `x-ratelimit-requests-*` fejléceket (eddig nem jutottak el az apphoz), és a hibát hordozó 200-as válaszokat nem gyorsítótárazza (`no-store`), hogy a javított fiók azonnal működjön.
+- **Eredmények ligaszűrő:** az összes ismert bajnokság szerepel; az eredménnyel nem rendelkezők "(még nincs eredmény)" felirattal, a lista végén.
+
 ## [1.37.5] - 2026-10-23
 
 ### Javítva (Fixed) - Az Eredmények közé csak lejátszott, eredménnyel rendelkező mérkőzés kerül

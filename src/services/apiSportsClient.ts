@@ -20,6 +20,7 @@ import {
 import {
   checkApiSportsQuota,
   recordApiSportsCall,
+  recordApiSportsBodyErrors,
 } from './quotaService';
 
 export const API_SPORTS_DEFAULT_KEY = '';
@@ -358,10 +359,12 @@ interface ApiSportsFixtureItem {
 }
 
 interface ApiSportsFixturesResponse {
+  errors?: unknown;
   response?: ApiSportsFixtureItem[];
 }
 
 interface ApiSportsOddsResponse {
+  errors?: unknown;
   response?: {
     bookmakers?: ApiSportsBookmaker[];
   }[];
@@ -482,7 +485,10 @@ export async function fetchApiSportsMatches(
 
       if (res.ok) {
         const parsed: ApiSportsFixturesResponse = await res.json();
-        if (parsed && Array.isArray(parsed.response)) {
+        const bodyIssue = recordApiSportsBodyErrors(parsed?.errors);
+        if (bodyIssue) {
+          lastError = new Error(bodyIssue);
+        } else if (parsed && Array.isArray(parsed.response)) {
           rawData = parsed;
           break;
         }
@@ -799,7 +805,10 @@ export async function fetchFixtureOdds(
 
       if (res.ok) {
         const parsed: ApiSportsOddsResponse = await res.json();
-        if (parsed && Array.isArray(parsed.response)) {
+        const bodyIssue = recordApiSportsBodyErrors(parsed?.errors);
+        if (bodyIssue) {
+          lastError = new Error(bodyIssue);
+        } else if (parsed && Array.isArray(parsed.response)) {
           rawData = parsed;
           break;
         }
