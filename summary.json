@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-10-23T08:49:30.658Z",
+  "activeFixtures": 57,
+  "activeCandidates": 2,
+  "settledCandidates": 0,
+  "clv": {
+    "n": 0,
+    "meanClvPct": 0,
+    "seClvPct": 0,
+    "ci95LowPct": 0,
+    "ci95HighPct": 0,
+    "positiveShare": 0,
+    "meanShopPct": 0,
+    "meanDriftPct": 0,
+    "verdict": "no_data"
+  },
+  "roi": {
+    "n": 0,
+    "roiPct": 0,
+    "seRoiPct": 0,
+    "ci95LowPct": 0,
+    "ci95HighPct": 0,
+    "hitRatePct": 0
+  },
+  "byBookmaker": [
+    {
+      "bookmaker": "Dafabet",
+      "n": 1
+    },
+    {
+      "bookmaker": "1xBet",
+      "n": 1
+    }
+  ],
+  "byMarket": [
+    {
+      "market": "X",
+      "n": 1
+    },
+    {
+      "market": "1",
+      "n": 1
+    }
+  ],
+  "byLeague": [
+    {
+      "league": "Eredivisie",
+      "n": 1
+    },
+    {
+      "league": "Bundesliga",
+      "n": 1
+    }
+  ]
+}
