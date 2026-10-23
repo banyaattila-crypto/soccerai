@@ -3,6 +3,7 @@ import { evaluatePickWon } from './betEvaluation';
 import { eventBus } from '../utils/eventBus';
 import { sha256Hex } from '../utils/sha256';
 import { marketSnapshotForPick, sanitizeSnapshot } from './clvService';
+import { protocolStamp, sanitizeProtocolStamp } from './bettingProtocol';
 
 export const STORAGE_KEY_AUDIT_LOG = 'soccerai_prediction_audit_log_v2';
 export const AUDIT_BASE_STAKE = 10000; // 10 000 Ft alaptét a hitelesített ROI és nyereség számításához
@@ -226,6 +227,7 @@ export function recordPreMatchPredictions(
         match.aiPick.isSimulatedOdds === false
           ? marketSnapshotForPick(match, match.aiPick.market, nowMs)
           : undefined,
+      protocol: match.aiPick.isSimulatedOdds === false ? protocolStamp(match, match.aiPick.market) : undefined,
       provenance: 'VERIFIED_PRE_MATCH',
       auditHash,
       settled: false,
@@ -637,6 +639,7 @@ export function importAuditLogFromJson(jsonStr: string): AuditImportResult {
           ...r,
           marketAtLog: sanitizeSnapshot(r.marketAtLog),
           marketClose: sanitizeSnapshot(r.marketClose),
+          protocol: sanitizeProtocolStamp(r.protocol),
           settled: sanitizedSettled,
           settledAt: sanitizedSettledAt,
           homeScore: sanitizedSettled ? r.homeScore : undefined,

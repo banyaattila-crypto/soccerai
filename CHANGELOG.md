@@ -3,6 +3,16 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.40.0] - 2026-10-24
+
+### Hozzáadva (Added) - Fogadási protokoll és papírkereskedés
+- **Rögzített, verziózott szabály** (`src/services/bettingProtocol.ts`, `docs/betting-protocol.md`): valós, friss szorzó; ár-előny +2%…+20% a piaci konszenzushoz; modell–piac eltérés legfeljebb 5 pp (12 pp fölött kizárt); szorzó 1,50-4,00; legalább 20 perc a kezdésig; naponta legfeljebb 5 tipp; fix 1 egységes papírtét.
+- **Utólagos válogatás ellen:** minden új, valós szorzón naplózott rekord protokoll-bélyeget kap (verzió, a szabály ujjlenyomata, eltérés). A protokoll-tipp döntés a rekordból minden megjelenítéskor újraszámolódik; a szabály módosítása új verziót, új mérést jelent, a régi eredmény nem íródik át.
+- **Eredmények oldal, "Fogadási protokoll" kártya:** protokoll-tippek száma, találati arány, papír ROI 95%-os intervallummal, átlagos CLV, legnagyobb visszaesés, piaconkénti bontás és az éles fogadási kapu feltételei haladásjelzővel.
+- **Éles fogadási kapu:** csak akkor "Éles fogadásra alkalmas", ha legalább 100 lezárt protokoll-tipp, legalább 100 CLV-minta pozitív alsó intervallum-határral, és a papír ROI nem negatív. Bizonyítottan negatív CLV vagy ROI esetén "Leállítandó".
+- **Napi Top Tipp kártya:** "Protokoll-tipp, csak papír" vagy "Nem protokoll-tipp" jelzés (az ok a súgóban).
+- Hiba a fejlesztés közben (teszt találta): az ujjlenyomat a beágyazott küszöböket nem vette figyelembe; rekurzív, rendezett szerializálással javítva.
+
 ## [1.39.0] - 2026-10-24
 
 ### Hozzáadva (Added) - Második szorzóforrás: The Odds API (az API-Sports-tól függetlenül)

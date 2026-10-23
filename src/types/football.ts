@@ -343,6 +343,11 @@ export interface PredictionAuditRecord {
   marketAtLog?: AuditMarketSnapshot;
   /** A kezdés előtti legutolsó ismert piaci pillanatkép (a záró fair ár közelítése) */
   marketClose?: AuditMarketSnapshot;
+  /**
+   * Fogadási protokoll bélyeg a naplózás idejéről (lásd services/bettingProtocol.ts): a verzió, a szabály
+   * ujjlenyomata és a modell–piac eltérés (százalékpont). A protokoll-tipp döntés ebből és a rekordból újraszámolható.
+   */
+  protocol?: { version: number; fingerprint: string; gapPp: number | null };
   status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
   profit: number;           // Forintban alaptéttel számolva (pl. 10 000 Ft alapon)
   roi: number;              // % megtérülés az adott fogadásra
