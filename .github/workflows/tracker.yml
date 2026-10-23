@@ -1,0 +1,86 @@
+name: Szorzó-követő (tracker)
+
+# Időzítve fut, naplózza a legjobb bukméker-árak előnyét a konszenzushoz képest, rögzíti a záró szorzókat és az
+# eredményeket. Az adatok a külön "tracker-data" ágra kerülnek (a main-t nem érinti, a Vercel nem építi újra).
+# Beállítás és értelmezés: docs/tracker.md
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+# Egyszerre csak egy futás írhat az adat-ágra
+concurrency:
+  group: tracker
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  track:
+    name: Szorzók és eredmények követése
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      API_SPORTS_KEY: ${{ secrets.API_SPORTS_KEY }}
+      TRACKER_DAILY_BUDGET: ${{ vars.TRACKER_DAILY_BUDGET }}
+      TRACKER_RESERVE: ${{ vars.TRACKER_RESERVE }}
+      TRACKER_LEAGUES: ${{ vars.TRACKER_LEAGUES }}
+
+    steps:
+      - name: A titok ellenőrzése
+        id: key
+        run: |
+          if [ -z "$API_SPORTS_KEY" ]; then
+            echo "::warning::Nincs beállítva az API_SPORTS_KEY repository secret, a követő kihagyja a futást (lásd docs/tracker.md)."
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Kód letöltése (main)
+        if: steps.key.outputs.has_key == 'true'
+        uses: actions/checkout@v4
+
+      - name: Node.js 22
+        if: steps.key.outputs.has_key == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Az adat-ág letöltése (vagy létrehozása)
+        if: steps.key.outputs.has_key == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$REMOTE" tracker-data >/dev/null 2>&1; then
+            git clone --depth 1 --branch tracker-data "$REMOTE" tracker-data
+          else
+            mkdir tracker-data
+            git -C tracker-data init -b tracker-data
+            git -C tracker-data remote add origin "$REMOTE"
+          fi
+
+      - name: tsx telepítése (a követő más függőséget nem használ)
+        if: steps.key.outputs.has_key == 'true'
+        run: npm install --no-save --no-audit --no-fund --no-package-lock tsx
+
+      - name: Követő futtatása
+        if: steps.key.outputs.has_key == 'true'
+        run: npx tsx scripts/tracker/run.ts --data tracker-data
+
+      - name: Adatok mentése az adat-ágra
+        if: steps.key.outputs.has_key == 'true'
+        run: |
+          cd tracker-data
+          git config user.name "soccerai-tracker"
+          git config user.email "soccerai-tracker@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nincs változás, nincs commit."
+          else
+            git commit -m "tracker: $(date -u +%Y-%m-%dT%H:%MZ) [skip ci]"
+            git push origin HEAD:tracker-data
+          fi

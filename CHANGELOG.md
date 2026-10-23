@@ -3,6 +3,24 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.36.0] - 2026-10-23
+
+### Hozzáadva (Added) - Szerveroldali szorzó-követő
+Az app CLV-gyűjtése csak nyitott böngészőben működött. A követő időzítve, szerveroldalon fut, így a minta nem hézagos, és nem függ attól, hogy az app nyitva van-e. Részletek és beállítás: `docs/tracker.md`.
+- **Mérés (`src/services/tracker/trackerCore.ts`):** korai szorzó-pillanatkép a kezdés előtt 45 perc és 30 óra között; ha a legjobb bukméker szorzója a konszenzus (Pinnacle, ennek híján legalább 4 bukméker átlaga) de-vigelt fair árához képest legalább +2% (és legfeljebb +20%) előnyt ad, write-once jelölt; két záró ablak (kezdés előtt 100–50 és 35–8 perc); a meccs végén a 90 perces eredmény. Kimenet: CLV 95%-os intervallummal (az app CLV-statisztikájával azonos ítéletek), egységtét-ROI, bukmékerenkénti, piaconkénti és ligánkénti megoszlás.
+- **Futtató (`trackerRunner.ts`, `scripts/tracker/run.ts`):** napi kérés-keret (alap 50), tartalék a válasz `x-ratelimit-requests-remaining` fejlécéből (12), futásonkénti korlát, 429 és 200-as törzsben jelzett API-hiba kezelése, üres szorzó-válasz ismétlésének korlátja. Ha nincs teendő, nem ír (nincs felesleges commit).
+- **Időzítés (`.github/workflows/tracker.yml`):** 20 percenként és kézzel; az API-kulcs `API_SPORTS_KEY` repository secret (nélküle a futás figyelmeztetéssel kihagyja magát); az adatok a `tracker-data` ágra kerülnek `[skip ci]` üzenettel, a `vercel.json` (`git.deploymentEnabled`) letiltja rá a Vercel-építést.
+- **Közös szorzó-feldolgozás (`oddsParsing.ts`):** az API-Sports odds-válasz feldolgozása az appból tiszta modulba került, a követő ugyanazt használja; `clvStatsFromSamples` általánosítja a CLV-statisztikát.
+
+### Módosítva (Changed)
+- Az app szorzó-előlekérésének napi kerete 40-ről 15-re csökkent: az API-Sports napi 100 kérése közös a követővel.
+
+### Korlátok
+- A követő az ingyenes kvóta miatt szűk (néhány liga); a záró szorzó közelítés (kezdés előtt 8–35 perc). A GitHub időzítése nem pontos.
+- A legjobb ár csak akkor értékes, ha elérhető (számlakorlátok): a bukmékerenkénti megoszlás mutatja, kitől függ az előny.
+- A workflow csak a main-re kerülés után fut; élő ellenőrzés az API-kulcs titokként való beállítása után lehetséges.
+- **Tesztek:** 34 új teszt (ütemezés, jelölt, CLV, lezárás, keret, hibák, életciklus hamis API-val); összesen 41 fájlban 375 / 375 zöld. A teljes fájl-I/O utat helyi hamis szerverrel is végigpróbáltam.
+
 ## [1.35.1] - 2026-10-23
 
 ### Javítva (Fixed)

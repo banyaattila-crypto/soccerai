@@ -17,7 +17,7 @@ import { getMatchKickoffTimestamp } from './predictionAuditService';
  * futásonként korlátozva történnek.
  */
 
-export const ODDS_TRACKING_DAILY_BUDGET = 40;
+export const ODDS_TRACKING_DAILY_BUDGET = 15;
 export const PREFETCH_MAX_PER_RUN = 6;
 export const CLOSING_REFRESH_MAX_PER_RUN = 4;
 /** Ennyivel a kezdés előtt (előre) érdemes először lekérni a szorzót */

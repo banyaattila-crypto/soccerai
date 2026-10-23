@@ -2,7 +2,6 @@ import {
   Match,
   MatchStatus,
   FixtureRealOdds,
-  BookmakerOddsItem,
 } from '../types/football';
 import {
   calculateMarketProbabilities,
@@ -12,6 +11,7 @@ import { formatLocalDate, parseIsoToLocalDateAndTime } from '../utils/dateUtils'
 import { normalizeTeamName } from '../utils/teamUtils';
 import { marketFairFromBookmakers, blendedMarketPct, applyMarketProbabilities } from './marketBlend';
 import { eventBus } from '../utils/eventBus';
+import { parseApiSportsBookmakers, type ApiSportsBookmaker } from './oddsParsing';
 import { getSnapshotLeagueModel } from './snapshotModels';
 import {
   computeExpectedGoalsFromModel,
@@ -359,21 +359,6 @@ interface ApiSportsFixtureItem {
 
 interface ApiSportsFixturesResponse {
   response?: ApiSportsFixtureItem[];
-}
-
-interface ApiSportsOddValue {
-  value: string;
-  odd: string;
-}
-
-interface ApiSportsBetMarket {
-  name: string;
-  values?: ApiSportsOddValue[];
-}
-
-interface ApiSportsBookmaker {
-  name: string;
-  bets?: ApiSportsBetMarket[];
 }
 
 interface ApiSportsOddsResponse {
@@ -842,80 +827,8 @@ export async function fetchFixtureOdds(
     return null;
   }
 
-  // 3. Bukmékerek és piacok feldolgozása
-  const parsedBookmakers: BookmakerOddsItem[] = [];
-
-  for (const b of rawBookmakers) {
-    const mw = b.bets?.find((x) => x.name === 'Match Winner');
-    const ou = b.bets?.find((x) => x.name === 'Goals Over/Under');
-    const btts = b.bets?.find((x) => x.name === 'Both Teams Score');
-
-    const homeVal = mw?.values?.find((v) => v.value === 'Home')?.odd;
-    const drawVal = mw?.values?.find((v) => v.value === 'Draw')?.odd;
-    const awayVal = mw?.values?.find((v) => v.value === 'Away')?.odd;
-
-    const home = homeVal ? Number(homeVal) : undefined;
-    const draw = drawVal ? Number(drawVal) : undefined;
-    const away = awayVal ? Number(awayVal) : undefined;
-
-    const over25Val = ou?.values?.find((v) => v.value === 'Over 2.5')?.odd;
-    const under25Val = ou?.values?.find((v) => v.value === 'Under 2.5')?.odd;
-    const over25 = over25Val ? Number(over25Val) : undefined;
-    const under25 = under25Val ? Number(under25Val) : undefined;
-
-    const bttsYesVal = btts?.values?.find((v) => v.value === 'Yes')?.odd;
-    const bttsNoVal = btts?.values?.find((v) => v.value === 'No')?.odd;
-    const bttsYes = bttsYesVal ? Number(bttsYesVal) : undefined;
-    const bttsNo = bttsNoVal ? Number(bttsNoVal) : undefined;
-
-    let margin: number | undefined = undefined;
-    if (home && draw && away) {
-      margin = Math.round(((1 / home + 1 / draw + 1 / away) - 1) * 1000) / 10;
-    }
-
-    parsedBookmakers.push({
-      name: b.name,
-      home,
-      draw,
-      away,
-      over25,
-      under25,
-      bttsYes,
-      bttsNo,
-      margin,
-    });
-  }
-
-  // Kiemelt bukmékerek kinyerése (Pinnacle & Bet365)
-  const pinnacle = parsedBookmakers.find((b) =>
-    b.name.toLowerCase().includes('pinnacle')
-  );
-  const bet365 = parsedBookmakers.find((b) =>
-    b.name.toLowerCase().includes('bet365')
-  );
-
-  // Legjobb elérhető szorzók kiválasztása
-  let bestHome: { odd: number; bookmaker: string } | undefined;
-  let bestDraw: { odd: number; bookmaker: string } | undefined;
-  let bestAway: { odd: number; bookmaker: string } | undefined;
-  let bestOver25: { odd: number; bookmaker: string } | undefined;
-  let bestUnder25: { odd: number; bookmaker: string } | undefined;
-  let bestBttsYes: { odd: number; bookmaker: string } | undefined;
-
-  for (const b of parsedBookmakers) {
-    if (b.home && (!bestHome || b.home > bestHome.odd))
-      bestHome = { odd: b.home, bookmaker: b.name };
-    if (b.draw && (!bestDraw || b.draw > bestDraw.odd))
-      bestDraw = { odd: b.draw, bookmaker: b.name };
-    if (b.away && (!bestAway || b.away > bestAway.odd))
-      bestAway = { odd: b.away, bookmaker: b.name };
-    if (b.over25 && (!bestOver25 || b.over25 > bestOver25.odd))
-      bestOver25 = { odd: b.over25, bookmaker: b.name };
-    if (b.under25 && (!bestUnder25 || b.under25 > bestUnder25.odd))
-      bestUnder25 = { odd: b.under25, bookmaker: b.name };
-    if (b.bttsYes && (!bestBttsYes || b.bttsYes > bestBttsYes.odd))
-      bestBttsYes = { odd: b.bttsYes, bookmaker: b.name };
-  }
+  // 3. Bukmékerek és piacok feldolgozása (közös, tiszta függvény: lásd oddsParsing.ts)
+  const parsed = parseApiSportsBookmakers(rawBookmakers);
 
   const result: FixtureRealOdds = {
     fixtureId,
@@ -923,17 +836,7 @@ export async function fetchFixtureOdds(
       hour: '2-digit',
       minute: '2-digit',
     }),
-    bookmakers: parsedBookmakers,
-    pinnacle,
-    bet365,
-    bestOdds: {
-      home: bestHome,
-      draw: bestDraw,
-      away: bestAway,
-      over25: bestOver25,
-      under25: bestUnder25,
-      bttsYes: bestBttsYes,
-    },
+    ...parsed,
   };
 
   const nowMs = Date.now();

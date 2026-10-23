@@ -128,7 +128,11 @@ const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
  * legalább 50 minta és a CI felső széle < 0 -> negative; egyébként unproven.
  */
 export function getClvStats(records: PredictionAuditRecord[]): ClvStats {
-  const items = records.map(computeRecordClv).filter((x): x is RecordClv => x !== null);
+  return clvStatsFromSamples(records.map(computeRecordClv).filter((x): x is RecordClv => x !== null));
+}
+
+/** CLV-statisztika tetszőleges mintákból (az app naplójából és a szerveroldali követőből is). */
+export function clvStatsFromSamples(items: RecordClv[]): ClvStats {
   const n = items.length;
   if (n === 0) {
     return {

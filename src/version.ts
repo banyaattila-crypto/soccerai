@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.35.1';
-export const APP_RELEASE_NAME = 'Mérhető Él';
+export const APP_VERSION = '1.36.0';
+export const APP_RELEASE_NAME = 'Szerveroldali Követő';
 export const APP_RELEASE_DATE = '2026-10-23';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';
 export const APP_GITHUB_RELEASES = 'https://github.com/banyaattila-crypto/soccerai/releases';
@@ -16,10 +16,9 @@ export const CURRENT_RELEASE_INFO: VersionInfo = {
   releaseDate: APP_RELEASE_DATE,
   tag: `v${APP_VERSION}`,
   highlights: [
-    'CLV-mérés: a valós szorzón naplózott tippekhez a rendszer rögzíti a naplózáskori és a kezdés előtti (záró) de-vigelt piaci árat, és kiszámolja a CLV-t 95%-os konfidencia-intervallummal; kevés mintánál (n < 50) nem mond ítéletet, élt csak n >= 100 és pozitív intervallum mellett jelez',
-    'Valós szorzók előzetes és záró lekérése a legerősebb tippekhez (napi 40 kérés keret, tartalék a menetrendnek), hogy a tippek piaci áron készüljenek és mérhetők legyenek',
-    'Új "Modell ≠ piac" jelző: a backtest (3504 meccs) szerint 5 pp eltérésnél a piac 0,016, 12 pp felett 0,103 log-loss-szal pontosabb; az eltérés a modell hibájának jele, nem rejtett értéké',
-    'A szimulált szorzón számolt ROI és profit visszafogott megjelenésű és "szimulált" jelölésű; a "xG" felirat "várható gól"-ra változott (a modell becslése, nem lövésalapú adat)',
-    '341 / 341 zöld teszt (39 tesztfájl)',
+    'Szerveroldali szorzó-követő (GitHub Actions, 20 percenként): a böngészőtől függetlenül rögzíti a legjobb bukméker-ár előnyét a konszenzushoz képest, a záró szorzókat és az eredményeket; a CLV így akkor is gyűlik, ha az app nincs nyitva',
+    'Modell nélküli mérés: jelölt = a legjobb ár legalább +2%-kal jobb a Pinnacle (vagy az átlag) de-vigelt fair áránál; CLV 95%-os intervallummal, ROI, bukméker- és ligamegoszlás; az adatok a külön tracker-data ágra kerülnek',
+    'Az app szorzó-előlekérésének napi kerete 40-ről 15-re csökkent (a követő 50-et használ, a napi 100 API-kérésen belül)',
+    '375 / 375 zöld teszt (41 tesztfájl)',
   ],
 };
