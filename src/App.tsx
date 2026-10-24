@@ -67,6 +67,8 @@ import {
 import { refreshOddsForTracking } from './services/oddsPrefetch';
 import { refreshOddsApi } from './services/oddsApiClient';
 import { refreshMatchContext } from './services/matchContext';
+import { ProbPicksSection } from './components/topPicks/ProbPicksSection';
+import { recordProbPicks, updateProbClosing, settleProbPicks } from './services/probPickService';
 
 export function App() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -258,6 +260,10 @@ export function App() {
           recordPreMatchPredictions(enhanced);
           // 1/b. A valós szorzón naplózott tippek záró piaci pillanatképének frissítése (CLV)
           updateClosingSnapshots(enhanced);
+          // 1/c. B protokoll (magas valószínűségű tippek): naplózás, záró pillanatkép, lezárás
+          recordProbPicks(enhanced);
+          updateProbClosing(enhanced);
+          settleProbPicks(enhanced);
           // 2. Korábban rögzített auditált predikciók lezárása valós befejezett meccsekkel
           settleAuditPredictions(enhanced);
           // 3. Tartós előzmények
@@ -660,6 +666,8 @@ export function App() {
             </button>
           </div>
         )}
+
+        {activeTab === 'picks' && <ProbPicksSection matches={matches} onSelectMatch={setSelectedMatch} />}
 
         {activeTab === 'picks' && (
           <TopPicks

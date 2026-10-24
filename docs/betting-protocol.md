@@ -40,3 +40,34 @@ Az "alkalmas" állapot sem garancia: kis tétet és kerethatárt jelent, és a m
 - A naplót a böngésző tárolja, ezért a mérés eszközönként eltér. A szerveroldali tracker (docs/tracker.md) mérésével összevonni külön lépés.
 - A záró ár frissítése az API-Sports szorzójára támaszkodik. Amíg a fiók felfüggesztett, a CLV lassabban gyűlik.
 - A küszöbök kezdeti becslések. Módosításukhoz új verzió kell, és az új verzió mérése nulláról indul.
+
+---
+
+# B protokoll: magas valószínűségű tippek (v1)
+
+Célja a nagy találati arány olyan áron, ami nem rosszabb a fair árnál. A nagy valószínűség önmagában nem jövedelmező: egy 80%-os tippnek a fair szorzója 1,25, a bukmékeri ár ennél jellemzően kisebb, és a piaci árrés (a 2025/26-os holdout szezonon minden kimenetelre fogadva −6,1%) hosszú távon felemészti a hozamot. Ezért az ár feltétele kötelező.
+
+| Feltétel | Érték |
+| :--- | :--- |
+| Szorzó forrása | valós, friss szorzó a naplózáskor |
+| Piac | 1X2, Over/Under 2.5 |
+| Piaci (de-vigelt) valószínűség | legalább 70% |
+| Szorzó | 1,25 – 1,70 |
+| Ár-előny a fair árhoz (legjobb iroda) | 0% … +20% (a legjobb ár nem rosszabb a fair árnál) |
+| Modell–piac eltérés | legfeljebb 5 pp |
+| Idő a kezdésig | legalább 20 perc |
+| Napi keret | kezdési naponként legfeljebb 5 tipp |
+| Tét | fix 1 egység (papír) |
+
+Egy meccsről egy B-tipp készül: a feltételeknek megfelelő kimenetelek közül a legnagyobb piaci valószínűségű. A B-tippek külön, write-once naplóba kerülnek (`soccerai_prob_pick_log_v1`), mert a fő tipp (aiPick) a játszható 1,55-2,40 szorzókat keresi, és a magas valószínűségű jelöltek általában kisebb szorzójúak.
+
+## Éles fogadási kapu (B)
+
+Mind a négy feltételnek egyszerre kell teljesülnie:
+
+1. legalább 100 lezárt tipp,
+2. kalibráció: a tényleges találati arány nem marad szignifikánsan (z < −1,96) a naplózáskori becsült valószínűség alatt,
+3. legalább 100 CLV-minta, az átlagos CLV nem negatív (az ár nem rosszabb a záró fair árnál),
+4. a papír ROI nem negatív.
+
+Leállítandó: ha a találati arány szignifikánsan rosszabb a becsültnél, a CLV bizonyítottan negatív, vagy 100+ lezárt tippel a ROI teljes intervalluma negatív.

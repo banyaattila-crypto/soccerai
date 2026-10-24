@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.43.0] - 2026-10-24
+
+### Hozzáadva (Added) - B protokoll: magas valószínűségű tippek
+- **Új nézet a Napi Top Tippek oldalán:** "Magas valószínűségű tippek". A feltételek: piaci (de-vigelt) valószínűség legalább 70%, szorzó 1,25-1,70, a legjobb irodai ár nem rosszabb a fair árnál (EV ≥ 0), modell–piac eltérés legfeljebb 5 pp, valós és friss szorzó. Meccsenként a legnagyobb valószínűségű megfelelő kimenetel szerepel; a lista a valószínűség szerint rendezett, az árral és a fair árral együtt.
+- **Külön mérés (B protokoll):** write-once napló, záró pillanatkép a CLV-hez, lezárás a végeredményből, papír ROI, **kalibráció** (becsült és tényleges találati arány, z-érték) és négy feltételű éles kapu (legalább 100 lezárt tipp, kalibráció, CLV ≥ 0, ROI ≥ 0). A kártya az Eredmények oldalon az A protokoll mellett jelenik meg.
+- Az A protokoll v1 ujjlenyomata változatlan marad (teszt védi), ezért a korábban rögzített rekordok érvényesek.
+- Miért külön: a fő tipp a játszható 1,55-2,40 szorzókat keresi, a magas valószínűségű jelöltek szorzója kisebb; így a B-tippek nem kerülnének a naplóba.
+
 ## [1.42.0] - 2026-10-24
 
 ### Módosítva (Changed) - API-Sports hívás saját IP-ről, tracker időzítés kikapcsolva

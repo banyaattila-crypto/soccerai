@@ -3,6 +3,7 @@ import { AuditKpiGrid } from './results/AuditKpiGrid';
 import { ClvKpiRow } from './results/ClvKpiRow';
 import { ProtocolCard } from './results/ProtocolCard';
 import { computeProtocolStats } from '../services/bettingProtocol';
+import { getProbStats } from '../services/probPickService';
 import { getClvStats, getRealOddsRoi } from '../services/clvService';
 import { ProvenanceTabs } from './results/ProvenanceTabs';
 import { MarketBreakdown } from './results/MarketBreakdown';
@@ -212,6 +213,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
   const clvStats = useMemo(() => getClvStats(verifiedRecords), [verifiedRecords]);
   const realOddsRoi = useMemo(() => getRealOddsRoi(verifiedRecords), [verifiedRecords]);
   const protocolStats = useMemo(() => computeProtocolStats(verifiedRecords), [verifiedRecords]);
+  const probStats = useMemo(() => getProbStats(), [verifiedRecords]);
 
   // 2. Hitelesített hivatalos statisztikák kiszámítása (KIZÁRÓLAG lezárt pre-match meccsekből!)
   const verifiedStats = useMemo(() => {
@@ -613,7 +615,10 @@ export const ResultsView: React.FC<ResultsViewProps> = ({ matches, onSelectMatch
           {/* FŐ KPI MUTATÓK (HITELESÍTETT ADATOKBÓL) */}
           <AuditKpiGrid verifiedStats={verifiedStats} />
           <ClvKpiRow clv={clvStats} real={realOddsRoi} totalAudited={verifiedStats.totalAudited} />
-          <ProtocolCard stats={protocolStats} />
+          <ProtocolCard stats={protocolStats} title="A protokoll: ár-előny" />
+          <ProtocolCard stats={probStats} title="B protokoll: magas valószínűség"
+            rule="piaci valószínűség legalább 70%; szorzó 1,25–1,70; a legjobb ár legalább a fair ár (EV ≥ 0); modell–piac eltérés legfeljebb 5 pp; naponta legfeljebb 5 tipp."
+          />
 
           {/* Fülválasztó: Összes Eredmény vs Hitelesített Audit vs Külső Archívum */}
           <ProvenanceTabs

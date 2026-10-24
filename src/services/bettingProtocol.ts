@@ -12,7 +12,11 @@ import { getClvStats, marketSnapshotForPick, type ClvStats } from './clvService'
  */
 
 export interface ProtocolConfig {
+  /** 'edge': ár-előny alapú protokoll (A); 'prob': magas valószínűségű tippek (B) */
+  id: 'edge' | 'prob';
   version: number;
+  /** Legkisebb piaci (de-vigelt) valószínűség, % (0: nincs korlát) */
+  minProbPct: number;
   /** Csak ezek a tipp-piacok számítanak (1X2 és Over/Under 2.5: ezekre van piaci referencia) */
   markets: string[];
   /** Legkisebb ár-előny a piaci konszenzus fair árához képest, % (szorzó · fair − 1) */
@@ -36,7 +40,9 @@ export interface ProtocolConfig {
 }
 
 export const PROTOCOL_V1: ProtocolConfig = {
+  id: 'edge',
   version: 1,
+  minProbPct: 0,
   markets: ['1', 'X', '2', 'HOME_WIN', 'DRAW', 'AWAY_WIN', 'OVER_25', 'UNDER_25'],
   minEdgePct: 2,
   maxEdgePct: 20,
@@ -50,11 +56,37 @@ export const PROTOCOL_V1: ProtocolConfig = {
   gate: { minSettled: 100, minClvSamples: 100, minRoiPct: 0 },
 };
 
+/**
+ * B protokoll: magas valószínűségű tippek. A cél a nagy találati arány olyan áron, ami nem rosszabb a fair árnál:
+ * piaci valószínűség legalább 70%, szorzó 1,25-1,70, a legjobb ár legalább a fair ár (EV >= 0), eltérés legfeljebb 5 pp.
+ * A nagy valószínűség önmagában nem jövedelmező (az árrés miatt), ezért az ár feltétele kötelező.
+ */
+export const PROTOCOL_PROB_V1: ProtocolConfig = {
+  id: 'prob',
+  version: 1,
+  minProbPct: 70,
+  markets: ['1', 'X', '2', 'HOME_WIN', 'DRAW', 'AWAY_WIN', 'OVER_25', 'UNDER_25'],
+  minEdgePct: 0,
+  maxEdgePct: 20,
+  maxGapPp: 5,
+  strongGapPp: 12,
+  minOdds: 1.25,
+  maxOdds: 1.7,
+  minLeadMs: 20 * 60 * 1000,
+  maxPerDay: 5,
+  stakeUnits: 1,
+  gate: { minSettled: 100, minClvSamples: 100, minRoiPct: 0 },
+};
+
 export const ACTIVE_PROTOCOL = PROTOCOL_V1;
 
 /** A szabály ujjlenyomata: bármely küszöb módosítása más értéket ad, ezért a verzióhoz kötött eredmény ellenőrizhető. */
 export function protocolFingerprint(cfg: ProtocolConfig = ACTIVE_PROTOCOL): string {
-  return `proto-${sha256Hex(canonicalJson(cfg)).slice(0, 16)}`;
+  // Az A protokoll v1 ujjlenyomata a B bevezetése előtt rögzített rekordokon is érvényes marad: az `id` és a
+  // semleges (0) `minProbPct` mezők a szabályt nem változtatják, ezért nem kerülnek az ujjlenyomatba.
+  const { id, minProbPct, ...legacy } = cfg;
+  const payload = id === 'edge' && minProbPct === 0 ? legacy : cfg;
+  return `proto-${sha256Hex(canonicalJson(payload)).slice(0, 16)}`;
 }
 
 /** Rendezett kulcsú, beágyazással együtt egyértelmű JSON (a tömb-szűrős JSON.stringify a beágyazott kulcsokat eldobná). */
@@ -111,6 +143,9 @@ export function evaluateProtocolInput(input: ProtocolInput, cfg: ProtocolConfig 
   if (input.fairProbPct === undefined || !(input.fairProbPct > 0)) {
     reasons.push('Nincs piaci referencia (fair ár) a naplózáskor.');
   } else {
+    if (cfg.minProbPct > 0 && input.fairProbPct < cfg.minProbPct) {
+      reasons.push(`A piaci valószínűség (${input.fairProbPct.toFixed(1)}%) a ${cfg.minProbPct}% küszöb alatt van.`);
+    }
     edgePct = (input.odds * (input.fairProbPct / 100) - 1) * 100;
     if (edgePct < cfg.minEdgePct) {
       reasons.push(`Az ár-előny (${edgePct.toFixed(1)}%) a ${cfg.minEdgePct}% küszöb alatt van.`);
@@ -231,7 +266,7 @@ export function selectProtocolRecords(
 }
 
 export interface GateCriterion {
-  key: 'settled' | 'clv' | 'roi';
+  key: 'settled' | 'clv' | 'roi' | 'calibration';
   label: string;
   have: string;
   need: string;
@@ -263,6 +298,27 @@ export interface ProtocolStats {
   gate: { status: GateStatus; criteria: GateCriterion[]; summary: string };
   /** Piaconként: 1X2 vs Over/Under */
   byMarket: { label: string; n: number; settled: number; roiPct: number }[];
+  /** Kalibráció: a naplózáskori piaci valószínűség átlaga és a tényleges találati arány a lezárt tippeken */
+  calibration: Calibration;
+}
+
+export interface Calibration {
+  n: number;
+  predictedPct: number;
+  observedPct: number;
+  /** (megfigyelt - becsült) / szórás; negatív: a tippek a becsültnél ritkábban nyertek */
+  z: number;
+}
+
+/** A becsült (naplózáskori fair) valószínűségek és a tényleges találatok összevetése; a szórás a Bernoulli-összegből. */
+export function calibrationOf(rows: { prob: number; won: boolean }[]): Calibration {
+  const n = rows.length;
+  if (n === 0) return { n: 0, predictedPct: 0, observedPct: 0, z: 0 };
+  const pred = rows.reduce((a, r) => a + r.prob, 0) / n;
+  const obs = rows.filter((r) => r.won).length / n;
+  const variance = rows.reduce((a, r) => a + r.prob * (1 - r.prob), 0);
+  const sd = Math.sqrt(variance) / n;
+  return { n, predictedPct: pred * 100, observedPct: obs * 100, z: sd > 0 ? (obs - pred) / sd : 0 };
 }
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
@@ -315,7 +371,12 @@ export function computeProtocolStats(
 
   const roiLow = roi - 1.96 * se;
   const roiHigh = roi + 1.96 * se;
-  const gate = gateFor({ settled: n, clv, roiPct: roi, roiHigh }, cfg);
+  const calibration = calibrationOf(
+    settledRows
+      .filter((x) => x.r.marketAtLog)
+      .map((x) => ({ prob: (x.r.marketAtLog as { fairProb: number }).fairProb / 100, won: x.r.status === 'WON' }))
+  );
+  const gate = gateFor({ settled: n, clv, roiPct: roi, roiHigh, calibration }, cfg);
 
   return {
     version: cfg.version,
@@ -334,6 +395,7 @@ export function computeProtocolStats(
     clv,
     gate,
     byMarket,
+    calibration,
   };
 }
 
@@ -345,9 +407,10 @@ export function computeProtocolStats(
  * Ha a CLV bizonyítottan negatív, vagy a ROI intervallumának felső széle is negatív (elég mintával), a státusz "stop".
  */
 export function gateFor(
-  m: { settled: number; clv: ClvStats; roiPct: number; roiHigh: number },
+  m: { settled: number; clv: ClvStats; roiPct: number; roiHigh: number; calibration?: Calibration },
   cfg: ProtocolConfig = ACTIVE_PROTOCOL
 ): ProtocolStats['gate'] {
+  if (cfg.id === 'prob') return gateForProb(m, cfg);
   const g = cfg.gate;
   const criteria: GateCriterion[] = [
     {
@@ -393,6 +456,80 @@ export function gateFor(
     };
   }
   if (m.settled < 30 && m.clv.n < 30) {
+    return { status: 'collecting', criteria, summary: 'Adatgyűjtés: még kevés a tipp a következtetéshez. Csak papíron követhető.' };
+  }
+  return { status: 'paper', criteria, summary: 'Csak papír: a bizonyíték még nem elég az éles fogadáshoz.' };
+}
+
+/**
+ * A B (magas valószínűségű) protokoll kapuja. Négy feltétel egyszerre:
+ *  1. legalább `minSettled` lezárt tipp,
+ *  2. kalibráció: a tényleges találati arány nem marad szignifikánsan (z < -1,96) a becsült alatt,
+ *  3. a CLV átlaga nem negatív (legalább `minClvSamples` mintával): az ár nem rosszabb a záró fair árnál,
+ *  4. a papír ROI nem negatív.
+ * "stop": szignifikánsan rosszabb találati arány a becsültnél, bizonyítottan negatív CLV, vagy a ROI teljes
+ * intervalluma negatív (100+ lezárt tippel).
+ */
+function gateForProb(
+  m: { settled: number; clv: ClvStats; roiPct: number; roiHigh: number; calibration?: Calibration },
+  cfg: ProtocolConfig
+): ProtocolStats['gate'] {
+  const g = cfg.gate;
+  const cal = m.calibration ?? { n: 0, predictedPct: 0, observedPct: 0, z: 0 };
+  const calOk = cal.n >= g.minSettled && cal.z > -1.96;
+  const criteria: GateCriterion[] = [
+    {
+      key: 'settled',
+      label: 'Lezárt tippek',
+      have: String(m.settled),
+      need: `legalább ${g.minSettled}`,
+      ok: m.settled >= g.minSettled,
+      progress: Math.min(1, m.settled / g.minSettled),
+    },
+    {
+      key: 'calibration',
+      label: 'Találati arány a becsülthöz képest',
+      have: cal.n > 0 ? `${cal.observedPct.toFixed(1)}% tényleges / ${cal.predictedPct.toFixed(1)}% becsült (n = ${cal.n})` : 'nincs adat',
+      need: 'nem szignifikánsan alacsonyabb a becsültnél',
+      ok: calOk,
+      progress: Math.min(1, cal.n / g.minSettled),
+    },
+    {
+      key: 'clv',
+      label: 'Záró árhoz mért ár-előny (CLV)',
+      have: m.clv.n > 0 ? `${m.clv.meanClvPct >= 0 ? '+' : ''}${m.clv.meanClvPct.toFixed(2)}%, n = ${m.clv.n}` : 'nincs adat',
+      need: `n ≥ ${g.minClvSamples} és az átlag ≥ 0`,
+      ok: m.clv.n >= g.minClvSamples && m.clv.meanClvPct >= 0,
+      progress: Math.min(1, m.clv.n / g.minClvSamples),
+    },
+    {
+      key: 'roi',
+      label: 'Papír ROI',
+      have: m.settled > 0 ? `${m.roiPct >= 0 ? '+' : ''}${m.roiPct.toFixed(1)}%` : 'nincs adat',
+      need: `legalább ${g.minRoiPct}%`,
+      ok: m.settled >= g.minSettled && m.roiPct >= g.minRoiPct,
+      progress: m.settled >= g.minSettled ? (m.roiPct >= g.minRoiPct ? 1 : 0.5) : Math.min(1, m.settled / g.minSettled),
+    },
+  ];
+  const stop =
+    (cal.n >= g.minSettled && cal.z < -1.96) ||
+    m.clv.verdict === 'negative' ||
+    (m.settled >= g.minSettled && m.roiHigh < g.minRoiPct);
+  if (stop) {
+    return {
+      status: 'stop',
+      criteria,
+      summary: 'A mérés szerint a tippek nem nyernek a becsült arányban, vagy rosszabb áron készülnek a fair árnál. Éles fogadásra nem alkalmas.',
+    };
+  }
+  if (criteria.every((c) => c.ok)) {
+    return {
+      status: 'ready',
+      criteria,
+      summary: 'Minden feltétel teljesül: a találati arány a becsültnek megfelel, az ár nem rosszabb a fair árnál, és a papír ROI nem negatív. Éles fogadás csak kis téttel és kerettel javasolt.',
+    };
+  }
+  if (m.settled < 30) {
     return { status: 'collecting', criteria, summary: 'Adatgyűjtés: még kevés a tipp a következtetéshez. Csak papíron követhető.' };
   }
   return { status: 'paper', criteria, summary: 'Csak papír: a bizonyíték még nem elég az éles fogadáshoz.' };

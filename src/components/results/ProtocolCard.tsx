@@ -4,7 +4,14 @@ import type { GateStatus, ProtocolStats } from '../../services/bettingProtocol';
 
 interface ProtocolCardProps {
   stats: ProtocolStats;
+  /** A kártya címe (több protokoll egymás alatt) */
+  title?: string;
+  /** A szabály rövid leírása a kártya alján */
+  rule?: string;
 }
+
+const RULE_EDGE =
+  'valós, friss szorzó; ár-előny a piaci konszenzushoz +2%…+20%; modell–piac eltérés legfeljebb 5 pp; szorzó 1,50–4,00; naponta legfeljebb 5 tipp.';
 
 const STATUS: Record<GateStatus, { label: string; tone: string }> = {
   collecting: { label: 'Adatgyűjtés', tone: 'bg-slate-800 text-slate-300 border-slate-700' },
@@ -19,7 +26,7 @@ const sign = (x: number, d = 1) => `${x >= 0 ? '+' : ''}${x.toFixed(d)}`;
  * A fogadási protokoll mérése: a rögzített szabálynak megfelelő tippek papír-eredménye (fix 1 egységes tét),
  * a záró árhoz mért ár-előny és az éles fogadási kapu. A szabály verziózott: módosítása új mérést indít.
  */
-export const ProtocolCard: React.FC<ProtocolCardProps> = ({ stats }) => {
+export const ProtocolCard: React.FC<ProtocolCardProps> = ({ stats, title, rule = RULE_EDGE }) => {
   const st = STATUS[stats.gate.status];
   const hasSettled = stats.settled > 0;
   return (
@@ -27,7 +34,7 @@ export const ProtocolCard: React.FC<ProtocolCardProps> = ({ stats }) => {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-[10px] sm:text-xs font-bold uppercase text-slate-400 flex items-center gap-1">
           <ClipboardCheck className="w-3.5 h-3.5 text-brand-400" />
-          Fogadási protokoll v{stats.version}, papírkereskedés
+          {title ?? 'Fogadási protokoll'} · v{stats.version}, papírkereskedés
         </span>
         <span className={`text-[11px] font-black px-2 py-0.5 rounded border ${st.tone}`}>{st.label}</span>
       </div>
@@ -56,6 +63,12 @@ export const ProtocolCard: React.FC<ProtocolCardProps> = ({ stats }) => {
           sub={stats.clv.n > 0 ? `n = ${stats.clv.n}, átlagos belépő előny ${sign(stats.avgEdgePct, 1)}%` : 'a zárás után mérhető'}
         />
       </div>
+
+      {stats.calibration.n > 0 && (
+        <p className="mt-3 text-[11px] text-slate-400 tabular-nums">
+          Kalibráció: becsült {stats.calibration.predictedPct.toFixed(1)}% · tényleges {stats.calibration.observedPct.toFixed(1)}% ({stats.calibration.n} lezárt tipp, z = {stats.calibration.z.toFixed(2)})
+        </p>
+      )}
 
       <ul className="mt-3 space-y-2">
         {stats.gate.criteria.map((c) => (
@@ -98,9 +111,8 @@ export const ProtocolCard: React.FC<ProtocolCardProps> = ({ stats }) => {
       )}
 
       <p className="text-[10px] text-slate-600 mt-3 leading-snug">
-        Szabály (ujjlenyomat {stats.fingerprint}): valós, friss szorzó; ár-előny a piaci konszenzushoz +2%…+20%; modell–piac
-        eltérés legfeljebb 5 pp; szorzó 1,50–4,00; naponta legfeljebb 5 tipp. A küszöbök kezdeti becslések, módosításuk új
-        protokoll-verziót és új mérést jelent. A mérés ezen az eszközön tárolt naplóból számol.
+        Szabály (ujjlenyomat {stats.fingerprint}): {rule} A küszöbök kezdeti becslések, módosításuk új protokoll-verziót és új
+        mérést jelent. A mérés ezen az eszközön tárolt naplóból számol.
       </p>
     </div>
   );
