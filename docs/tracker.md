@@ -3,6 +3,11 @@
 A követő a böngészőtől függetlenül, GitHub Actions időzítéssel fut, és azt méri, amiről a rendszer fogadásra való
 alkalmasságát el lehet dönteni: **van-e a legjobb bukméker-ár stratégiának tartós előnye a záró árhoz képest.**
 
+> **Állapot (2026-10-24):** az időzítés ki van kapcsolva. Az API-Sports a megosztott felhő-IP-ről (GitHub Actions, Vercel) érkező
+> forgalmat a Free csomagnál visszaélésként értékelheti, a fiókot felfüggesztették. A követő csak kézzel indítható
+> (`gh workflow run tracker.yml`), amíg a hívás nem megy saját vagy dedikált IP-ről. Visszakapcsolás: a `schedule` blokk
+> visszaírása a `.github/workflows/tracker.yml` fájlban.
+
 ## Mit csinál
 
 Modell nélkül, tisztán árakból dolgozik (a modell súlya a backtest szerint úgyis 0):

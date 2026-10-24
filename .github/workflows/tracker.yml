@@ -4,9 +4,10 @@ name: Szorzó-követő (tracker)
 # eredményeket. Az adatok a külön "tracker-data" ágra kerülnek (a main-t nem érinti, a Vercel nem építi újra).
 # Beállítás és értelmezés: docs/tracker.md
 
+# Az időzítés ki van kapcsolva: a GitHub Actions megosztott IP-ről hív, amit az API-Sports a Free csomagnál
+# visszaélésként értékelhet (a fiókot felfüggesztették). Csak kézzel indítható (workflow_dispatch), amíg a hívás
+# nem megy saját/dedikált IP-ről. Visszakapcsolás: a `schedule` blokk visszaírása (cron: '*/20 * * * *').
 on:
-  schedule:
-    - cron: '*/20 * * * *'
   workflow_dispatch:
 
 # Egyszerre csak egy futás írhat az adat-ágra

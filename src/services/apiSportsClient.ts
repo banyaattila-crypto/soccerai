@@ -25,6 +25,21 @@ import {
 } from './quotaService';
 
 export const API_SPORTS_DEFAULT_KEY = '';
+export const API_SPORTS_KEY_STORAGE = 'focitipp_apisports_key';
+
+/** A Beállításokban megadott saját API-Sports kulcs (üres, ha nincs): a közvetlen, saját IP-ről induló hívásokhoz. */
+export function getStoredApiSportsKey(): string {
+  try {
+    return (localStorage.getItem(API_SPORTS_KEY_STORAGE) || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+/** A hívásnak átadott kulcs, ennek híján a Beállításokban tárolt saját kulcs. */
+export function resolveApiSportsKey(explicit: string | undefined): string {
+  return (explicit || '').trim() || getStoredApiSportsKey();
+}
 // v3: a v1.30.0 csapatonkénti (pillanatkép) modelljei előtt számolt, ligaátlagos becslések ne maradjanak a gyorsítótárban
 export const CACHE_KEY = 'soccerai_apisports_fixtures_cache_v3';
 const FIXTURE_LOOKUP_KEY = 'soccerai_fixture_lookup_v1';
@@ -462,11 +477,13 @@ export async function fetchApiSportsMatches(
     }
   }
 
-  // 2. Végpontok: szerveroldali proxy (és közvetlen API csak saját kulcs megadásakor)
-  const endpoints = [`/api/apisports?date=${dateStr}`];
-  if (apiKey.trim()) {
-    endpoints.push(`https://v3.football.api-sports.io/fixtures?date=${dateStr}`);
-  }
+  // 2. Végpont: saját kulcs esetén közvetlenül a böngészőből (a felhasználó saját IP-je), egyébként a szerveroldali
+  //    proxy. A proxy (Vercel) és a GitHub Actions megosztott IP-ről hív, amit az API-Sports a Free csomagnál
+  //    visszaélésként értékelhet (fiókfelfüggesztés), ezért kulcs megadásakor a proxyt nem használjuk.
+  apiKey = resolveApiSportsKey(apiKey);
+  const endpoints = apiKey
+    ? [`https://v3.football.api-sports.io/fixtures?date=${dateStr}`]
+    : [`/api/apisports?date=${dateStr}`];
 
   let rawData: ApiSportsFixturesResponse | null = null;
   let lastError: Error | null = null;
@@ -782,11 +799,11 @@ export async function fetchFixtureOdds(
     }
   }
 
-  // 2. Végpontok: szerveroldali proxy (és közvetlen API csak saját kulcs megadásakor)
-  const endpoints = [`/api/apisports?fixture=${fixtureId}`];
-  if (apiKey.trim()) {
-    endpoints.push(`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`);
-  }
+  // 2. Végpont: saját kulcs esetén közvetlenül a böngészőből (saját IP), egyébként a szerveroldali proxy
+  apiKey = resolveApiSportsKey(apiKey);
+  const endpoints = apiKey
+    ? [`https://v3.football.api-sports.io/odds?fixture=${fixtureId}`]
+    : [`/api/apisports?fixture=${fixtureId}`];
 
   let rawData: ApiSportsOddsResponse | null = null;
   let lastError: Error | null = null;

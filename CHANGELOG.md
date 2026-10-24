@@ -3,6 +3,14 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.42.0] - 2026-10-24
+
+### Módosítva (Changed) - API-Sports hívás saját IP-ről, tracker időzítés kikapcsolva
+- **Ok:** az API-Sports támogatása szerint a Free csomagnál a megosztott felhő-IP-ről (szerverless függvény, GitHub Actions) érkező forgalom védelmi mechanizmust válthat ki, akkor is, ha a saját kérésszám alacsony; a fiókot felfüggesztették. Az app eddig minden hívást a Vercel proxyn át küldött, a tracker pedig a GitHub Actions futtatóiról.
+- **Saját kulcs = közvetlen hívás:** ha a Beállításokban saját API-Sports kulcs van megadva, a meccslista, a szorzó és a meccs-kontextus (hiányzók, felállás) lekérése közvetlenül a böngészőből, a felhasználó saját IP-jéről megy, a proxyt nem érinti (korábban a kulcs is a Vercel proxyn át ment). Kulcs nélkül a szerveroldali proxy marad (megosztott IP).
+- **Tracker:** a GitHub Actions időzítés (20 percenként) ki van kapcsolva, csak kézzel indítható, amíg a hívás nem megy saját/dedikált IP-ről; különben a fiók feloldása után ugyanaz a futtató azonnal újra kiválthatná a felfüggesztést.
+- Beállítások: a kulcs-mező és a leírás a közvetlen hívást és az eszközönkénti megadást magyarázza.
+
 ## [1.41.0] - 2026-10-24
 
 ### Hozzáadva (Added) - API-keretek követése, proxyvédelem, meccs-kontextus

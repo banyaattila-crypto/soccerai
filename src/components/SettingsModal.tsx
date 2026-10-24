@@ -154,7 +154,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <span>API-Sports, Nemzetközi Kupák &amp; Bajnokságok</span>
               </label>
               <span className="text-[10px] bg-brand-500/20 text-brand-300 border border-brand-500/30 px-1.5 py-0.5 rounded font-bold font-mono">
-                {apiSportsKey ? '✓ Egyéni kulcs' : '✓ Proxy védett (100 req/nap)'}
+                {apiSportsKey ? '✓ Közvetlen, saját IP' : 'Szerveroldali proxy (megosztott IP)'}
               </span>
             </div>
 
@@ -178,17 +178,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-slate-300">
-                API-Sports Kulcs (opcionális felülbírálat)
+                API-Sports saját kulcs (ajánlott)
               </label>
               <input
                 type="password"
                 value={apiSportsKey}
                 onChange={(e) => setApiSportsKey(e.target.value)}
-                placeholder="Üresen hagyva a szerveroldali API_SPORTS_KEY változót használja..."
+                placeholder="Saját kulcs megadásakor a hívás a te eszközödről, a saját IP-dről indul..."
                 className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono"
               />
               <p className="text-[10px] text-slate-500">
-                Szerveroldali proxy (<code className="text-slate-300">API_SPORTS_KEY</code>) és 45 perces gyorsítótár védi a kvótát.
+                Saját kulccsal az app közvetlenül az API-Sports-ot hívja a te eszközödről (saját IP). Üresen a szerveroldali
+                proxy (<code className="text-slate-300">API_SPORTS_KEY</code>) hív, megosztott felhő-IP-ről, amit az API-Sports a
+                Free csomagnál visszaélésként értékelhet. A kulcs csak ezen az eszközön tárolódik, minden eszközön külön kell megadni.
               </p>
             </div>
 

@@ -1,7 +1,7 @@
 import type { Match } from '../types/football';
 import { eventBus } from '../utils/eventBus';
 import { checkApiSportsQuota, getApiSportsUsage } from './quotaService';
-import { resolveApiSportsFixtureId } from './apiSportsClient';
+import { getStoredApiSportsKey, resolveApiSportsFixtureId } from './apiSportsClient';
 import { teamNamesMatch } from './oddsApiParsing';
 import { evaluateMatchPick } from './bettingProtocol';
 import { getMatchKickoffTimestamp } from './predictionAuditService';
@@ -163,9 +163,16 @@ export function selectContextTargets(
   return out.sort((a, b) => getMatchKickoffTimestamp(a.match) - getMatchKickoffTimestamp(b.match));
 }
 
-async function getJson(path: string): Promise<unknown | null> {
+/** Saját kulccsal közvetlenül az API-Sports-ot hívja (saját IP), különben a szerveroldali proxyt. */
+async function getJson(endpoint: 'injuries' | 'lineups', fixtureId: number): Promise<unknown | null> {
+  const key = getStoredApiSportsKey();
   try {
-    const res = await fetch(path);
+    const res = key
+      ? await fetch(
+          `https://v3.football.api-sports.io/${endpoint === 'lineups' ? 'fixtures/lineups' : 'injuries'}?fixture=${fixtureId}`,
+          { headers: { 'x-apisports-key': key } }
+        )
+      : await fetch(`/api/apisports?endpoint=${endpoint}&fixture=${fixtureId}`);
     if (!res.ok) return null;
     const json = await res.json();
     const errors = (json as { errors?: unknown } | null)?.errors;
@@ -198,7 +205,7 @@ export async function refreshMatchContext(matches: Match[], nowMs: number = Date
     let changed = false;
     if (t.needInjuries && getContextBudgetUsed(nowMs) < CONTEXT_DAILY_BUDGET) {
       addContextBudget(nowMs);
-      const json = await getJson(`/api/apisports?endpoint=injuries&fixture=${t.fixtureId}`);
+      const json = await getJson('injuries', t.fixtureId);
       if (json) {
         const parsed = parseInjuries(json, t.match.homeTeam.name, t.match.awayTeam.name);
         ctx = { ...ctx, homeAbsent: parsed.home, awayAbsent: parsed.away, injuriesAt: nowMs };
@@ -207,7 +214,7 @@ export async function refreshMatchContext(matches: Match[], nowMs: number = Date
     }
     if (t.needLineups && getContextBudgetUsed(nowMs) < CONTEXT_DAILY_BUDGET) {
       addContextBudget(nowMs);
-      const json = await getJson(`/api/apisports?endpoint=lineups&fixture=${t.fixtureId}`);
+      const json = await getJson('lineups', t.fixtureId);
       if (json) {
         ctx = { ...ctx, lineups: parseLineups(json, t.match.homeTeam.name, t.match.awayTeam.name), lineupsAt: nowMs };
         changed = true;
