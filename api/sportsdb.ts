@@ -171,7 +171,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Kulcs hiányában a nyilvános, erősen korlátozott teszt-kulcs (123) marad
-  const key = process.env.THE_SPORTS_DB || process.env.THESPORTSDB_KEY || '123';
+  const key = process.env.THESPORTSDB || process.env.THE_SPORTS_DB || process.env.THESPORTSDB_KEY || '123';
   const qs =
     kind === 'day'
       ? `d=${day}&s=Soccer`

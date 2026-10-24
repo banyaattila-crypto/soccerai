@@ -46,7 +46,7 @@ A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) ve
 - **Keret:** napi 8 liga lekérés (2 kredit / liga, kb. 480 kredit / hó), 12 kredit alatt leáll a hónap végi tartalékért. Csak a következő 48 órában kezdődő meccsek ligáit kéri, a Top Tippet tartalmazó ligákat előre.
 - **Párosítás:** csapatnév (ismert eltérésekkel, pl. München/Munich, "and"/"&") és kezdési idő (±36 óra) alapján; az API-Sports szorzója elsőbbséget élvez, a The Odds API csak pótolja.
 - Ismert korlát: BTTS piac az ingyenes csomagban nincs; a román, magyar NB I és Konferencia Liga meccseihez a The Odds API nem ad szorzót.
-- **TheSportsDB proxy** (`/api/sportsdb`, kulcs: `THE_SPORTS_DB`): meccsnaptár és eredmény lekéréshez; még nincs bekötve a felületbe.
+- **TheSportsDB proxy** (`/api/sportsdb`, kulcs: `THESPORTSDB`): meccsnaptár és eredmény lekéréshez; még nincs bekötve a felületbe.
 
 ## [1.38.0] - 2026-10-23
 
