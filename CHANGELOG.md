@@ -3,6 +3,11 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.43.1] - 2026-10-24
+
+### Eltávolítva (Removed) - TheSportsDB proxy
+- A `api/sportsdb.ts` proxy törölve: az ingyenes kulcs (`123`) szándékosan szűkített (1 meccs / lekérés, a szezonlista a szezon első 15 mérkőzése), a prémium kulcsot a szerver nem látta, és a TheSportsDB nem ad szorzót, így a használata nem érte meg. Használaton kívüli, nyilvánosan hívható végpont nem maradt a kódban.
+
 ## [1.43.0] - 2026-10-24
 
 ### Hozzáadva (Added) - B protokoll: magas valószínűségű tippek

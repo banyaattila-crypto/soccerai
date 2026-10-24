@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import apisportsHandler from '../../../api/apisports';
 import oddsHandler from '../../../api/oddsapi';
-import sportsdbHandler from '../../../api/sportsdb';
 
 function mockRes() {
   const out = { statusCode: 200, headers: {} as Record<string, string> };
@@ -41,7 +40,6 @@ describe('proxyk: ismeretlen paraméterrel nem lehet a gyorsítótárat kijátsz
   it.each([
     ['api/apisports.ts', apisportsHandler, { date: '2026-10-24' }],
     ['api/oddsapi.ts', oddsHandler, { sport: 'soccer_epl' }],
-    ['api/sportsdb.ts', sportsdbHandler, { kind: 'next', league: '4328' }],
   ])('%s: az engedett paraméterekkel megy, extra paraméterrel 400 és nincs szolgáltatói hívás', async (_n, handler, ok) => {
     const good = await call(handler, ok);
     expect(good.status).toBe(200);
