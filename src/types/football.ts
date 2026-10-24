@@ -249,6 +249,19 @@ export interface TrackedBet {
   notes?: string;
   settledAt?: string;
   netProfit?: number; // WON: potentialWin - stake, LOST: -stake, VOID: 0
+  /** A fogadást megkötő iroda (protokoll-tippre kötött fogadásnál) */
+  bookmaker?: string;
+  /**
+   * Ha a fogadás egy protokoll-tippre épül: melyik protokoll, melyik meccs, és a naplózáskori (papír) szorzó, amihez
+   * a ténylegesen kapott ár mérhető.
+   */
+  protocolRef?: {
+    protocol: 'edge' | 'prob';
+    matchId: string;
+    recordId?: string;
+    loggedOdds: number;
+    loggedBookmaker?: string;
+  };
 }
 
 export interface BankrollConfig {

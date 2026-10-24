@@ -4,6 +4,8 @@ import type { Match } from '../../types/football';
 import { listProbCandidates } from '../../services/probPickService';
 import { PROTOCOL_PROB_V1 } from '../../services/bettingProtocol';
 import { getMatchKickoffTimestamp } from '../../services/predictionAuditService';
+import { getProbLog } from '../../services/probPickService';
+import { ProtocolBetButton } from '../bankroll/ProtocolBetButton';
 
 interface ProbPicksSectionProps {
   matches: Match[];
@@ -22,6 +24,7 @@ function formatLeft(ms: number): string {
  */
 export const ProbPicksSection: React.FC<ProbPicksSectionProps> = ({ matches, onSelectMatch }) => {
   const picks = useMemo(() => listProbCandidates(matches), [matches]);
+  const logged = useMemo(() => new Map(getProbLog().map((r) => [r.matchId, r])), [matches]);
   const cfg = PROTOCOL_PROB_V1;
   const now = Date.now();
 
@@ -49,11 +52,11 @@ export const ProbPicksSection: React.FC<ProbPicksSectionProps> = ({ matches, onS
               {picks.map((c) => {
                 const left = getMatchKickoffTimestamp(c.match) - now;
                 return (
-                  <li key={c.match.id}>
+                  <li key={c.match.id} className="flex flex-wrap items-center gap-x-2">
                     <button
                       type="button"
                       onClick={() => onSelectMatch(c.match)}
-                      className="w-full text-left py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 cursor-pointer hover:bg-slate-900/50 rounded-lg px-1"
+                      className="flex-1 min-w-0 text-left py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 cursor-pointer hover:bg-slate-900/50 rounded-lg px-1"
                     >
                       <span className="min-w-0 flex-1 basis-48">
                         <span className="block text-xs font-bold text-white truncate">
@@ -81,6 +84,21 @@ export const ProbPicksSection: React.FC<ProbPicksSectionProps> = ({ matches, onS
                         <span className="block text-[10px] text-slate-500">ár-előny</span>
                       </span>
                     </button>
+                    <span className="shrink-0 pr-1">
+                      <ProtocolBetButton
+                        compact
+                        target={{
+                          protocol: 'prob',
+                          match: c.match,
+                          market: c.market,
+                          marketLabel: c.marketLabel,
+                          loggedOdds: logged.get(c.match.id)?.pick.odds ?? c.odds,
+                          loggedBookmaker: logged.get(c.match.id)?.marketAtLog?.bookmaker ?? c.bookmaker,
+                          probabilityPct: c.probPct,
+                          recordId: logged.get(c.match.id)?.id,
+                        }}
+                      />
+                    </span>
                   </li>
                 );
               })}

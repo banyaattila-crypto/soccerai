@@ -5,6 +5,7 @@ export type SoccerAiEventMap = {
   settings_updated: void;
   filter_live: void;
   odds_cache_updated: void;
+  bets_changed: void;
   pin_state_changed: void;
   pin_locked: void;
 };

@@ -3,6 +3,8 @@ import { Match, TrackedBet, TrackedBetStatus, BankrollSummary } from '../types/f
 import { EquityCurve } from './EquityCurve';
 import { TrackedBetCard } from './bankroll/TrackedBetCard';
 import { ManualBetModal } from './bankroll/ManualBetModal';
+import { ProtocolBetsCard } from './bankroll/ProtocolBetsCard';
+import { computeProtocolBetStats } from '../services/protocolBets';
 import {
   getTrackedBets,
   getInitialBankroll,
@@ -78,6 +80,9 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
   const summary: BankrollSummary = useMemo(() => {
     return calculateBankrollSummary(bets, initialCapital);
   }, [bets, initialCapital]);
+
+  // Protokoll-tippekre kötött valós fogadások: ár-eltérés, valós és papír hozam, irodánként
+  const protocolBetStats = useMemo(() => computeProtocolBetStats(bets), [bets]);
 
   // Szűrt szelvények
   const filteredBets = useMemo(() => {
@@ -460,6 +465,8 @@ export const BankrollView: React.FC<BankrollViewProps> = ({
           )}
         </div>
       </div>
+
+      <ProtocolBetsCard stats={protocolBetStats} />
 
       {/* 5. Szelvény Kártyák Listája */}
       <div className="space-y-4">

@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.43.1';
+export const APP_VERSION = '1.44.0';
 export const APP_RELEASE_NAME = 'Kevesebb Zöld';
 export const APP_RELEASE_DATE = '2026-10-23';
 export const APP_GITHUB_REPO = 'https://github.com/banyaattila-crypto/soccerai';

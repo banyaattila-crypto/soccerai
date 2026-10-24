@@ -3,6 +3,13 @@
 Minden fontosabb változás ebben a fájlban kerül rögzítésre a [Keep a Changelog](https://keepachangelog.com/hu/1.0.0/) szabvány szerint.
 A projekt a [Semantic Versioning (SemVer 2.0.0)](https://semver.org/lang/hu/) verziózási szabályait követi.
 
+## [1.44.0] - 2026-10-24
+
+### Hozzáadva (Added) - Tényleges fogadás rögzítése a protokoll-tipphez kötve
+- **"Megfogadtam" gomb** az A protokoll tippjein (Napi Top Tipp kártya) és a "Magas valószínűségű tippek" (B) soraiban: rögzíti az irodát (a meccs irodalistájából választható), a ténylegesen kapott szorzót és a tétet (alapértelmezés: a bankroll 1%-a). A fogadás a Tétnaplóba kerül, a protokoll-tipphez kötve, ugyanarra a tippre kétszer nem rögzíthető, a végeredmény alapján automatikusan lezárul.
+- **Tétnapló, "Protokoll-fogadások" kártya:** a ténylegesen kapott ár eltérése a naplózott (papír) szorzótól (átlag és a rosszabb esetek száma), a valós ROI és ugyanezen tippek papír ROI-ja egymás mellett, és irodánkénti bontás (fogadások, ár-eltérés, valós ROI). Ebből látszik, mennyit ér a valós ár a naplózotthoz képest, és melyik iroda mennyire korlátoz vagy csúszik.
+- A tétnapló szelvényei új, opcionális mezőket kaptak (`bookmaker`, `protocolRef`); a korábbi szelvények változatlanul működnek.
+
 ## [1.43.1] - 2026-10-24
 
 ### Eltávolítva (Removed) - TheSportsDB proxy

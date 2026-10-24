@@ -71,3 +71,15 @@ Mind a négy feltételnek egyszerre kell teljesülnie:
 4. a papír ROI nem negatív.
 
 Leállítandó: ha a találati arány szignifikánsan rosszabb a becsültnél, a CLV bizonyítottan negatív, vagy 100+ lezárt tippel a ROI teljes intervalluma negatív.
+
+---
+
+# Valós fogadások és a protokoll
+
+A protokoll papíron, a naplózáskori (legjobb) áron mér. A ténylegesen megkötött fogadás ára, irodája és eredménye eltérhet (késés, árváltozás, tétkorlát). Ezért a protokoll-tippek mellett a "Megfogadtam" gombbal rögzíthető a valós fogadás (iroda, kapott szorzó, tét), a Tétnaplóban a tipphez kötve. A "Protokoll-fogadások" kártya méri:
+
+- az átlagos ár-eltérést a kapott és a naplózott szorzó között (negatív: rosszabb ár, mint amit a protokoll feltételezett),
+- a valós ROI-t és ugyanezen tippek papír ROI-ját (a különbség a gyakorlati költség),
+- irodánként a fogadások számát, az ár-eltérést és a valós hozamot.
+
+Ha a valós ROI tartósan elmarad a papírétól, vagy egy iroda rendszeresen rosszabb árat ad, az a protokoll gyakorlati hasznát csökkenti, akkor is, ha a papír mérés jó.
